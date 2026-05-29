@@ -26,12 +26,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .logo-arrow{width:0;height:0;border-top:13px solid transparent;border-bottom:13px solid transparent;border-left:16px solid var(--naranja);margin-left:3px;}
 .header-sub{color:rgba(255,255,255,0.5);font-size:12px;margin-top:2px;}
 
-.cfg{background:#fff3cd;border-bottom:1px solid #ffe08a;padding:12px 16px;font-size:14px;color:#7a5a00;}
-.cfg.hidden{display:none;}
-.cfg strong{display:block;margin-bottom:6px;}
-.cfg input{width:100%;margin-top:4px;padding:10px;border:1px solid #ffe08a;border-radius:6px;font-size:14px;background:#fffdf0;color:#1a1a1a;}
-.cfg button{margin-top:8px;background:var(--naranja);border:none;border-radius:6px;padding:10px;font-size:14px;font-weight:700;cursor:pointer;width:100%;color:#fff;}
-
 .nav{display:grid;grid-template-columns:1fr 1fr 1fr;background:#fff;border-bottom:2px solid var(--bor);}
 .nb{padding:12px 4px;font-size:13px;border:none;background:none;cursor:pointer;color:var(--gris2);border-bottom:3px solid transparent;margin-bottom:-2px;}
 .nb.active{color:var(--naranja);border-bottom-color:var(--naranja);font-weight:700;}
@@ -91,35 +85,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
   </div>
 </div>
 
-<div class="cfg hidden">
-  <strong>⚙️ Configuración — solo la primera vez</strong>
-  Pegá la URL de tu Apps Script:
-  <input type="url" id="iurl" placeholder="https://script.google.com/macros/s/.../exec">
-  <button onclick="guardarUrl()">Guardar y conectar</button>
-</div>
-
 <div class="nav">
   <button class="nb active" onclick="tab('uso',this)">📋 Uso diario</button>
   <button class="nb" onclick="tab('gasoil',this)">⛽ Gasoil</button>
   <button class="nb" onclick="tab('historial',this)">🕐 Historial</button>
 </div>
 
-<!-- USO DIARIO -->
 <div class="sec active" id="tab-uso">
   <div class="card">
     <div class="ct"><span class="ct-bar"></span>Registro de uso diario</div>
 
     <div class="f">
       <label>Equipo <span class="req">*</span></label>
-      <select id="ue"><option value="">— Seleccionar —</option></select>
+      <select id="ue"><option value="">— Cargando equipos... —</option></select>
     </div>
     <div class="f">
       <label>Operario <span class="req">*</span></label>
-      <select id="uo"><option value="">— Seleccionar —</option></select>
+      <select id="uo"><option value="">— Cargando operarios... —</option></select>
     </div>
     <div class="f">
       <label>Obra / Lugar</label>
-      <select id="uw"><option value="">— Seleccionar —</option></select>
+      <select id="uw"><option value="">— Cargando obras... —</option></select>
     </div>
     <div class="f">
       <label>Horas o Km actuales <span class="req">*</span></label>
@@ -150,22 +136,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
   </div>
 </div>
 
-<!-- GASOIL -->
 <div class="sec" id="tab-gasoil">
   <div class="card">
     <div class="ct"><span class="ct-bar"></span>Carga de gasoil / nafta</div>
 
     <div class="f">
       <label>Equipo <span class="req">*</span></label>
-      <select id="ge"><option value="">— Seleccionar —</option></select>
+      <select id="ge"><option value="">— Cargando equipos... —</option></select>
     </div>
     <div class="f">
       <label>Operario <span class="req">*</span></label>
-      <select id="go"><option value="">— Seleccionar —</option></select>
+      <select id="go"><option value="">— Cargando operarios... —</option></select>
     </div>
     <div class="f">
       <label>Obra / Lugar</label>
-      <select id="gw"><option value="">— Seleccionar —</option></select>
+      <select id="gw"><option value="">— Cargando obras... —</option></select>
     </div>
     <div class="f">
       <label>Litros cargados <span class="req">*</span></label>
@@ -184,7 +169,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
   </div>
 </div>
 
-<!-- HISTORIAL -->
 <div class="sec" id="tab-historial">
   <div id="hlist"></div>
 </div>
@@ -192,135 +176,140 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 <div class="toast hidden" id="toast"></div>
 
 <script>
-var URL_="https://script.google.com/macros/s/AKfycbzoEu3ix-IgVOREpqLJrjQn4nhgIxAjggk1XcmusVwj_C296PRtxzYU4bEzBuugM5qM5w/exec";
-var HIST=JSON.parse(localStorage.getItem("pam_hist")||"[]");
+// URL fija y definitiva de tu Apps Script
+var URL_ = "https://script.google.com/macros/s/AKfycbzoEu3ix-IgVOREpqLJrjQn4nhgIxAjggk1XcmusVwj_C296PRtxzYU4bEzBuugM5qM5w/exec";
+var HIST = JSON.parse(localStorage.getItem("pam_hist") || "[]");
 
-document.getElementById("hfecha").textContent=
-  new Date().toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"long"});
+document.getElementById("hfecha").textContent =
+  new Date().toLocaleDateString("es-AR", {weekday: "long", day: "numeric", month: "long"});
 
+// Al cargar la página, busca directamente las listas en el servidor
 cargarListas();
 
-function guardarUrl(){
-  var v=document.getElementById("iurl").value.trim();
-  if(!v||v.indexOf("script.google.com")===-1){toast("URL inválida","err");return;}
-  URL_=v;localStorage.setItem("pam_url",URL_);
-  document.getElementById("cfg").classList.add("hidden");
-  cargarListas();
-}
-
-function jsonp(url,cb){
-  var n="cb_"+Math.random().toString(36).slice(2);
-  window[n]=function(d){delete window[n];document.head.removeChild(s);cb(null,d);};
-  var s=document.createElement("script");
-  s.onerror=function(){delete window[n];document.head.removeChild(s);cb(new Error("err"));};
-  s.src=url+(url.indexOf("?")>=0?"&":"?")+"callback="+n;
+function jsonp(url, cb) {
+  var n = "cb_" + Math.random().toString(36).slice(2);
+  window[n] = function(d) { delete window[n]; document.head.removeChild(s); cb(null, d); };
+  var s = document.createElement("script");
+  s.onerror = function() { delete window[n]; document.head.removeChild(s); cb(new Error("err")); };
+  s.src = url + (url.indexOf("?") >= 0 ? "&" : "?") + "callback=" + n;
   document.head.appendChild(s);
 }
 
-function cargarListas(){
-  if(!URL_)return;
-  jsonp(URL_+"?action=getListas",function(err,d){
-    if(err||!d||!d.ok){toast("No se pudo cargar las listas","err");return;}
-    fill("ue",d.equipos); fill("uo",d.operarios); fill("uw",d.obras);
-    fill("ge",d.equipos); fill("go",d.operarios); fill("gw",d.obras);
+function cargarListas() {
+  jsonp(URL_ + "?action=getListas", function(err, d) {
+    if (err || !d || !d.ok) { 
+      toast("Error de conexión: No se pudo cargar las listas", "err"); 
+      return; 
+    }
+    fill("ue", d.equipos); fill("uo", d.operarios); fill("uw", d.obras);
+    fill("ge", d.equipos); fill("go", d.operarios); fill("gw", d.obras);
   });
 }
 
-function fill(id,list){
-  var s=document.getElementById(id);
-  s.innerHTML="<option value=''>— Seleccionar —</option>"+
-    list.map(function(v){return"<option value='"+v+"'>"+v+"</option>";}).join("");
+function fill(id, list) {
+  var s = document.getElementById(id);
+  if (!list || !list.length) {
+    s.innerHTML = "<option value=''>— Sin datos —</option>";
+    return;
+  }
+  s.innerHTML = "<option value=''>— Seleccionar —</option>" +
+    list.map(function(v) { return "<option value='" + v + "'>" + v + "</option>"; }).join("");
 }
 
-function g(id){return document.getElementById(id).value.trim();}
+function g(id) { return document.getElementById(id).value.trim(); }
 
-function marcarError(id){
-  var el=document.getElementById(id);
+function marcarError(id) {
+  var el = document.getElementById(id);
   el.classList.add("error");
-  el.addEventListener("change",function(){el.classList.remove("error");},{once:true});
-  el.addEventListener("input",function(){el.classList.remove("error");},{once:true});
+  el.addEventListener("change", function() { el.classList.remove("error"); }, {once: true});
+  el.addEventListener("input", function() { el.classList.remove("error"); }, {once: true});
 }
 
-function envUso(){
-  var ok=true;
-  if(!g("ue")){marcarError("ue");ok=false;}
-  if(!g("uo")){marcarError("uo");ok=false;}
-  if(!g("uhk")){marcarError("uhk");ok=false;}
-  if(!ok){toast("Completá los campos obligatorios (*)","err");return;}
+function envUso() {
+  var ok = true;
+  if (!g("ue")) { marcarError("ue"); ok = false; }
+  if (!g("uo")) { marcarError("uo"); ok = false; }
+  if (!g("uhk")) { marcarError("uhk"); ok = false; }
+  if (!ok) { toast("Completá los campos obligatorios (*)", "err"); return; }
 
-  var b=document.getElementById("buso");
-  b.disabled=true;b.innerHTML='<span class="spin"></span>Guardando...';
-  var p={action:"registrarUso",equipo:g("ue"),operario:g("uo"),obra:g("uw"),
-    horasKm:g("uhk"),trabajo:g("ut"),arreglos:g("ua"),observaciones:g("uob")};
-  call(p,"uso",b,"Guardar registro");
+  var b = document.getElementById("buso");
+  b.disabled = true; b.innerHTML = '<span class="spin"></span>Guardando...';
+  var p = {
+    action: "registrarUso", equipo: g("ue"), operario: g("uo"), obra: g("uw"),
+    horasKm: g("uhk"), trabajo: g("ut"), arreglos: g("ua"), observaciones: g("uob")
+  };
+  call(p, "uso", b, "Guardar registro");
 }
 
-function envGas(){
-  var ok=true;
-  if(!g("ge")){marcarError("ge");ok=false;}
-  if(!g("go")){marcarError("go");ok=false;}
-  if(!g("gl")){marcarError("gl");ok=false;}
-  if(!g("ghk")){marcarError("ghk");ok=false;}
-  if(!ok){toast("Completá los campos obligatorios (*)","err");return;}
+function envGas() {
+  var ok = true;
+  if (!g("ge")) { marcarError("ge"); ok = false; }
+  if (!g("go")) { marcarError("go"); ok = false; }
+  if (!g("gl")) { marcarError("gl"); ok = false; }
+  if (!g("ghk")) { marcarError("ghk"); ok = false; }
+  if (!ok) { toast("Completá los campos obligatorios (*)", "err"); return; }
 
-  var b=document.getElementById("bgas");
-  b.disabled=true;b.innerHTML='<span class="spin"></span>Guardando...';
-  var p={action:"registrarGasoil",equipo:g("ge"),operario:g("go"),obra:g("gw"),
-    litros:g("gl"),horasKm:g("ghk"),observaciones:g("gob")};
-  call(p,"gasoil",b,"Guardar carga");
+  var b = document.getElementById("bgas");
+  b.disabled = true; b.innerHTML = '<span class="spin"></span>Guardando...';
+  var p = {
+    action: "registrarGasoil", equipo: g("ge"), operario: g("go"), obra: g("gw"),
+    litros: g("gl"), horasKm: g("ghk"), observaciones: g("gob")
+  };
+  call(p, "gasoil", b, "Guardar carga");
 }
 
-function call(p,tipo,btn,label){
-  if(!URL_){toast("Configurá la URL primero","err");btn.disabled=false;btn.textContent=label;return;}
-  var qs=Object.keys(p).map(function(k){return encodeURIComponent(k)+"="+encodeURIComponent(p[k]);}).join("&");
-  jsonp(URL_+"?"+qs,function(err,d){
-    btn.disabled=false;btn.textContent=label;
-    if(err||!d){toast("Sin conexión. Reintentá.","err");return;}
-    if(d.ok){
-      HIST.unshift(Object.assign({},p,{tipo:tipo,ts:new Date().toISOString()}));
-      if(HIST.length>50)HIST=HIST.slice(0,50);
-      localStorage.setItem("pam_hist",JSON.stringify(HIST));
-      limpiar(tipo);toast("✓ Guardado en el Sheet","ok");
-    }else{toast("Error: "+(d.mensaje||"?"),"err");}
+function call(p, tipo, btn, label) {
+  var qs = Object.keys(p).map(function(k) { return encodeURIComponent(k) + "=" + encodeURIComponent(p[k]); }).join("&");
+  jsonp(URL_ + "?" + qs, function(err, d) {
+    btn.disabled = false; btn.textContent = label;
+    if (err || !d) { toast("Sin conexión. Reintentá.", "err"); return; }
+    if (d.ok) {
+      HIST.unshift(Object.assign({}, p, {tipo: tipo, ts: new Date().toISOString()}));
+      if (HIST.length > 50) HIST = HIST.slice(0, 50);
+      localStorage.setItem("pam_hist", JSON.stringify(HIST));
+      limpiar(tipo); toast("✓ Guardado en el Sheet", "ok");
+    } else { 
+      toast("Error: " + (d.mensaje || "?"), "err"); 
+    }
   });
 }
 
-function limpiar(t){
-  if(t==="uso"){
-    ["ue","uo","uw","ut"].forEach(function(i){document.getElementById(i).value="";});
-    ["uhk","ua","uob"].forEach(function(i){document.getElementById(i).value="";});
-  }else{
-    ["ge","go","gw"].forEach(function(i){document.getElementById(i).value="";});
-    ["gl","ghk","gob"].forEach(function(i){document.getElementById(i).value="";});
+function limpiar(t) {
+  if (t === "uso") {
+    ["ue", "uo", "uw", "ut"].forEach(function(i) { document.getElementById(i).value = ""; });
+    ["uhk", "ua", "uob"].forEach(function(i) { document.getElementById(i).value = ""; });
+  } else {
+    ["ge", "go", "gw"].forEach(function(i) { document.getElementById(i).value = ""; });
+    ["gl", "ghk", "gob"].forEach(function(i) { document.getElementById(i).value = ""; });
   }
 }
 
-function tab(n,el){
-  document.querySelectorAll(".sec").forEach(function(s){s.classList.remove("active");});
-  document.querySelectorAll(".nb").forEach(function(b){b.classList.remove("active");});
-  document.getElementById("tab-"+n).classList.add("active");
-  if(el)el.classList.add("active");
-  if(n==="historial")renderHist();
+function tab(n, el) {
+  document.querySelectorAll(".sec").forEach(function(s) { s.classList.remove("active"); });
+  document.querySelectorAll(".nb").forEach(function(b) { b.classList.remove("active"); });
+  document.getElementById("tab-" + n).classList.add("active");
+  if (el) el.classList.add("active");
+  if (n === "historial") renderHist();
 }
 
-function renderHist(){
-  var el=document.getElementById("hlist");
-  if(!HIST.length){el.innerHTML='<div class="empty">Sin registros en este dispositivo.</div>';return;}
-  el.innerHTML=HIST.map(function(h){
-    var f=new Date(h.ts).toLocaleString("es-AR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
-    var badge=h.tipo==="gasoil"?'<span class="badge bg">Gasoil</span>':'<span class="badge bu">Uso</span>';
-    var det=h.tipo==="gasoil"
-      ?h.operario+" · "+h.litros+"L · "+h.horasKm+" hs/km"
-      :h.operario+" · "+h.horasKm+" hs/km · "+(h.trabajo||"—");
-    return'<div class="hi"><div class="hi-top"><span class="hi-eq">'+h.equipo+badge+'</span><span class="hi-t">'+f+'</span></div><div class="hi-d">'+det+'</div></div>';
+function renderHist() {
+  var el = document.getElementById("hlist");
+  if (!HIST.length) { el.innerHTML = '<div class="empty">Sin registros en este dispositivo.</div>'; return; }
+  el.innerHTML = HIST.map(function(h) {
+    var f = new Date(h.ts).toLocaleString("es-AR", {day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"});
+    var badge = h.tipo === "gasoil" ? '<span class="badge bg">Gasoil</span>' : '<span class="badge bu">Uso</span>';
+    var det = h.tipo === "gasoil"
+      ? h.operario + " · " + h.litros + "L · " + h.horasKm + " hs/km"
+      : h.operario + " · " + h.horasKm + " hs/km · " + (h.trabajo || "—");
+    return '<div class="hi"><div class="hi-top"><span class="hi-eq">' + h.equipo + badge + '</span><span class="hi-t">' + f + '</span></div><div class="hi-d">' + det + '</div></div>';
   }).join("");
 }
 
-function toast(msg,type){
-  var t=document.getElementById("toast");
-  t.textContent=msg;t.className="toast "+type;
+function toast(msg, type) {
+  var t = document.getElementById("toast");
+  t.textContent = msg; t.className = "toast " + type;
   clearTimeout(window._tt);
-  window._tt=setTimeout(function(){t.className="toast hidden";},3500);
+  window._tt = setTimeout(function() { t.className = "toast hidden"; }, 3500);
 }
 </script>
 </body>

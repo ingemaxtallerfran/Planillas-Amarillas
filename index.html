@@ -3,162 +3,88 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
 <title>Planillas Amarillas</title>
 <style>
-  :root {
-    --amarillo: #F5C800;
-    --amarillo-dark: #d4ac00;
-    --bg: #f5f5f0;
-    --card: #ffffff;
-    --text: #1a1a1a;
-    --text2: #555;
-    --border: #e0e0d8;
-    --green: #1D9E75;
-    --green-bg: #E1F5EE;
-    --green-text: #085041;
-    --blue: #185FA5;
-    --blue-bg: #E6F1FB;
-    --blue-text: #0C447C;
-    --red: #A32D2D;
-    --red-bg: #FCEBEB;
-    --radius: 12px;
-    --radius-sm: 8px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-
-  /* Header */
-  .header { background: var(--amarillo); padding: 16px 20px 14px; display: flex; align-items: center; gap: 12px; }
-  .header-icon { width: 36px; height: 36px; background: rgba(0,0,0,0.12); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-  .header h1 { font-size: 18px; font-weight: 700; color: #1a1a1a; }
-  .header p { font-size: 12px; color: rgba(0,0,0,0.55); }
-
-  /* Config banner */
-  .config-banner { background: #fff3cd; border-bottom: 1px solid #ffe08a; padding: 10px 16px; font-size: 13px; color: #7a5a00; display: flex; align-items: flex-start; gap: 8px; }
-  .config-banner.hidden { display: none; }
-  .config-banner strong { display: block; margin-bottom: 2px; }
-  .config-banner input { width: 100%; margin-top: 6px; padding: 8px 10px; border: 1px solid #ffe08a; border-radius: 6px; font-size: 13px; background: #fffdf0; }
-  .config-banner button { margin-top: 8px; background: #F5C800; border: none; border-radius: 6px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; width: 100%; }
-
-  /* Nav tabs */
-  .nav { display: grid; grid-template-columns: 1fr 1fr 1fr; background: var(--card); border-bottom: 1px solid var(--border); }
-  .nav-btn { padding: 12px 8px; font-size: 13px; border: none; background: none; cursor: pointer; color: var(--text2); font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.15s; }
-  .nav-btn.active { color: #1a1a1a; border-bottom-color: var(--amarillo); font-weight: 700; }
-
-  /* Sections */
-  .section { display: none; padding: 16px; max-width: 480px; margin: 0 auto; }
-  .section.active { display: block; }
-
-  /* Cards */
-  .card { background: var(--card); border-radius: var(--radius); border: 0.5px solid var(--border); padding: 16px; margin-bottom: 12px; }
-  .card-title { font-size: 14px; font-weight: 600; margin-bottom: 14px; color: var(--text); display: flex; align-items: center; gap: 6px; }
-
-  /* Form fields */
-  .field { margin-bottom: 14px; }
-  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.04em; }
-  .field select, .field input, .field textarea {
-    width: 100%; padding: 11px 12px; border: 1px solid var(--border);
-    border-radius: var(--radius-sm); font-size: 16px; background: #fafaf8;
-    color: var(--text); appearance: none; -webkit-appearance: none;
-  }
-  .field select:focus, .field input:focus, .field textarea:focus {
-    outline: none; border-color: var(--amarillo); background: #fff;
-  }
-  .field textarea { resize: none; height: 72px; font-family: inherit; }
-  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-  /* Toggle tipo */
-  .tipo-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
-  .tipo-btn { padding: 10px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); font-size: 14px; font-weight: 500; cursor: pointer; text-align: center; transition: all 0.15s; }
-  .tipo-btn.active { background: var(--amarillo); border-color: var(--amarillo-dark); color: #1a1a1a; font-weight: 700; }
-
-  /* Submit btn */
-  .btn-submit { width: 100%; padding: 14px; background: var(--amarillo); border: none; border-radius: var(--radius-sm); font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 4px; transition: opacity 0.15s; }
-  .btn-submit:active { opacity: 0.8; }
-  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  /* Toast */
-  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); padding: 12px 20px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; z-index: 999; white-space: nowrap; transition: opacity 0.3s; pointer-events: none; max-width: 90vw; white-space: normal; text-align: center; }
-  .toast.ok { background: var(--green-bg); color: var(--green-text); border: 1px solid #5DCAA5; }
-  .toast.error { background: var(--red-bg); color: var(--red); border: 1px solid #F09595; }
-  .toast.hidden { opacity: 0; }
-
-  /* History list */
-  .history-item { background: var(--card); border-radius: var(--radius-sm); border: 0.5px solid var(--border); padding: 12px 14px; margin-bottom: 8px; }
-  .history-item .hi-top { display: flex; justify-content: space-between; align-items: baseline; }
-  .history-item .hi-equipo { font-weight: 600; font-size: 14px; }
-  .history-item .hi-time { font-size: 12px; color: var(--text2); }
-  .history-item .hi-detail { font-size: 13px; color: var(--text2); margin-top: 4px; }
-  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; margin-left: 6px; }
-  .badge-uso { background: var(--blue-bg); color: var(--blue-text); }
-  .badge-gas { background: var(--green-bg); color: var(--green-text); }
-  .empty-state { text-align: center; padding: 40px 20px; color: var(--text2); font-size: 14px; }
-
-  /* Spinner */
-  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(0,0,0,0.2); border-top-color: #1a1a1a; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+:root{--am:#F5C800;--bg:#f5f5f0;--card:#fff;--text:#1a1a1a;--text2:#555;--bor:#e0e0d8;--radius:12px;--rsm:8px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);}
+.header{background:var(--am);padding:16px 20px;display:flex;align-items:center;gap:12px;}
+.header h1{font-size:18px;font-weight:700;}
+.header p{font-size:12px;color:rgba(0,0,0,0.5);}
+.cfg{background:#fff3cd;border-bottom:1px solid #ffe08a;padding:12px 16px;font-size:14px;color:#7a5a00;}
+.cfg.hidden{display:none;}
+.cfg strong{display:block;margin-bottom:6px;}
+.cfg input{width:100%;margin-top:4px;padding:10px;border:1px solid #ffe08a;border-radius:6px;font-size:14px;background:#fffdf0;color:#1a1a1a;}
+.cfg button{margin-top:8px;background:var(--am);border:none;border-radius:6px;padding:10px;font-size:14px;font-weight:700;cursor:pointer;width:100%;}
+.nav{display:grid;grid-template-columns:1fr 1fr 1fr;background:#fff;border-bottom:1px solid var(--bor);}
+.nb{padding:12px 4px;font-size:13px;border:none;background:none;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;}
+.nb.active{color:#1a1a1a;border-bottom-color:var(--am);font-weight:700;}
+.sec{display:none;padding:16px;max-width:480px;margin:0 auto;}
+.sec.active{display:block;}
+.card{background:#fff;border-radius:var(--radius);border:0.5px solid var(--bor);padding:16px;margin-bottom:12px;}
+.ct{font-size:15px;font-weight:600;margin-bottom:14px;}
+.f{margin-bottom:13px;}
+.f label{display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+.f select,.f input,.f textarea{width:100%;padding:11px 12px;border:1px solid var(--bor);border-radius:var(--rsm);font-size:16px;background:#fafaf8;color:var(--text);-webkit-appearance:none;appearance:none;}
+.f textarea{resize:none;height:70px;font-family:inherit;}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.tt{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.tb{padding:10px;border:1.5px solid var(--bor);border-radius:var(--rsm);background:var(--bg);font-size:14px;font-weight:500;cursor:pointer;text-align:center;}
+.tb.active{background:var(--am);border-color:#d4ac00;font-weight:700;}
+.btn{width:100%;padding:14px;background:var(--am);border:none;border-radius:var(--rsm);font-size:16px;font-weight:700;cursor:pointer;margin-top:4px;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:var(--rsm);font-size:14px;font-weight:500;z-index:999;max-width:90vw;text-align:center;pointer-events:none;}
+.toast.ok{background:#E1F5EE;color:#085041;border:1px solid #5DCAA5;}
+.toast.err{background:#FCEBEB;color:#A32D2D;border:1px solid #F09595;}
+.toast.hidden{display:none;}
+.hi{background:#fff;border-radius:var(--rsm);border:.5px solid var(--bor);padding:12px 14px;margin-bottom:8px;}
+.hi-top{display:flex;justify-content:space-between;align-items:baseline;}
+.hi-eq{font-weight:600;font-size:14px;}
+.hi-t{font-size:12px;color:var(--text2);}
+.hi-d{font-size:13px;color:var(--text2);margin-top:4px;}
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-left:6px;}
+.bu{background:#E6F1FB;color:#0C447C;}
+.bg{background:#E1F5EE;color:#085041;}
+.empty{text-align:center;padding:40px 20px;color:var(--text2);font-size:14px;}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,.2);border-top-color:#1a1a1a;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:6px;}
+@keyframes sp{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div class="header-icon">🚜</div>
   <div>
-    <h1>Planillas Amarillas</h1>
-    <p id="header-fecha"></p>
+    <h1>🚜 Planillas Amarillas</h1>
+    <p id="hfecha"></p>
   </div>
 </div>
 
-<!-- Banner configuración -->
-<div class="config-banner" id="config-banner">
-  <div style="flex:1">
-    <strong>⚙️ Configuración inicial</strong>
-    Pegá la URL de tu Apps Script para conectar con Google Sheets:
-    <input type="url" id="input-url" placeholder="https://script.google.com/macros/s/..." />
-    <button onclick="guardarUrl()">Guardar y conectar</button>
-  </div>
+<div class="cfg" id="cfg">
+  <strong>⚙️ Configuración — solo la primera vez</strong>
+  Pegá la URL de tu Apps Script:
+  <input type="url" id="iurl" placeholder="https://script.google.com/macros/s/.../exec">
+  <button onclick="guardarUrl()">Guardar y conectar</button>
 </div>
 
-<!-- Navegación -->
 <div class="nav">
-  <button class="nav-btn active" onclick="showTab('uso')">📋 Uso diario</button>
-  <button class="nav-btn" onclick="showTab('gasoil')">⛽ Gasoil</button>
-  <button class="nav-btn" onclick="showTab('historial')">🕐 Historial</button>
+  <button class="nb active" onclick="tab('uso',this)">📋 Uso diario</button>
+  <button class="nb" onclick="tab('gasoil',this)">⛽ Gasoil</button>
+  <button class="nb" onclick="tab('historial',this)">🕐 Historial</button>
 </div>
 
-<!-- ===== TAB: USO DIARIO ===== -->
-<div class="section active" id="tab-uso">
+<div class="sec active" id="tab-uso">
   <div class="card">
-    <div class="card-title">🔧 Registro de uso</div>
-
-    <div class="field">
-      <label>Equipo</label>
-      <select id="uso-equipo"><option value="">Cargando...</option></select>
+    <div class="ct">🔧 Registro de uso</div>
+    <div class="f"><label>Equipo</label><select id="ue"><option value="">— Equipo —</option></select></div>
+    <div class="f"><label>Operario</label><select id="uo"><option value="">— Operario —</option></select></div>
+    <div class="f"><label>Obra / Lugar</label><select id="uw"><option value="">— Obra —</option></select></div>
+    <div class="tt">
+      <button class="tb active" id="bh" onclick="tipo('horas')">⏱ Horas</button>
+      <button class="tb" id="bk" onclick="tipo('km')">🛣 Km</button>
     </div>
-    <div class="field">
-      <label>Operario</label>
-      <select id="uso-operario"><option value="">Cargando...</option></select>
-    </div>
-    <div class="field">
-      <label>Obra / Lugar</label>
-      <select id="uso-obra"><option value="">Cargando...</option></select>
-    </div>
-
-    <div class="tipo-toggle">
-      <button class="tipo-btn active" id="btn-horas" onclick="setTipo('horas')">⏱ Horas</button>
-      <button class="tipo-btn" id="btn-km" onclick="setTipo('km')">🛣 Km</button>
-    </div>
-
-    <div class="field">
-      <label id="lbl-horasKm">Horas actuales del equipo</label>
-      <input type="number" id="uso-horasKm" placeholder="Ej: 2540" inputmode="numeric">
-    </div>
-
-    <div class="field">
-      <label>Tipo de trabajo</label>
-      <select id="uso-trabajo">
+    <div class="f"><label id="lhk">Horas actuales del equipo</label><input type="number" id="uhk" placeholder="Ej: 2540" inputmode="numeric"></div>
+    <div class="f"><label>Tipo de trabajo</label>
+      <select id="ut">
         <option value="">— Seleccionar —</option>
         <option>Nivelación</option>
         <option>Logística y Traslado de Personal</option>
@@ -168,262 +94,148 @@
         <option>Otro</option>
       </select>
     </div>
-
-    <div class="field">
-      <label>Arreglos / Fallas</label>
-      <input type="text" id="uso-arreglos" placeholder="Opcional">
-    </div>
-
-    <div class="field">
-      <label>Observaciones</label>
-      <textarea id="uso-obs" placeholder="Opcional"></textarea>
-    </div>
-
-    <button class="btn-submit" id="btn-uso" onclick="enviarUso()">Guardar registro</button>
+    <div class="f"><label>Arreglos / Fallas</label><input type="text" id="ua" placeholder="Opcional"></div>
+    <div class="f"><label>Observaciones</label><textarea id="uob" placeholder="Opcional"></textarea></div>
+    <button class="btn" id="buso" onclick="envUso()">Guardar registro</button>
   </div>
 </div>
 
-<!-- ===== TAB: GASOIL ===== -->
-<div class="section" id="tab-gasoil">
+<div class="sec" id="tab-gasoil">
   <div class="card">
-    <div class="card-title">⛽ Carga de gasoil / nafta</div>
-
-    <div class="field">
-      <label>Equipo</label>
-      <select id="gas-equipo"><option value="">Cargando...</option></select>
+    <div class="ct">⛽ Carga de gasoil / nafta</div>
+    <div class="f"><label>Equipo</label><select id="ge"><option value="">— Equipo —</option></select></div>
+    <div class="f"><label>Operario</label><select id="go"><option value="">— Operario —</option></select></div>
+    <div class="f"><label>Obra / Lugar</label><select id="gw"><option value="">— Obra —</option></select></div>
+    <div class="fr">
+      <div class="f"><label>Litros</label><input type="number" id="gl" placeholder="Ej: 120" inputmode="decimal"></div>
+      <div class="f"><label>Horas / Km</label><input type="number" id="ghk" placeholder="Ej: 2540" inputmode="numeric"></div>
     </div>
-    <div class="field">
-      <label>Operario</label>
-      <select id="gas-operario"><option value="">Cargando...</option></select>
-    </div>
-    <div class="field">
-      <label>Obra / Lugar</label>
-      <select id="gas-obra"><option value="">Cargando...</option></select>
-    </div>
-
-    <div class="field-row">
-      <div class="field">
-        <label>Litros cargados</label>
-        <input type="number" id="gas-litros" placeholder="Ej: 120" inputmode="decimal">
-      </div>
-      <div class="field">
-        <label>Horas / Km actuales</label>
-        <input type="number" id="gas-horasKm" placeholder="Ej: 2540" inputmode="numeric">
-      </div>
-    </div>
-
-    <div class="field">
-      <label>Observaciones</label>
-      <textarea id="gas-obs" placeholder="Opcional"></textarea>
-    </div>
-
-    <button class="btn-submit" id="btn-gas" onclick="enviarGasoil()">Guardar carga</button>
+    <div class="f"><label>Observaciones</label><textarea id="gob" placeholder="Opcional"></textarea></div>
+    <button class="btn" id="bgas" onclick="envGas()">Guardar carga</button>
   </div>
 </div>
 
-<!-- ===== TAB: HISTORIAL ===== -->
-<div class="section" id="tab-historial">
-  <div id="historial-list"></div>
+<div class="sec" id="tab-historial">
+  <div id="hlist"></div>
 </div>
 
-<!-- Toast -->
 <div class="toast hidden" id="toast"></div>
 
 <script>
-const STORAGE_URL_KEY = "planillas_api_url";
-const STORAGE_HIST_KEY = "planillas_historial";
-let API_URL = localStorage.getItem(STORAGE_URL_KEY) || "";
-let tipoActual = "horas";
-let historial = JSON.parse(localStorage.getItem(STORAGE_HIST_KEY) || "[]");
+var URL_ = localStorage.getItem("pam_url")||"";
+var TM = "horas";
+var HIST = JSON.parse(localStorage.getItem("pam_hist")||"[]");
 
-// Fecha en header
-document.getElementById("header-fecha").textContent =
-  new Date().toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" });
+document.getElementById("hfecha").textContent =
+  new Date().toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"long"});
 
-// Mostrar config si no hay URL
-if (!API_URL) {
-  document.getElementById("config-banner").classList.remove("hidden");
-} else {
+if(URL_){ document.getElementById("cfg").classList.add("hidden"); cargarListas(); }
+
+function guardarUrl(){
+  var v=document.getElementById("iurl").value.trim();
+  if(!v||v.indexOf("script.google.com")===-1){toast("URL inválida","err");return;}
+  URL_=v; localStorage.setItem("pam_url",URL_);
+  document.getElementById("cfg").classList.add("hidden");
   cargarListas();
 }
 
-function guardarUrl() {
-  const val = document.getElementById("input-url").value.trim();
-  if (!val.startsWith("https://")) { showToast("URL inválida", "error"); return; }
-  API_URL = val;
-  localStorage.setItem(STORAGE_URL_KEY, API_URL);
-  document.getElementById("config-banner").classList.add("hidden");
-  cargarListas();
-  showToast("Conectado correctamente", "ok");
+function jsonp(url,cb){
+  var n="cb_"+Math.random().toString(36).slice(2);
+  window[n]=function(d){delete window[n];document.head.removeChild(s);cb(null,d);};
+  var s=document.createElement("script");
+  s.onerror=function(){delete window[n];document.head.removeChild(s);cb(new Error("err"));};
+  s.src=url+(url.indexOf("?")>=0?"&":"?")+"callback="+n;
+  document.head.appendChild(s);
 }
 
-// -------- Listas --------
-async function cargarListas() {
-  if (!API_URL) return;
-  try {
-    const r = await fetch(API_URL + "?action=getListas");
-    const d = await r.json();
-    if (!d.ok) return;
-    llenarSelect("uso-equipo", d.equipos, "— Equipo —");
-    llenarSelect("uso-operario", d.operarios, "— Operario —");
-    llenarSelect("uso-obra", d.obras, "— Obra —");
-    llenarSelect("gas-equipo", d.equipos, "— Equipo —");
-    llenarSelect("gas-operario", d.operarios, "— Operario —");
-    llenarSelect("gas-obra", d.obras, "— Obra —");
-  } catch(e) {
-    showToast("No se pudo conectar con el Sheet", "error");
-  }
+function cargarListas(){
+  if(!URL_)return;
+  jsonp(URL_+"?action=getListas",function(err,d){
+    if(err||!d||!d.ok){toast("No se pudo cargar listas","err");return;}
+    fill("ue",d.equipos,"— Equipo —"); fill("uo",d.operarios,"— Operario —"); fill("uw",d.obras,"— Obra —");
+    fill("ge",d.equipos,"— Equipo —"); fill("go",d.operarios,"— Operario —"); fill("gw",d.obras,"— Obra —");
+  });
 }
 
-function llenarSelect(id, lista, placeholder) {
-  const sel = document.getElementById(id);
-  sel.innerHTML = `<option value="">${placeholder}</option>` +
-    lista.map(v => `<option value="${v}">${v}</option>`).join("");
+function fill(id,list,ph){
+  var s=document.getElementById(id);
+  s.innerHTML="<option value=''>"+ph+"</option>"+list.map(function(v){return"<option>"+v+"</option>";}).join("");
 }
 
-// -------- Tipo horas/km --------
-function setTipo(t) {
-  tipoActual = t;
-  document.getElementById("btn-horas").classList.toggle("active", t === "horas");
-  document.getElementById("btn-km").classList.toggle("active", t === "km");
-  document.getElementById("lbl-horasKm").textContent =
-    t === "horas" ? "Horas actuales del equipo" : "Kilómetros actuales";
-  document.getElementById("uso-horasKm").placeholder = t === "horas" ? "Ej: 2540" : "Ej: 45820";
+function tipo(t){
+  TM=t;
+  document.getElementById("bh").classList.toggle("active",t==="horas");
+  document.getElementById("bk").classList.toggle("active",t==="km");
+  document.getElementById("lhk").textContent=t==="horas"?"Horas actuales del equipo":"Kilómetros actuales";
 }
 
-// -------- Enviar uso --------
-async function enviarUso() {
-  const equipo   = document.getElementById("uso-equipo").value;
-  const operario = document.getElementById("uso-operario").value;
-  const obra     = document.getElementById("uso-obra").value;
-  const horasKm  = document.getElementById("uso-horasKm").value;
+function g(id){return document.getElementById(id).value;}
 
-  if (!equipo || !operario || !obra || !horasKm) {
-    showToast("Completá equipo, operario, obra y horas/km", "error"); return;
-  }
-
-  const btn = document.getElementById("btn-uso");
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>Guardando...';
-
-  const payload = {
-    action: "registrarUso", equipo, operario, obra,
-    horasKm: Number(horasKm),
-    trabajo:       document.getElementById("uso-trabajo").value,
-    arreglos:      document.getElementById("uso-arreglos").value,
-    observaciones: document.getElementById("uso-obs").value,
-    tipoMedicion:  tipoActual
-  };
-
-  await enviar(payload, "uso", btn, "Guardar registro");
+function envUso(){
+  if(!g("ue")||!g("uo")||!g("uw")||!g("uhk")){toast("Completá equipo, operario, obra y horas/km","err");return;}
+  var b=document.getElementById("buso");
+  b.disabled=true; b.innerHTML='<span class="spin"></span>Guardando...';
+  var p={action:"registrarUso",equipo:g("ue"),operario:g("uo"),obra:g("uw"),
+    horasKm:g("uhk"),tipoMedicion:TM,trabajo:g("ut"),arreglos:g("ua"),observaciones:g("uob")};
+  call(p,"uso",b,"Guardar registro");
 }
 
-// -------- Enviar gasoil --------
-async function enviarGasoil() {
-  const equipo   = document.getElementById("gas-equipo").value;
-  const operario = document.getElementById("gas-operario").value;
-  const obra     = document.getElementById("gas-obra").value;
-  const litros   = document.getElementById("gas-litros").value;
-  const horasKm  = document.getElementById("gas-horasKm").value;
-
-  if (!equipo || !operario || !litros || !horasKm) {
-    showToast("Completá equipo, operario, litros y horas/km", "error"); return;
-  }
-
-  const btn = document.getElementById("btn-gas");
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>Guardando...';
-
-  const payload = {
-    action: "registrarGasoil", equipo, operario, obra,
-    litros: Number(litros), horasKm: Number(horasKm),
-    observaciones: document.getElementById("gas-obs").value
-  };
-
-  await enviar(payload, "gasoil", btn, "Guardar carga");
+function envGas(){
+  if(!g("ge")||!g("go")||!g("gl")||!g("ghk")){toast("Completá equipo, operario, litros y horas/km","err");return;}
+  var b=document.getElementById("bgas");
+  b.disabled=true; b.innerHTML='<span class="spin"></span>Guardando...';
+  var p={action:"registrarGasoil",equipo:g("ge"),operario:g("go"),obra:g("gw"),
+    litros:g("gl"),horasKm:g("ghk"),observaciones:g("gob")};
+  call(p,"gasoil",b,"Guardar carga");
 }
 
-// -------- Envío genérico --------
-async function enviar(payload, tipo, btn, label) {
-  if (!API_URL) { showToast("Configurá la URL del Script primero", "error"); btn.disabled=false; btn.textContent=label; return; }
-  try {
-    const r = await fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify(payload)
-    });
-    const d = await r.json();
-    if (d.ok) {
-      agregarHistorial(payload, tipo);
-      limpiarForm(tipo);
-      showToast("✓ Guardado en el Sheet", "ok");
-    } else {
-      showToast("Error: " + d.mensaje, "error");
-    }
-  } catch(e) {
-    showToast("Sin conexión. Reintentá.", "error");
-  }
-  btn.disabled = false;
-  btn.textContent = label;
+function call(p,tipo,btn,label){
+  if(!URL_){toast("Configurá la URL primero","err");btn.disabled=false;btn.textContent=label;return;}
+  var qs=Object.keys(p).map(function(k){return encodeURIComponent(k)+"="+encodeURIComponent(p[k]);}).join("&");
+  jsonp(URL_+"?"+qs,function(err,d){
+    btn.disabled=false; btn.textContent=label;
+    if(err||!d){toast("Sin conexión. Reintentá.","err");return;}
+    if(d.ok){
+      HIST.unshift(Object.assign({},p,{tipo:tipo,ts:new Date().toISOString()}));
+      if(HIST.length>50)HIST=HIST.slice(0,50);
+      localStorage.setItem("pam_hist",JSON.stringify(HIST));
+      limpiar(tipo); toast("✓ Guardado en el Sheet","ok");
+    } else { toast("Error: "+(d.mensaje||"?"),"err"); }
+  });
 }
 
-// -------- Historial local --------
-function agregarHistorial(d, tipo) {
-  historial.unshift({ ...d, tipo, ts: new Date().toISOString() });
-  if (historial.length > 50) historial = historial.slice(0, 50);
-  localStorage.setItem(STORAGE_HIST_KEY, JSON.stringify(historial));
+function limpiar(t){
+  if(t==="uso"){["ue","uo","uw","ut"].forEach(function(i){document.getElementById(i).value="";});
+    ["uhk","ua","uob"].forEach(function(i){document.getElementById(i).value="";});}
+  else{["ge","go","gw"].forEach(function(i){document.getElementById(i).value="";});
+    ["gl","ghk","gob"].forEach(function(i){document.getElementById(i).value="";});}
 }
 
-function renderHistorial() {
-  const el = document.getElementById("historial-list");
-  if (!historial.length) {
-    el.innerHTML = '<div class="empty-state">Todavía no hay registros en este dispositivo.</div>';
-    return;
-  }
-  el.innerHTML = historial.map(h => {
-    const fecha = new Date(h.ts).toLocaleString("es-AR", { day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit" });
-    const badge = h.tipo === "gasoil"
-      ? `<span class="badge badge-gas">Gasoil</span>`
-      : `<span class="badge badge-uso">Uso</span>`;
-    const detalle = h.tipo === "gasoil"
-      ? `${h.operario} · ${h.litros}L · ${h.horasKm} hs/km`
-      : `${h.operario} · ${h.horasKm} ${h.tipoMedicion === 'km' ? 'km' : 'hs'} · ${h.trabajo || '—'}`;
-    return `
-      <div class="history-item">
-        <div class="hi-top">
-          <span class="hi-equipo">${h.equipo}${badge}</span>
-          <span class="hi-time">${fecha}</span>
-        </div>
-        <div class="hi-detail">${detalle}</div>
-      </div>`;
+function tab(n,el){
+  document.querySelectorAll(".sec").forEach(function(s){s.classList.remove("active");});
+  document.querySelectorAll(".nb").forEach(function(b){b.classList.remove("active");});
+  document.getElementById("tab-"+n).classList.add("active");
+  if(el)el.classList.add("active");
+  if(n==="historial")renderHist();
+}
+
+function renderHist(){
+  var el=document.getElementById("hlist");
+  if(!HIST.length){el.innerHTML='<div class="empty">Sin registros en este dispositivo.</div>';return;}
+  el.innerHTML=HIST.map(function(h){
+    var f=new Date(h.ts).toLocaleString("es-AR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+    var badge=h.tipo==="gasoil"?'<span class="badge bg">Gasoil</span>':'<span class="badge bu">Uso</span>';
+    var det=h.tipo==="gasoil"?h.operario+" · "+h.litros+"L · "+h.horasKm+" hs/km"
+      :h.operario+" · "+h.horasKm+" "+(h.tipoMedicion==="km"?"km":"hs")+" · "+(h.trabajo||"—");
+    return'<div class="hi"><div class="hi-top"><span class="hi-eq">'+h.equipo+badge+'</span><span class="hi-t">'+f+'</span></div><div class="hi-d">'+det+'</div></div>';
   }).join("");
 }
 
-// -------- Limpiar formularios --------
-function limpiarForm(tipo) {
-  if (tipo === "uso") {
-    ["uso-equipo","uso-operario","uso-obra","uso-trabajo"].forEach(id => document.getElementById(id).value = "");
-    ["uso-horasKm","uso-arreglos","uso-obs"].forEach(id => document.getElementById(id).value = "");
-  } else {
-    ["gas-equipo","gas-operario","gas-obra"].forEach(id => document.getElementById(id).value = "");
-    ["gas-litros","gas-horasKm","gas-obs"].forEach(id => document.getElementById(id).value = "");
-  }
-}
-
-// -------- Tabs --------
-function showTab(name) {
-  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
-  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
-  document.getElementById("tab-" + name).classList.add("active");
-  event.target.classList.add("active");
-  if (name === "historial") renderHistorial();
-}
-
-// -------- Toast --------
-function showToast(msg, type) {
-  const t = document.getElementById("toast");
-  t.textContent = msg;
-  t.className = "toast " + type;
-  setTimeout(() => t.classList.add("hidden"), 3000);
+function toast(msg,type){
+  var t=document.getElementById("toast");
+  t.textContent=msg; t.className="toast "+type;
+  clearTimeout(window._tt);
+  window._tt=setTimeout(function(){t.className="toast hidden";},3500);
 }
 </script>
 </body>

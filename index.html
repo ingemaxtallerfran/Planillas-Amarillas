@@ -65,7 +65,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .hi-d{font-size:13px;color:var(--gris2);margin-top:4px;}
 .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-left:6px;}
 .bu{background:#FEF0E7;color:#c45212;}
-.bg Slide{background:#E1F5EE;color:#085041;}
+.bg{background:#E1F5EE;color:#085041;}
 .empty{text-align:center;padding:40px 20px;color:var(--gris2);font-size:14px;}
 
 .spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:6px;}
@@ -176,13 +176,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 <div class="toast hidden" id="toast"></div>
 
 <script>
-// URL NUEVA DE TU IMPLEMENTACIÓN CORREGIDA
-var URL_ = "https://script.google.com/macros/s/AKfycbzo1N5ehl-zl_Ka-mOU9bUQNX8l-1l2YKmDoa4AMkyu9rhVdVi4VgZfKjyA1aFA2g6V5w/exec";
+// URL NUEVA DE TU IMPLEMENTACIÓN FIJA
+var URL_ = "https://script.google.com/macros/s/AKfycbzp1N5ehl-zl_Ka-mOU9bUQNX8l-1l2YKmDoa4AMkyu9rhVdVi4VgZfKjyA1aFA2g6V5w/exec";
 var HIST = JSON.parse(localStorage.getItem("pam_hist") || "[]");
 
 document.getElementById("hfecha").textContent =
   new Date().toLocaleDateString("es-AR", {weekday: "long", day: "numeric", month: "long"});
 
+// Ejecuta la carga de datos apenas abre la app
 cargarListas();
 
 function jsonp(url, cb) {
@@ -190,6 +191,7 @@ function jsonp(url, cb) {
   window[n] = function(d) { delete window[n]; document.head.removeChild(s); cb(null, d); };
   var s = document.createElement("script");
   s.onerror = function() { delete window[n]; document.head.removeChild(s); cb(new Error("err")); };
+  // Corregido: Maneja correctamente si la URL ya viene con un "?" o no
   s.src = url + (url.indexOf("?") >= 0 ? "&" : "?") + "callback=" + n;
   document.head.appendChild(s);
 }
@@ -242,74 +244,4 @@ function envUso() {
 
 function envGas() {
   var ok = true;
-  if (!g("ge")) { marcarError("ge"); ok = false; }
-  if (!g("go")) { marcarError("go"); ok = false; }
-  if (!g("gl")) { marcarError("gl"); ok = false; }
-  if (!g("ghk")) { marcarError("ghk"); ok = false; }
-  if (!ok) { toast("Completá los campos obligatorios (*)", "err"); return; }
-
-  var b = document.getElementById("bgas");
-  b.disabled = true; b.innerHTML = '<span class="spin"></span>Guardando...';
-  var p = {
-    action: "registrarGasoil", equipo: g("ge"), operario: g("go"), obra: g("gw"),
-    litros: g("gl"), horasKm: g("ghk"), observaciones: g("gob")
-  };
-  call(p, "gasoil", b, "Guardar carga");
-}
-
-function call(p, tipo, btn, label) {
-  var qs = Object.keys(p).map(function(k) { return encodeURIComponent(k) + "=" + encodeURIComponent(p[k]); }).join("&");
-  jsonp(URL_ + "?" + qs, function(err, d) {
-    btn.disabled = false; btn.textContent = label;
-    if (err || !d) { toast("Sin conexión. Reintentá.", "err"); return; }
-    if (d.ok) {
-      HIST.unshift(Object.assign({}, p, {tipo: tipo, ts: new Date().toISOString()}));
-      if (HIST.length > 50) HIST = HIST.slice(0, 50);
-      localStorage.setItem("pam_hist", JSON.stringify(HIST));
-      limpiar(tipo); toast("✓ Guardado en el Sheet", "ok");
-    } else { 
-      toast("Error: " + (d.mensaje || "?"), "err"); 
-    }
-  });
-}
-
-function limpiar(t) {
-  if (t === "uso") {
-    ["ue", "uo", "uw", "ut"].forEach(function(i) { document.getElementById(i).value = ""; });
-    ["uhk", "ua", "uob"].forEach(function(i) { document.getElementById(i).value = ""; });
-  } else {
-    ["ge", "go", "gw"].forEach(function(i) { document.getElementById(i).value = ""; });
-    ["gl", "ghk", "gob"].forEach(function(i) { document.getElementById(i).value = ""; });
-  }
-}
-
-function tab(n, el) {
-  document.querySelectorAll(".sec").forEach(function(s) { s.classList.remove("active"); });
-  document.querySelectorAll(".nb").forEach(function(b) { b.classList.remove("active"); });
-  document.getElementById("tab-" + n).classList.add("active");
-  if (el) el.classList.add("active");
-  if (n === "historial") renderHist();
-}
-
-function renderHist() {
-  var el = document.getElementById("hlist");
-  if (!HIST.length) { el.innerHTML = '<div class="empty">Sin registros en este dispositivo.</div>'; return; }
-  el.innerHTML = HIST.map(function(h) {
-    var f = new Date(h.ts).toLocaleString("es-AR", {day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"});
-    var badge = h.tipo === "gasoil" ? '<span class="badge bg">Gasoil</span>' : '<span class="badge bu">Uso</span>';
-    var det = h.tipo === "gasoil"
-      ? h.operario + " · " + h.litros + "L · " + h.horasKm + " hs/km"
-      : h.operario + " · " + h.horasKm + " hs/km · " + (h.trabajo || "—");
-    return '<div class="hi"><div class="hi-top"><span class="hi-eq">' + h.equipo + badge + '</span><span class="hi-t">' + f + '</span></div><div class="hi-d">' + det + '</div></div>';
-  }).join("");
-}
-
-function toast(msg, type) {
-  var t = document.getElementById("toast");
-  t.textContent = msg; t.className = "toast " + type;
-  clearTimeout(window._tt);
-  window._tt = setTimeout(function() { t.className = "toast hidden"; }, 3500);
-}
-</script>
-</body>
-</html>
+  if (!g("ge"))

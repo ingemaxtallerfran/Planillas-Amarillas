@@ -65,7 +65,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .hi-d{font-size:13px;color:var(--gris2);margin-top:4px;}
 .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-left:6px;}
 .bu{background:#FEF0E7;color:#c45212;}
-.bg{background:#E1F5EE;color:#085041;}
+.bg Slide{background:#E1F5EE;color:#085041;}
 .empty{text-align:center;padding:40px 20px;color:var(--gris2);font-size:14px;}
 
 .spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:6px;}
@@ -176,14 +176,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 <div class="toast hidden" id="toast"></div>
 
 <script>
-// URL fija y definitiva de tu Apps Script
-var URL_ = "https://script.google.com/macros/s/AKfycbzoEu3ix-IgVOREpqLJrjQn4nhgIxAjggk1XcmusVwj_C296PRtxzYU4bEzBuugM5qM5w/exec";
+// URL NUEVA DE TU IMPLEMENTACIÓN CORREGIDA
+var URL_ = "https://script.google.com/macros/s/AKfycbzo1N5ehl-zl_Ka-mOU9bUQNX8l-1l2YKmDoa4AMkyu9rhVdVi4VgZfKjyA1aFA2g6V5w/exec";
 var HIST = JSON.parse(localStorage.getItem("pam_hist") || "[]");
 
 document.getElementById("hfecha").textContent =
   new Date().toLocaleDateString("es-AR", {weekday: "long", day: "numeric", month: "long"});
 
-// Al cargar la página, busca directamente las listas en el servidor
 cargarListas();
 
 function jsonp(url, cb) {

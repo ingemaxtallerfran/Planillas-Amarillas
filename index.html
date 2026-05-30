@@ -5,37 +5,60 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <title>Ingemax — Planillas</title>
   <style>
-    :root{--naranja:#E8651A;--naranja-dark:#c4521200;--gris:#2C2C2C;--gris2:#555;--bg:#f4f4f2;--card:#fff;--bor:#e0e0d8;--radius:12px;--rsm:8px;}
+    :root{--naranja:#E8651A;--gris:#2C2C2C;--gris2:#555;--bg:#f4f4f2;--bor:#e0e0d8;--radius:12px;--rsm:8px;}
     *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
     body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--gris);}
+
     .header{background:var(--gris);padding:14px 20px;display:flex;align-items:center;gap:14px;}
-    .logo-box{display:flex;align-items:center;gap:0;}
+    .logo-box{display:flex;align-items:center;}
     .logo-ing{font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.5px;}
     .logo-max{font-size:22px;font-weight:900;color:var(--naranja);letter-spacing:-0.5px;}
     .logo-arrow{width:0;height:0;border-top:13px solid transparent;border-bottom:13px solid transparent;border-left:16px solid var(--naranja);margin-left:3px;}
     .header-sub{color:rgba(255,255,255,0.5);font-size:12px;margin-top:2px;}
-    .nav{display:grid;grid-template-columns:1fr 1fr 1fr;background:#fff;border-bottom:2px solid var(--bor);}
-    .nb{padding:12px 4px;font-size:13px;border:none;background:none;cursor:pointer;color:var(--gris2);border-bottom:3px solid transparent;margin-bottom:-2px;}
+
+    .nav{display:grid;grid-template-columns:1fr 1fr;background:#fff;border-bottom:2px solid var(--bor);}
+    .nb{padding:12px 4px;font-size:14px;border:none;background:none;cursor:pointer;color:var(--gris2);border-bottom:3px solid transparent;margin-bottom:-2px;font-weight:500;}
     .nb.active{color:var(--naranja);border-bottom-color:var(--naranja);font-weight:700;}
+
     .sec{display:none;padding:16px;max-width:480px;margin:0 auto;}
     .sec.active{display:block;}
+
     .card{background:#fff;border-radius:var(--radius);border:0.5px solid var(--bor);padding:16px;margin-bottom:12px;}
     .ct{font-size:15px;font-weight:700;margin-bottom:14px;color:var(--gris);display:flex;align-items:center;gap:8px;}
     .ct-bar{width:4px;height:18px;background:var(--naranja);border-radius:2px;display:inline-block;}
+
     .f{margin-bottom:13px;}
     .f label{display:block;font-size:11px;font-weight:700;color:var(--gris2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em;}
-    .f label .req{color:var(--naranja);}
-    .f select,.f input,.f textarea{width:100%;padding:11px 12px;border:1.5px solid var(--bor);border-radius:var(--rsm);font-size:16px;background:#fafaf8;color:var(--gris);-webkit-appearance:none;appearance:none;}
+    .req{color:var(--naranja);}
+    .f select,.f input,.f textarea{width:100%;padding:11px 12px;border:1.5px solid var(--bor);border-radius:var(--rsm);font-size:16px;background:#fafaf8;color:var(--gris);-webkit-appearance:none;appearance:none;font-family:inherit;}
     .f select:focus,.f input:focus,.f textarea:focus{outline:none;border-color:var(--naranja);background:#fff;}
     .f select.error,.f input.error{border-color:#E24B4A;background:#fff8f8;}
-    .f textarea{resize:none;height:70px;font-family:inherit;}
+    .f textarea{resize:none;height:70px;}
+
+    /* Toggle gasoil */
+    .gas-toggle{display:flex;align-items:center;gap:10px;padding:12px 0;cursor:pointer;user-select:none;}
+    .gas-toggle input[type=checkbox]{width:44px;height:26px;-webkit-appearance:none;appearance:none;background:#ccc;border-radius:13px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;}
+    .gas-toggle input[type=checkbox]:checked{background:var(--naranja);}
+    .gas-toggle input[type=checkbox]::after{content:'';position:absolute;width:22px;height:22px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+    .gas-toggle input[type=checkbox]:checked::after{left:20px;}
+    .gas-label{font-size:14px;font-weight:600;color:var(--gris);}
+
+    .gas-fields{display:none;border-top:1px solid var(--bor);margin-top:4px;padding-top:12px;}
+    .gas-fields.visible{display:block;}
+
+    .divider{height:1px;background:var(--bor);margin:12px 0;}
+
     .btn{width:100%;padding:14px;background:var(--naranja);border:none;border-radius:var(--rsm);font-size:16px;font-weight:700;cursor:pointer;margin-top:4px;color:#fff;letter-spacing:.02em;}
     .btn:disabled{opacity:.5;cursor:not-allowed;}
     .btn:active{opacity:.85;}
+
+    .hint{font-size:12px;color:var(--gris2);margin-top:-8px;margin-bottom:10px;}
+
     .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:var(--rsm);font-size:14px;font-weight:500;z-index:999;max-width:90vw;text-align:center;pointer-events:none;}
     .toast.ok{background:#E1F5EE;color:#085041;border:1px solid #5DCAA5;}
     .toast.err{background:#FCEBEB;color:#A32D2D;border:1px solid #F09595;}
     .toast.hidden{display:none;}
+
     .hi{background:#fff;border-radius:var(--rsm);border:.5px solid var(--bor);padding:12px 14px;margin-bottom:8px;}
     .hi-top{display:flex;justify-content:space-between;align-items:baseline;}
     .hi-eq{font-weight:700;font-size:14px;}
@@ -45,9 +68,9 @@
     .bu{background:#FEF0E7;color:#c45212;}
     .bg{background:#E1F5EE;color:#085041;}
     .empty{text-align:center;padding:40px 20px;color:var(--gris2);font-size:14px;}
+
     .spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:6px;}
     @keyframes sp{to{transform:rotate(360deg)}}
-    .hint{font-size:12px;color:var(--gris2);margin-top:-8px;margin-bottom:10px;}
   </style>
 </head>
 <body>
@@ -62,42 +85,34 @@
 </div>
 
 <div class="nav">
-  <button class="nb active" onclick="tab('uso',this)">📋 Uso diario</button>
-  <button class="nb"        onclick="tab('gasoil',this)">⛽ Gasoil</button>
+  <button class="nb active" onclick="tab('registro',this)">📋 Registro</button>
   <button class="nb"        onclick="tab('historial',this)">🕐 Historial</button>
 </div>
 
-<!-- ══ USO ══ -->
-<div class="sec active" id="tab-uso">
+<!-- ══ REGISTRO ══ -->
+<div class="sec active" id="tab-registro">
   <div class="card">
-    <div class="ct"><span class="ct-bar"></span>Registro de uso diario</div>
+    <div class="ct"><span class="ct-bar"></span>Registro diario</div>
+
     <div class="f">
       <label>Equipo <span class="req">*</span></label>
-      <select id="ue"><option value="">— Cargando equipos... —</option></select>
+      <select id="ue"><option value="">— Cargando... —</option></select>
     </div>
     <div class="f">
       <label>Operario <span class="req">*</span></label>
-      <select id="uo"><option value="">— Cargando operarios... —</option></select>
+      <select id="uo"><option value="">— Cargando... —</option></select>
     </div>
     <div class="f">
       <label>Obra / Lugar</label>
-      <select id="uw"><option value="">— Cargando obras... —</option></select>
+      <select id="uw"><option value="">— Cargando... —</option></select>
     </div>
     <div class="f">
-      <label>Horas o Km actuales <span class="req">*</span></label>
+      <label>Horas / Km actuales <span class="req">*</span></label>
       <input type="number" id="uhk" placeholder="Ej: 2540" inputmode="numeric">
     </div>
     <div class="f">
       <label>Tipo de trabajo</label>
-      <select id="ut">
-        <option value="">— Seleccionar —</option>
-        <option>Nivelación</option>
-        <option>Logística y Traslado de Personal</option>
-        <option>Mantenimiento</option>
-        <option>Excavación</option>
-        <option>Compactación</option>
-        <option>Otro</option>
-      </select>
+      <select id="ut"><option value="">— Cargando... —</option></select>
     </div>
     <div class="f">
       <label>Arreglos / Fallas</label>
@@ -107,65 +122,44 @@
       <label>Observaciones</label>
       <textarea id="uob" placeholder="Opcional"></textarea>
     </div>
-    <p class="hint"><span class="req">*</span> Campos obligatorios</p>
-    <button class="btn" id="buso" onclick="envUso()">Guardar registro</button>
-  </div>
-</div>
 
-<!-- ══ GASOIL ══ -->
-<div class="sec" id="tab-gasoil">
-  <div class="card">
-    <div class="ct"><span class="ct-bar"></span>Carga de gasoil / nafta</div>
-    <div class="f">
-      <label>Equipo <span class="req">*</span></label>
-      <select id="ge"><option value="">— Cargando equipos... —</option></select>
+    <div class="divider"></div>
+
+    <!-- Toggle gasoil -->
+    <label class="gas-toggle">
+      <input type="checkbox" id="gas-chk" onchange="toggleGas(this)">
+      <span class="gas-label">⛽ ¿Cargó gasoil hoy?</span>
+    </label>
+
+    <div class="gas-fields" id="gas-fields">
+      <div class="f">
+        <label>Litros cargados <span class="req">*</span></label>
+        <input type="number" id="gl" placeholder="Ej: 120" inputmode="decimal">
+      </div>
+      <div class="f">
+        <label>Observaciones gasoil</label>
+        <textarea id="gob" placeholder="Opcional"></textarea>
+      </div>
     </div>
-    <div class="f">
-      <label>Operario <span class="req">*</span></label>
-      <select id="go"><option value="">— Cargando operarios... —</option></select>
-    </div>
-    <div class="f">
-      <label>Obra / Lugar</label>
-      <select id="gw"><option value="">— Cargando obras... —</option></select>
-    </div>
-    <div class="f">
-      <label>Litros cargados <span class="req">*</span></label>
-      <input type="number" id="gl" placeholder="Ej: 120" inputmode="decimal">
-    </div>
-    <div class="f">
-      <label>Horas / Km actuales <span class="req">*</span></label>
-      <input type="number" id="ghk" placeholder="Ej: 2540" inputmode="numeric">
-    </div>
-    <div class="f">
-      <label>Observaciones</label>
-      <textarea id="gob" placeholder="Opcional"></textarea>
-    </div>
+
     <p class="hint"><span class="req">*</span> Campos obligatorios</p>
-    <button class="btn" id="bgas" onclick="envGas()">Guardar carga</button>
+    <button class="btn" id="bguardar" onclick="enviar()">Guardar</button>
   </div>
 </div>
 
 <!-- ══ HISTORIAL ══ -->
 <div class="sec" id="tab-historial">
-  <div id="hlist"></div>
+  <div id="hlist"><div class="empty">Sin registros todavía</div></div>
 </div>
 
 <div class="toast hidden" id="toast"></div>
 
 <script>
-  const URL_ = "https://script.google.com/macros/s/AKfycbybeAnxaFBdzN_f27z0LYbSvaKhVD6sNiiJakjatvwI7VRZpGQuezkV_fvqscO3N2ahdg/exec";
-
+  const URL_ = "https://script.google.com/macros/s/AKfycbxl4MecNkGtG-ZuSFgKtZinpp4dqq5dhkVq6XujqIUqWmaORdezQV9AZ1P-Se0phdhP-g/exec";
   const HIST = JSON.parse(localStorage.getItem("pam_hist") || "[]");
 
   document.getElementById("hfecha").textContent =
     new Date().toLocaleDateString("es-AR", { weekday:"long", day:"numeric", month:"long" });
-
-  function toast(msg, type) {
-    const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.className = "toast " + (type || "ok");
-    setTimeout(() => t.classList.add("hidden"), 3000);
-  }
 
   function tab(name, btn) {
     document.querySelectorAll(".sec").forEach(s => s.classList.remove("active"));
@@ -173,6 +167,22 @@
     document.getElementById("tab-" + name).classList.add("active");
     btn.classList.add("active");
     if (name === "historial") renderHist();
+  }
+
+  function toggleGas(chk) {
+    document.getElementById("gas-fields").classList.toggle("visible", chk.checked);
+    if (!chk.checked) {
+      document.getElementById("gl").value = "";
+      document.getElementById("gob").value = "";
+      document.getElementById("gl").classList.remove("error");
+    }
+  }
+
+  function toast(msg, type) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.className = "toast " + (type || "ok");
+    setTimeout(() => t.classList.add("hidden"), 3000);
   }
 
   function jsonp(url) {
@@ -197,8 +207,10 @@
     try {
       const d = await jsonp(URL_ + "?action=getListas");
       if (!d || !d.ok) { toast("No se pudieron cargar listas", "err"); return; }
-      fill("ue", d.equipos);  fill("uo", d.operarios);  fill("uw", d.obras);
-      fill("ge", d.equipos);  fill("go", d.operarios);  fill("gw", d.obras);
+      fill("ue", d.equipos);
+      fill("uo", d.operarios);
+      fill("uw", d.obras);
+      fill("ut", d.trabajos);
     } catch(err) {
       console.error(err);
       toast("Error conexión", "err");
@@ -207,12 +219,11 @@
 
   function fill(id, list) {
     const s = document.getElementById(id);
-    s.innerHTML = "";
+    s.innerHTML = '<option value="">— Seleccionar —</option>';
     if (!list || !list.length) {
       s.innerHTML = '<option value="">— Sin datos —</option>';
       return;
     }
-    s.innerHTML = '<option value="">— Seleccionar —</option>';
     list.forEach(v => {
       const o = document.createElement("option");
       o.value = o.textContent = v;
@@ -228,60 +239,70 @@
     ["change","input"].forEach(ev => el.addEventListener(ev, () => el.classList.remove("error"), { once:true }));
   }
 
-  async function call(params, tipo, btn, txt) {
-    const q = new URLSearchParams(params).toString();
-    try {
-      const d = await jsonp(URL_ + "?" + q);
-      if (!d || !d.ok) { toast(d?.mensaje || "Error", "err"); return; }
-      toast("Guardado ✓");
-      guardarHist(tipo, params);
-    } catch(err) {
-      console.error(err);
-      toast("Error conexión", "err");
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = txt;
-    }
-  }
-
-  function envUso() {
+  async function enviar() {
+    // Validar obligatorios
     let ok = true;
     if (!g("ue"))  { marcarError("ue");  ok = false; }
     if (!g("uo"))  { marcarError("uo");  ok = false; }
     if (!g("uhk")) { marcarError("uhk"); ok = false; }
+
+    const conGas = document.getElementById("gas-chk").checked;
+    if (conGas && !g("gl")) { marcarError("gl"); ok = false; }
+
     if (!ok) { toast("Completá los campos obligatorios", "err"); return; }
-    const b = document.getElementById("buso");
+
+    const b = document.getElementById("bguardar");
     b.disabled = true;
     b.innerHTML = '<span class="spin"></span>Guardando...';
-    call({
-      action: "registrarUso",
-      equipo: g("ue"), operario: g("uo"), obra: g("uw"),
-      horasKm: g("uhk"), trabajo: g("ut"), arreglos: g("ua"), observaciones: g("uob")
-    }, "uso", b, "Guardar registro");
+
+    try {
+      const p = {
+        action:        "registrar",
+        equipo:        g("ue"),
+        operario:      g("uo"),
+        obra:          g("uw"),
+        horasKm:       g("uhk"),
+        litros:        conGas ? g("gl") : "",
+        trabajo:       g("ut"),
+        arreglos:      g("ua"),
+        observaciones: conGas ? g("uob") + (g("gob") ? " | Gasoil: " + g("gob") : "") : g("uob")
+      };
+      const d = await jsonp(URL_ + "?" + new URLSearchParams(p).toString());
+      if (!d || !d.ok) { toast(d?.mensaje || "Error al guardar", "err"); return; }
+
+      toast(conGas ? "Uso y gasoil guardados ✓" : "Guardado ✓");
+      guardarHist(p, conGas ? g("gl") : null);
+      limpiarForm();
+
+    } catch(err) {
+      console.error(err);
+      toast("Error conexión", "err");
+    } finally {
+      b.disabled = false;
+      b.innerHTML = "Guardar";
+    }
   }
 
-  function envGas() {
-    let ok = true;
-    if (!g("ge"))  { marcarError("ge");  ok = false; }
-    if (!g("go"))  { marcarError("go");  ok = false; }
-    if (!g("gl"))  { marcarError("gl");  ok = false; }
-    if (!g("ghk")) { marcarError("ghk"); ok = false; }
-    if (!ok) { toast("Completá los campos obligatorios", "err"); return; }
-    const b = document.getElementById("bgas");
-    b.disabled = true;
-    b.innerHTML = '<span class="spin"></span>Guardando...';
-    call({
-      action: "registrarGasoil",
-      equipo: g("ge"), operario: g("go"), obra: g("gw"),
-      litros: g("gl"), horasKm: g("ghk"), observaciones: g("gob")
-    }, "gasoil", b, "Guardar carga");
+  function limpiarForm() {
+    ["ue","uo","uw","uhk","ut","ua","uob","gl","gob"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+    });
+    document.getElementById("gas-chk").checked = false;
+    document.getElementById("gas-fields").classList.remove("visible");
   }
 
-  function guardarHist(tipo, data) {
-    HIST.unshift({ tipo, data, fecha: new Date().toLocaleString("es-AR") });
+  function guardarHist(data, litros) {
+    HIST.unshift({
+      equipo:   data.equipo,
+      operario: data.operario,
+      obra:     data.obra,
+      horasKm:  data.horasKm,
+      litros:   litros,
+      fecha:    new Date().toLocaleString("es-AR")
+    });
     HIST.splice(20);
     localStorage.setItem("pam_hist", JSON.stringify(HIST));
-    renderHist();
   }
 
   function renderHist() {
@@ -290,12 +311,12 @@
     c.innerHTML = HIST.map(h => `
       <div class="hi">
         <div class="hi-top">
-          <div class="hi-eq">${h.data.equipo || "-"}
-            <span class="badge ${h.tipo === "uso" ? "bu" : "bg"}">${h.tipo}</span>
+          <div class="hi-eq">${h.equipo || "-"}
+            ${h.litros ? `<span class="badge bg">⛽ ${h.litros} L</span>` : '<span class="badge bu">uso</span>'}
           </div>
           <div class="hi-t">${h.fecha}</div>
         </div>
-        <div class="hi-d">${h.data.operario || "-"}</div>
+        <div class="hi-d">${h.operario || "-"}${h.obra ? " · " + h.obra : ""}${h.horasKm ? " · " + h.horasKm + " hs/km" : ""}</div>
       </div>`).join("");
   }
 

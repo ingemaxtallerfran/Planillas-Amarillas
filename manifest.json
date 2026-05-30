@@ -1,0 +1,20 @@
+{
+  "name": "Ingemax Planillas",
+  "short_name": "Ingemax",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#2C2C2C",
+  "theme_color": "#2C2C2C",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192/E8651A/ffffff?text=IX",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512/E8651A/ffffff?text=IX",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

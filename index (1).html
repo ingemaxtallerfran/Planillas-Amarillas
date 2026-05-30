@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Ingemax — Planillas</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2C2C2C">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Ingemax">
+  <style>
+    .offline-bar{display:none;background:#c45212;color:#fff;font-size:12px;font-weight:600;text-align:center;padding:6px;letter-spacing:.03em;}
+    .offline-bar.visible{display:block;}
+    .pending-badge{display:none;background:#c45212;color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;margin-left:6px;}
+    .pending-badge.visible{display:inline;}
+  </style>
+  <style>
+    :root{--naranja:#E8651A;--gris:#2C2C2C;--gris2:#555;--bg:#f4f4f2;--bor:#e0e0d8;--radius:12px;--rsm:8px;}
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--gris);}
+
+    .header{background:var(--gris);padding:14px 20px;display:flex;align-items:center;gap:14px;}
+    .logo-box{display:flex;align-items:center;}
+    .logo-ing{font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.5px;}
+    .logo-max{font-size:22px;font-weight:900;color:var(--naranja);letter-spacing:-0.5px;}
+    .logo-arrow{width:0;height:0;border-top:13px solid transparent;border-bottom:13px solid transparent;border-left:16px solid var(--naranja);margin-left:3px;}
+    .header-sub{color:rgba(255,255,255,0.5);font-size:12px;margin-top:2px;}
+
+    .nav{display:grid;grid-template-columns:1fr 1fr;background:#fff;border-bottom:2px solid var(--bor);}
+    .nb{padding:12px 4px;font-size:14px;border:none;background:none;cursor:pointer;color:var(--gris2);border-bottom:3px solid transparent;margin-bottom:-2px;font-weight:500;}
+    .nb.active{color:var(--naranja);border-bottom-color:var(--naranja);font-weight:700;}
+
+    .sec{display:none;padding:16px;max-width:480px;margin:0 auto;}
+    .sec.active{display:block;}
+
+    .card{background:#fff;border-radius:var(--radius);border:0.5px solid var(--bor);padding:16px;margin-bottom:12px;}
+    .ct{font-size:15px;font-weight:700;margin-bottom:14px;color:var(--gris);display:flex;align-items:center;gap:8px;}
+    .ct-bar{width:4px;height:18px;background:var(--naranja);border-radius:2px;display:inline-block;}
+
+    .f{margin-bottom:13px;}
+    .f label{display:block;font-size:11px;font-weight:700;color:var(--gris2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em;}
+    .req{color:var(--naranja);}
+    .f select,.f input,.f textarea{width:100%;padding:11px 12px;border:1.5px solid var(--bor);border-radius:var(--rsm);font-size:16px;background:#fafaf8;color:var(--gris);-webkit-appearance:none;appearance:none;font-family:inherit;}
+    .f select:focus,.f input:focus,.f textarea:focus{outline:none;border-color:var(--naranja);background:#fff;}
+    .f select.error,.f input.error{border-color:#E24B4A;background:#fff8f8;}
+    .f textarea{resize:none;height:70px;}
+
+
+
+    .btn{width:100%;padding:14px;background:var(--naranja);border:none;border-radius:var(--rsm);font-size:16px;font-weight:700;cursor:pointer;margin-top:4px;color:#fff;letter-spacing:.02em;}
+    .btn:disabled{opacity:.5;cursor:not-allowed;}
+    .btn:active{opacity:.85;}
+
+    .hint{font-size:12px;color:var(--gris2);margin-top:-8px;margin-bottom:10px;}
+
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:var(--rsm);font-size:14px;font-weight:500;z-index:999;max-width:90vw;text-align:center;pointer-events:none;}
+    .toast.ok{background:#E1F5EE;color:#085041;border:1px solid #5DCAA5;}
+    .toast.err{background:#FCEBEB;color:#A32D2D;border:1px solid #F09595;}
+    .toast.hidden{display:none;}
+
+    .hi{background:#fff;border-radius:var(--rsm);border:.5px solid var(--bor);padding:12px 14px;margin-bottom:8px;}
+    .hi-top{display:flex;justify-content:space-between;align-items:baseline;}
+    .hi-eq{font-weight:700;font-size:14px;}
+    .hi-t{font-size:12px;color:var(--gris2);}
+    .hi-d{font-size:13px;color:var(--gris2);margin-top:4px;}
+    .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-left:6px;}
+    .bu{background:#FEF0E7;color:#c45212;}
+    .bg{background:#E1F5EE;color:#085041;}
+    .empty{text-align:center;padding:40px 20px;color:var(--gris2);font-size:14px;}
+
+    .spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:6px;}
+    @keyframes sp{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+
+<div class="offline-bar" id="offline-bar">⚠️ Sin conexión — los registros se guardarán y enviarán al reconectar</div>
+<div class="header">
+  <div>
+    <div class="logo-box">
+      <span class="logo-ing">INGEMA</span><span class="logo-max">X</span><div class="logo-arrow"></div>
+    </div>
+    <div class="header-sub" id="hfecha"></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nb active" onclick="tab('registro',this)">📋 Registro</button>
+  <button class="nb"        onclick="tab('historial',this)">🕐 Historial<span class="pending-badge" id="pending-badge"></span></button>
+</div>
+
+<!-- ══ REGISTRO ══ -->
+<div class="sec active" id="tab-registro">
+  <div class="card">
+    <div class="ct"><span class="ct-bar"></span>Registro diario</div>
+
+    <div class="f">
+      <label>Equipo <span class="req">*</span></label>
+      <select id="ue"><option value="">— Cargando... —</option></select>
+    </div>
+    <div class="f">
+      <label>Operario <span class="req">*</span></label>
+      <select id="uo"><option value="">— Cargando... —</option></select>
+    </div>
+    <div class="f">
+      <label>Obra / Lugar</label>
+      <select id="uw"><option value="">— Cargando... —</option></select>
+    </div>
+    <div class="f">
+      <label>Horas / Km actuales <span class="req">*</span></label>
+      <input type="number" id="uhk" placeholder="Ej: 2540" inputmode="numeric">
+    </div>
+    <div class="f">
+      <label>Gasoil / Nafta (litros)</label>
+      <input type="number" id="gl" placeholder="Ej: 120 — Opcional" inputmode="decimal">
+    </div>
+    <div class="f">
+      <label>Tipo de trabajo</label>
+      <select id="ut"><option value="">— Cargando... —</option></select>
+    </div>
+    <div class="f">
+      <label>Arreglos / Fallas</label>
+      <input type="text" id="ua" placeholder="Opcional">
+    </div>
+    <div class="f">
+      <label>Observaciones</label>
+      <textarea id="uob" placeholder="Opcional"></textarea>
+    </div>
+
+
+
+    <p class="hint"><span class="req">*</span> Campos obligatorios</p>
+    <button class="btn" id="bguardar" onclick="enviar()">Guardar</button>
+  </div>
+</div>
+
+<!-- ══ HISTORIAL ══ -->
+<div class="sec" id="tab-historial">
+  <div id="hlist"><div class="empty">Sin registros todavía</div></div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<script>
+  const URL_ = "https://script.google.com/macros/s/AKfycbxl4MecNkGtG-ZuSFgKtZinpp4dqq5dhkVq6XujqIUqWmaORdezQV9AZ1P-Se0phdhP-g/exec";
+  const HIST = JSON.parse(localStorage.getItem("pam_hist") || "[]");
+  let PENDING = JSON.parse(localStorage.getItem("pam_pending") || "[]");
+  let isOnline = navigator.onLine;
+
+  // ── Service Worker ──
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW:', e));
+  }
+
+  // ── Offline detection ──
+  function updateOnlineStatus() {
+    isOnline = navigator.onLine;
+    document.getElementById("offline-bar").classList.toggle("visible", !isOnline);
+    if (isOnline) syncPending();
+  }
+  window.addEventListener("online",  updateOnlineStatus);
+  window.addEventListener("offline", updateOnlineStatus);
+  updateOnlineStatus();
+
+  // ── Pending badge ──
+  function updatePendingBadge() {
+    const badge = document.getElementById("pending-badge");
+    if (PENDING.length > 0) {
+      badge.textContent = PENDING.length;
+      badge.classList.add("visible");
+    } else {
+      badge.classList.remove("visible");
+    }
+  }
+  updatePendingBadge();
+
+  // ── Date header ──
+  document.getElementById("hfecha").textContent =
+    new Date().toLocaleDateString("es-AR", { weekday:"long", day:"numeric", month:"long" });
+
+  function tab(name, btn) {
+    document.querySelectorAll(".sec").forEach(s => s.classList.remove("active"));
+    document.querySelectorAll(".nb").forEach(b => b.classList.remove("active"));
+    document.getElementById("tab-" + name).classList.add("active");
+    btn.classList.add("active");
+    if (name === "historial") renderHist();
+  }
+
+  function toast(msg, type) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.className = "toast " + (type || "ok");
+    setTimeout(() => t.classList.add("hidden"), 3000);
+  }
+
+  function jsonp(url) {
+    return new Promise((resolve, reject) => {
+      const cb = "cb_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+      const script = document.createElement("script");
+      let done = false;
+      function clean() {
+        done = true;
+        try { delete window[cb]; } catch(e) {}
+        try { script.remove(); } catch(e) {}
+      }
+      window[cb] = function(data) { if (done) return; clean(); resolve(data); };
+      script.onerror = function() { if (done) return; clean(); reject(new Error("error")); };
+      script.src = url + (url.includes("?") ? "&" : "?") + "callback=" + cb + "&_=" + Date.now();
+      document.body.appendChild(script);
+      setTimeout(() => { if (done) return; clean(); reject(new Error("timeout")); }, 10000);
+    });
+  }
+
+  async function cargarListas() {
+    // Load from cache first
+    const cached = localStorage.getItem("pam_listas");
+    if (cached) {
+      const d = JSON.parse(cached);
+      fill("ue", d.equipos); fill("uo", d.operarios); fill("uw", d.obras); fill("ut", d.trabajos);
+    }
+    if (!navigator.onLine) return;
+    try {
+      const d = await jsonp(URL_ + "?action=getListas");
+      if (!d || !d.ok) { if (!cached) toast("No se pudieron cargar listas", "err"); return; }
+      localStorage.setItem("pam_listas", JSON.stringify(d));
+      fill("ue", d.equipos); fill("uo", d.operarios); fill("uw", d.obras); fill("ut", d.trabajos);
+    } catch(err) {
+      if (!cached) toast("Error conexión", "err");
+    }
+  }
+
+  function fill(id, list) {
+    const s = document.getElementById(id);
+    if (!s) return;
+    s.innerHTML = '<option value="">— Seleccionar —</option>';
+    if (!list || !list.length) { s.innerHTML = '<option value="">— Sin datos —</option>'; return; }
+    list.forEach(v => {
+      const o = document.createElement("option");
+      o.value = o.textContent = v;
+      s.appendChild(o);
+    });
+  }
+
+  function g(id) {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : "";
+  }
+
+  function marcarError(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add("error");
+    ["change","input"].forEach(ev => el.addEventListener(ev, () => el.classList.remove("error"), { once:true }));
+  }
+
+  // ── Guardar (online u offline) ──
+  async function enviar() {
+    let ok = true;
+    if (!g("ue"))  { marcarError("ue");  ok = false; }
+    if (!g("uo"))  { marcarError("uo");  ok = false; }
+    if (!g("uhk")) { marcarError("uhk"); ok = false; }
+    if (!ok) { toast("Completá los campos obligatorios", "err"); return; }
+
+    const p = {
+      action:        "registrar",
+      equipo:        g("ue"),
+      operario:      g("uo"),
+      obra:          g("uw"),
+      horasKm:       g("uhk"),
+      litros:        g("gl"),
+      trabajo:       g("ut"),
+      arreglos:      g("ua"),
+      observaciones: g("uob")
+    };
+
+    const b = document.getElementById("bguardar");
+    b.disabled = true;
+    b.innerHTML = '<span class="spin"></span>Guardando...';
+
+    if (!navigator.onLine) {
+      // Save to pending queue
+      PENDING.push({ p, fecha: new Date().toISOString() });
+      localStorage.setItem("pam_pending", JSON.stringify(PENDING));
+      guardarHist(p, true);
+      updatePendingBadge();
+      toast("Sin conexión — guardado localmente ✓", "ok");
+      limpiarForm();
+      b.disabled = false;
+      b.innerHTML = "Guardar";
+      return;
+    }
+
+    try {
+      const d = await jsonp(URL_ + "?" + new URLSearchParams(p).toString());
+      if (!d || !d.ok) { toast(d?.mensaje || "Error al guardar", "err"); return; }
+      toast(p.litros ? "Uso y gasoil guardados ✓" : "Guardado ✓");
+      guardarHist(p, false);
+      limpiarForm();
+    } catch(err) {
+      // Fallback to offline
+      PENDING.push({ p, fecha: new Date().toISOString() });
+      localStorage.setItem("pam_pending", JSON.stringify(PENDING));
+      guardarHist(p, true);
+      updatePendingBadge();
+      toast("Sin señal — guardado localmente ✓", "ok");
+      limpiarForm();
+    } finally {
+      b.disabled = false;
+      b.innerHTML = "Guardar";
+    }
+  }
+
+  // ── Sync pending when back online ──
+  async function syncPending() {
+    if (!PENDING.length) return;
+    const toSync = [...PENDING];
+    let synced = 0;
+    for (const item of toSync) {
+      try {
+        const d = await jsonp(URL_ + "?" + new URLSearchParams(item.p).toString());
+        if (d && d.ok) {
+          PENDING = PENDING.filter(x => x !== item);
+          synced++;
+        }
+      } catch(e) { break; }
+    }
+    if (synced > 0) {
+      localStorage.setItem("pam_pending", JSON.stringify(PENDING));
+      updatePendingBadge();
+      renderHist();
+      toast(synced + " registro" + (synced > 1 ? "s" : "") + " sincronizado" + (synced > 1 ? "s" : "") + " ✓");
+    }
+  }
+
+  function limpiarForm() {
+    ["ue","uo","uw","uhk","gl","ut","ua","uob"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+    });
+  }
+
+  function guardarHist(data, pending) {
+    HIST.unshift({
+      equipo:   data.equipo,
+      operario: data.operario,
+      obra:     data.obra,
+      horasKm:  data.horasKm,
+      litros:   data.litros,
+      fecha:    new Date().toLocaleString("es-AR"),
+      pending:  pending
+    });
+    HIST.splice(30);
+    localStorage.setItem("pam_hist", JSON.stringify(HIST));
+  }
+
+  function renderHist() {
+    const c = document.getElementById("hlist");
+    const all = [...PENDING.map(x => ({...x.p, fecha: new Date(x.fecha).toLocaleString("es-AR"), pending: true})),
+                 ...HIST];
+    if (!all.length) { c.innerHTML = '<div class="empty">Sin registros todavía</div>'; return; }
+    c.innerHTML = all.map(h => `
+      <div class="hi">
+        <div class="hi-top">
+          <div class="hi-eq">${h.equipo || "-"}
+            ${h.litros ? `<span class="badge bg">⛽ ${h.litros}L</span>` : '<span class="badge bu">uso</span>'}
+            ${h.pending ? '<span class="badge" style="background:#fff3cd;color:#856404">⏳ pendiente</span>' : ''}
+          </div>
+          <div class="hi-t">${h.fecha}</div>
+        </div>
+        <div class="hi-d">${h.operario || "-"}${h.obra ? " · " + h.obra : ""}${h.horasKm ? " · " + h.horasKm + " hs/km" : ""}</div>
+      </div>`).join("");
+  }
+
+  cargarListas();
+</script>
+</body>
+</html>

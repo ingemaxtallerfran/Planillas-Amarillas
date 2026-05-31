@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Ingemax — Intervenciones</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --naranja: #E8651A;
+      --naranja2: #ff7a2f;
+      --negro: #0f0f0f;
+      --gris1: #1a1a1a;
+      --gris2: #252525;
+      --gris3: #333;
+      --gris4: #555;
+      --gris5: #888;
+      --borde: #2e2e2e;
+      --texto: #f0f0f0;
+      --texto2: #aaa;
+      --radius: 10px;
+      --rsm: 7px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Barlow', sans-serif;
+      background: var(--negro);
+      color: var(--texto);
+      min-height: 100vh;
+      overscroll-behavior: none;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--gris1);
+      border-bottom: 1px solid var(--borde);
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: .04em;
+    }
+    .logo span { color: var(--naranja); }
+
+    .header-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--texto2);
+    }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      background: var(--gris1);
+      border-bottom: 1px solid var(--borde);
+      padding: 10px 14px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .search-wrap {
+      flex: 1;
+      min-width: 160px;
+      position: relative;
+    }
+
+    .search-wrap input {
+      width: 100%;
+      background: var(--gris2);
+      border: 1px solid var(--borde);
+      border-radius: var(--rsm);
+      color: var(--texto);
+      font-family: 'Barlow', sans-serif;
+      font-size: 14px;
+      padding: 8px 12px 8px 34px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .search-wrap input:focus { border-color: var(--naranja); }
+    .search-wrap input::placeholder { color: var(--gris5); }
+
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gris5);
+      font-size: 15px;
+    }
+
+    .filter-btn {
+      background: var(--gris2);
+      border: 1px solid var(--borde);
+      border-radius: var(--rsm);
+      color: var(--texto2);
+      font-family: 'Barlow', sans-serif;
+      font-size: 13px;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: border-color .2s, color .2s;
+      white-space: nowrap;
+    }
+    .filter-btn.active { border-color: var(--naranja); color: var(--naranja); }
+
+    /* ── FILTERS ROW ── */
+    .filters {
+      display: none;
+      background: var(--gris1);
+      border-bottom: 1px solid var(--borde);
+      padding: 10px 14px;
+      gap: 8px;
+    }
+    .filters.open { display: flex; flex-wrap: wrap; }
+
+    .filters select {
+      flex: 1;
+      min-width: 130px;
+      background: var(--gris2);
+      border: 1px solid var(--borde);
+      border-radius: var(--rsm);
+      color: var(--texto);
+      font-family: 'Barlow', sans-serif;
+      font-size: 13px;
+      padding: 8px 10px;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+    }
+    .filters select:focus { border-color: var(--naranja); }
+
+    .filters-clear {
+      background: none;
+      border: 1px solid var(--gris4);
+      border-radius: var(--rsm);
+      color: var(--gris5);
+      font-family: 'Barlow', sans-serif;
+      font-size: 12px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    /* ── STATS BAR ── */
+    .stats {
+      padding: 8px 16px;
+      font-size: 12px;
+      color: var(--gris5);
+      border-bottom: 1px solid var(--borde);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .stats strong { color: var(--naranja); }
+
+    /* ── LIST ── */
+    .list {
+      padding: 12px 14px;
+      padding-bottom: 100px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .item {
+      background: var(--gris1);
+      border: 1px solid var(--borde);
+      border-radius: var(--radius);
+      margin-bottom: 8px;
+      overflow: hidden;
+      transition: border-color .2s;
+      cursor: pointer;
+    }
+    .item:active { border-color: var(--naranja); }
+
+    .item-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px 8px;
+      gap: 8px;
+    }
+
+    .item-equipo {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: .02em;
+      color: var(--texto);
+      flex: 1;
+    }
+
+    .item-fecha {
+      font-size: 12px;
+      color: var(--texto2);
+      white-space: nowrap;
+    }
+
+    .item-body {
+      padding: 0 14px 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+    }
+
+    .tag-trabajo { background: rgba(232,101,26,.15); color: var(--naranja); border: 1px solid rgba(232,101,26,.3); }
+    .tag-service { background: rgba(59,130,246,.15); color: #60a5fa; border: 1px solid rgba(59,130,246,.3); }
+    .tag-taller  { background: rgba(255,255,255,.07); color: var(--texto2); border: 1px solid var(--borde); }
+    .tag-odometro{ background: rgba(255,255,255,.05); color: var(--gris5); border: 1px solid var(--borde); font-family: 'Barlow Condensed', sans-serif; font-size: 12px; }
+
+    .item-desc {
+      padding: 0 14px 12px;
+      font-size: 13px;
+      color: var(--texto2);
+      line-height: 1.4;
+      border-top: 1px solid var(--borde);
+      padding-top: 8px;
+      margin-top: -4px;
+    }
+
+    /* ── EMPTY ── */
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--gris5);
+    }
+    .empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .empty p { font-size: 14px; }
+
+    /* ── FAB ── */
+    .fab {
+      position: fixed;
+      bottom: 24px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      background: var(--naranja);
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 26px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(232,101,26,.5);
+      transition: transform .15s, box-shadow .15s;
+      z-index: 90;
+    }
+    .fab:active { transform: scale(.93); box-shadow: 0 2px 10px rgba(232,101,26,.4); }
+
+    /* ── MODAL ── */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.75);
+      z-index: 200;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .overlay.open { display: flex; }
+
+    .modal {
+      background: var(--gris1);
+      border-radius: 18px 18px 0 0;
+      border-top: 1px solid var(--borde);
+      width: 100%;
+      max-width: 600px;
+      max-height: 92vh;
+      overflow-y: auto;
+      padding: 20px 18px 40px;
+      animation: slideUp .25s ease;
+    }
+
+    @keyframes slideUp { from { transform: translateY(60px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+
+    .modal-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--gris3);
+      border-radius: 2px;
+      margin: 0 auto 18px;
+    }
+
+    .modal-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-close {
+      background: var(--gris2);
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      color: var(--texto2);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── FORM ── */
+    .f { margin-bottom: 14px; }
+    .f label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gris5);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .req { color: var(--naranja); }
+
+    .f select, .f input, .f textarea {
+      width: 100%;
+      background: var(--gris2);
+      border: 1px solid var(--borde);
+      border-radius: var(--rsm);
+      color: var(--texto);
+      font-family: 'Barlow', sans-serif;
+      font-size: 15px;
+      padding: 10px 12px;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: border-color .2s;
+    }
+    .f select:focus, .f input:focus, .f textarea:focus { border-color: var(--naranja); }
+    .f select.error, .f input.error { border-color: #ef4444; }
+    .f textarea { resize: none; height: 75px; font-size: 14px; }
+
+    /* service filters checkboxes */
+    .filtros-service {
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .filtros-service.visible { display: flex; }
+
+    .chk-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--gris2);
+      border: 1px solid var(--borde);
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      user-select: none;
+    }
+    .chk-label input { display: none; }
+    .chk-label input:checked + span { color: var(--naranja); }
+    .chk-label:has(input:checked) {
+      border-color: var(--naranja);
+      background: rgba(232,101,26,.1);
+    }
+
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* ── BUTTONS ── */
+    .btn-row { display: flex; gap: 10px; margin-top: 6px; }
+
+    .btn {
+      flex: 1;
+      padding: 13px;
+      border: none;
+      border-radius: var(--rsm);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn:active { opacity: .8; }
+    .btn-primary { background: var(--naranja); color: #fff; }
+    .btn-danger  { background: #2a1010; color: #ef4444; border: 1px solid #3d1515; }
+    .btn-cancel  { background: var(--gris2); color: var(--texto2); border: 1px solid var(--borde); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+    .spin { display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:5px; }
+    @keyframes sp { to { transform: rotate(360deg); } }
+
+    /* ── TOAST ── */
+    .toast { position:fixed;bottom:90px;left:50%;transform:translateX(-50%);padding:11px 20px;border-radius:var(--rsm);font-size:13px;font-weight:600;z-index:999;max-width:90vw;text-align:center;pointer-events:none;white-space:nowrap; }
+    .toast.ok  { background:#1a3326;color:#4ade80;border:1px solid #2d5c42; }
+    .toast.err { background:#2d1515;color:#f87171;border:1px solid #5a2020; }
+    .toast.hidden { display:none; }
+
+    /* ── CONFIRM DELETE ── */
+    .confirm-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.85);
+      z-index: 300;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .confirm-overlay.open { display: flex; }
+    .confirm-box {
+      background: var(--gris1);
+      border: 1px solid var(--borde);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      max-width: 320px;
+      width: 100%;
+      text-align: center;
+    }
+    .confirm-box h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; margin-bottom: 8px; }
+    .confirm-box p { font-size: 13px; color: var(--texto2); margin-bottom: 20px; }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--gris5);
+      font-size: 14px;
+    }
+    .loading-dot {
+      display: inline-block;
+      animation: blink 1.2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:.2} 50%{opacity:1} }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">INGEMA<span>X</span></div>
+  <div class="header-title">Intervenciones</div>
+  <div style="width:80px"></div>
+</div>
+
+<div class="toolbar">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="search" id="searchInput" placeholder="Buscar equipo, trabajo..." oninput="applyFilters()">
+  </div>
+  <button class="filter-btn" id="filterToggle" onclick="toggleFilters()">⚙ Filtros</button>
+</div>
+
+<div class="filters" id="filtersRow">
+  <select id="fEquipo" onchange="applyFilters()">
+    <option value="">Todos los equipos</option>
+  </select>
+  <select id="fTrabajo" onchange="applyFilters()">
+    <option value="">Todos los trabajos</option>
+    <option>Servis</option>
+    <option>Reparación</option>
+    <option>Mantenimiento</option>
+    <option>Diagnóstico</option>
+    <option>Otro</option>
+  </select>
+  <select id="fTaller" onchange="applyFilters()">
+    <option value="">Todos los talleres</option>
+    <option>Interno</option>
+    <option>Externo</option>
+  </select>
+  <button class="filters-clear" onclick="clearFilters()">✕ Limpiar</button>
+</div>
+
+<div class="stats" id="statsBar">
+  <span>Cargando...</span>
+</div>
+
+<div class="list" id="lista">
+  <div class="loading">Cargando intervenciones<span class="loading-dot">...</span></div>
+</div>
+
+<!-- FAB -->
+<button class="fab" onclick="abrirModal()" title="Nueva intervención">+</button>
+
+<!-- MODAL FORM -->
+<div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">
+      <span id="modalTitulo">Nueva intervención</span>
+      <button class="modal-close" onclick="cerrarModal()">✕</button>
+    </div>
+
+    <input type="hidden" id="editId">
+
+    <div class="row2">
+      <div class="f">
+        <label>Fecha <span class="req">*</span></label>
+        <input type="date" id="fFecha">
+      </div>
+      <div class="f">
+        <label>Odómetro</label>
+        <input type="number" id="fOdometro" placeholder="hs / km" inputmode="numeric">
+      </div>
+    </div>
+
+    <div class="f">
+      <label>Equipo <span class="req">*</span></label>
+      <select id="fEquipoForm"><option value="">— Seleccionar —</option></select>
+    </div>
+
+    <div class="row2">
+      <div class="f">
+        <label>Trabajo <span class="req">*</span></label>
+        <select id="fTrabajo2" onchange="onTrabajoChange()">
+          <option value="">— Seleccionar —</option>
+          <option>Servis</option>
+          <option>Reparación</option>
+          <option>Mantenimiento</option>
+          <option>Diagnóstico</option>
+          <option>Otro</option>
+        </select>
+      </div>
+      <div class="f">
+        <label>Taller</label>
+        <select id="fTallerForm">
+          <option value="">— Seleccionar —</option>
+          <option>Interno</option>
+          <option>Externo</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Filtros service (solo si Trabajo = Servis) -->
+    <div class="f" id="serviceSection" style="display:none">
+      <label>Filtros cambiados</label>
+      <div class="filtros-service visible">
+        <label class="chk-label"><input type="checkbox" id="chkAceite"><span>🛢 Aceite</span></label>
+        <label class="chk-label"><input type="checkbox" id="chkCombustible"><span>⛽ Combustible</span></label>
+        <label class="chk-label"><input type="checkbox" id="chkAire"><span>💨 Aire</span></label>
+        <label class="chk-label"><input type="checkbox" id="chkAgua"><span>💧 Trampa de agua</span></label>
+        <label class="chk-label"><input type="checkbox" id="chkHabitaculo"><span>🚗 Habitáculo</span></label>
+        <label class="chk-label"><input type="checkbox" id="chkHidraulico"><span>🔧 Hidráulico</span></label>
+      </div>
+      <div class="f" style="margin-top:10px;margin-bottom:0">
+        <label>Aceite utilizado</label>
+        <select id="fAceite">
+          <option value="">— Seleccionar —</option>
+          <option>15W40</option>
+          <option>10W30</option>
+          <option>SAE 30</option>
+          <option>SAE 40</option>
+          <option>Hidráulico AW46</option>
+          <option>Otro</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="f">
+      <label>Descripción</label>
+      <textarea id="fDesc" placeholder="Detalle de la intervención..."></textarea>
+    </div>
+
+    <div class="f">
+      <label>Aviso de mejora</label>
+      <input type="text" id="fAviso" placeholder="Opcional">
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btnGuardar" onclick="guardar()">Guardar</button>
+    </div>
+
+    <div id="deleteRow" style="display:none;margin-top:10px">
+      <button class="btn btn-danger" style="width:100%" onclick="confirmarEliminar()">🗑 Eliminar intervención</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <h3>¿Eliminar?</h3>
+    <p>Esta acción no se puede deshacer.</p>
+    <div class="btn-row">
+      <button class="btn btn-cancel" onclick="document.getElementById('confirmOverlay').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-danger" onclick="eliminar()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<script>
+  const URL_ = "https://script.google.com/macros/s/AKfycbwh9fSHZ0Tt6nGQFcWFJg7P5L4jUVoRdhs1QhulVECMqmn7ACv58VUUprOhMQviszKSew/exec";
+
+  let TODOS = [];
+  let FILTRADOS = [];
+
+  // ── JSONP ──
+  function jsonp(url) {
+    return new Promise((resolve, reject) => {
+      const cb = "cb_" + Date.now() + "_" + Math.floor(Math.random() * 1e5);
+      const s = document.createElement("script");
+      let done = false;
+      function clean() { done = true; try{delete window[cb];}catch(e){} try{s.remove();}catch(e){} }
+      window[cb] = d => { if(done)return; clean(); resolve(d); };
+      s.onerror = () => { if(done)return; clean(); reject(new Error("error")); };
+      s.src = url + (url.includes("?")?"&":"?") + "callback=" + cb + "&_=" + Date.now();
+      document.body.appendChild(s);
+      setTimeout(() => { if(done)return; clean(); reject(new Error("timeout")); }, 12000);
+    });
+  }
+
+  // ── TOAST ──
+  function toast(msg, type) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.className = "toast " + (type || "ok");
+    setTimeout(() => t.classList.add("hidden"), 3000);
+  }
+
+  // ── CARGAR ──
+  async function cargar() {
+    try {
+      const d = await jsonp(URL_ + "?action=getIntervenciones");
+      if (!d || !d.ok) { showError("No se pudieron cargar los datos"); return; }
+      TODOS = d.intervenciones || [];
+      // fill equipo filter
+      const equipos = [...new Set(TODOS.map(x => x.equipo).filter(Boolean))].sort();
+      const fEq = document.getElementById("fEquipo");
+      equipos.forEach(eq => {
+        const o = document.createElement("option");
+        o.value = o.textContent = eq;
+        fEq.appendChild(o);
+      });
+      // fill equipo in form
+      fillEquiposForm(equipos);
+      applyFilters();
+    } catch(e) {
+      showError("Error de conexión");
+    }
+  }
+
+  function fillEquiposForm(equipos) {
+    const s = document.getElementById("fEquipoForm");
+    s.innerHTML = '<option value="">— Seleccionar —</option>';
+    equipos.forEach(eq => {
+      const o = document.createElement("option");
+      o.value = o.textContent = eq;
+      s.appendChild(o);
+    });
+  }
+
+  function showError(msg) {
+    document.getElementById("lista").innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><p>${msg}</p></div>`;
+    document.getElementById("statsBar").innerHTML = `<span>${msg}</span>`;
+  }
+
+  // ── FILTERS ──
+  function toggleFilters() {
+    const r = document.getElementById("filtersRow");
+    const b = document.getElementById("filterToggle");
+    r.classList.toggle("open");
+    b.classList.toggle("active");
+  }
+
+  function clearFilters() {
+    document.getElementById("searchInput").value = "";
+    document.getElementById("fEquipo").value = "";
+    document.getElementById("fTrabajo").value = "";
+    document.getElementById("fTaller").value = "";
+    applyFilters();
+  }
+
+  function applyFilters() {
+    const q     = document.getElementById("searchInput").value.toLowerCase();
+    const eq    = document.getElementById("fEquipo").value;
+    const trab  = document.getElementById("fTrabajo").value;
+    const tall  = document.getElementById("fTaller").value;
+
+    FILTRADOS = TODOS.filter(i => {
+      if (eq   && i.equipo  !== eq)   return false;
+      if (trab && i.trabajo !== trab) return false;
+      if (tall && i.taller  !== tall) return false;
+      if (q) {
+        const hay = [i.equipo, i.trabajo, i.taller, i.descripcion, i.normalizado]
+          .join(" ").toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+
+    renderLista();
+  }
+
+  // ── RENDER ──
+  function renderLista() {
+    const c = document.getElementById("lista");
+    document.getElementById("statsBar").innerHTML =
+      `<span><strong>${FILTRADOS.length}</strong> de ${TODOS.length} intervenciones</span>` +
+      `<span>${TODOS.length ? formatFecha(TODOS[0].fecha) : ""}</span>`;
+
+    if (!FILTRADOS.length) {
+      c.innerHTML = `<div class="empty"><div class="empty-icon">🔧</div><p>Sin intervenciones</p></div>`;
+      return;
+    }
+
+    c.innerHTML = FILTRADOS.map(item => {
+      const filtros = parseFiltros(item.servis);
+      return `
+      <div class="item" onclick="abrirEditar('${item.id}')">
+        <div class="item-header">
+          <div class="item-equipo">${item.equipo || "—"}</div>
+          <div class="item-fecha">${formatFecha(item.fecha)}</div>
+        </div>
+        <div class="item-body">
+          ${item.trabajo ? `<span class="tag tag-trabajo">${item.trabajo}</span>` : ""}
+          ${filtros.length ? `<span class="tag tag-service">🔩 ${filtros.join(" · ")}</span>` : ""}
+          ${item.taller ? `<span class="tag tag-taller">${item.taller}</span>` : ""}
+          ${item.odometro ? `<span class="tag tag-odometro">⏱ ${Number(item.odometro).toLocaleString("es-AR")} hs/km</span>` : ""}
+        </div>
+        ${item.descripcion ? `<div class="item-desc">${item.descripcion}</div>` : ""}
+      </div>`;
+    }).join("");
+  }
+
+  function parseFiltros(val) {
+    if (!val) return [];
+    return val.split(",").map(s => s.trim()).filter(Boolean);
+  }
+
+  function formatFecha(f) {
+    if (!f) return "";
+    const d = new Date(f);
+    if (isNaN(d)) return f;
+    return d.toLocaleDateString("es-AR", { day:"2-digit", month:"2-digit", year:"2-digit" });
+  }
+
+  // ── MODAL ──
+  function abrirModal() {
+    document.getElementById("editId").value = "";
+    document.getElementById("modalTitulo").textContent = "Nueva intervención";
+    document.getElementById("deleteRow").style.display = "none";
+    document.getElementById("btnGuardar").textContent = "Guardar";
+    limpiarForm();
+    // set today
+    document.getElementById("fFecha").value = new Date().toISOString().split("T")[0];
+    document.getElementById("overlay").classList.add("open");
+  }
+
+  function abrirEditar(id) {
+    const item = TODOS.find(x => x.id === id);
+    if (!item) return;
+    document.getElementById("editId").value = id;
+    document.getElementById("modalTitulo").textContent = "Editar intervención";
+    document.getElementById("deleteRow").style.display = "block";
+    document.getElementById("btnGuardar").textContent = "Actualizar";
+
+    document.getElementById("fFecha").value = item.fecha ? item.fecha.split("T")[0] : "";
+    document.getElementById("fOdometro").value = item.odometro || "";
+    document.getElementById("fEquipoForm").value = item.equipo || "";
+    document.getElementById("fTrabajo2").value = item.trabajo || "";
+    document.getElementById("fTallerForm").value = item.taller || "";
+    document.getElementById("fDesc").value = item.descripcion || "";
+    document.getElementById("fAviso").value = item.aviso || "";
+
+    onTrabajoChange();
+
+    if (item.servis) {
+      const filtros = parseFiltros(item.servis);
+      ["Aceite","Combustible","Aire","Agua","Habitaculo","Hidraulico"].forEach(f => {
+        const chk = document.getElementById("chk" + f);
+        if (chk) chk.checked = filtros.some(x => x.toLowerCase().includes(f.toLowerCase()));
+      });
+    }
+    if (item.aceite) document.getElementById("fAceite").value = item.aceite;
+
+    document.getElementById("overlay").classList.add("open");
+  }
+
+  function cerrarModal() {
+    document.getElementById("overlay").classList.remove("open");
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById("overlay")) cerrarModal();
+  }
+
+  function limpiarForm() {
+    ["fFecha","fOdometro","fEquipoForm","fTrabajo2","fTallerForm","fDesc","fAviso","fAceite"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+    });
+    ["chkAceite","chkCombustible","chkAire","chkAgua","chkHabitaculo","chkHidraulico"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.checked = false;
+    });
+    document.getElementById("serviceSection").style.display = "none";
+  }
+
+  function onTrabajoChange() {
+    const val = document.getElementById("fTrabajo2").value;
+    document.getElementById("serviceSection").style.display = val === "Servis" ? "block" : "none";
+  }
+
+  function getFiltrosSeleccionados() {
+    const map = {
+      chkAceite: "Aceite", chkCombustible: "Combustible", chkAire: "Aire",
+      chkAgua: "Trampa de agua", chkHabitaculo: "Habitáculo", chkHidraulico: "Hidráulico"
+    };
+    return Object.entries(map)
+      .filter(([id]) => document.getElementById(id)?.checked)
+      .map(([,v]) => v).join(", ");
+  }
+
+  function g(id) { const el = document.getElementById(id); return el ? el.value.trim() : ""; }
+
+  function marcarError(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.add("error");
+      ["change","input"].forEach(ev => el.addEventListener(ev, () => el.classList.remove("error"), {once:true}));
+    }
+  }
+
+  // ── GUARDAR ──
+  async function guardar() {
+    let ok = true;
+    if (!g("fEquipoForm")) { marcarError("fEquipoForm"); ok = false; }
+    if (!g("fTrabajo2"))   { marcarError("fTrabajo2");   ok = false; }
+    if (!g("fFecha"))      { marcarError("fFecha");      ok = false; }
+    if (!ok) { toast("Completá los campos obligatorios", "err"); return; }
+
+    const btn = document.getElementById("btnGuardar");
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span>Guardando...';
+
+    const editId = g("editId");
+    const params = {
+      action:      editId ? "editarIntervencion" : "agregarIntervencion",
+      id:          editId,
+      fecha:       g("fFecha"),
+      equipo:      g("fEquipoForm"),
+      odometro:    g("fOdometro"),
+      trabajo:     g("fTrabajo2"),
+      servis:      getFiltrosSeleccionados(),
+      aceite:      g("fAceite"),
+      taller:      g("fTallerForm"),
+      descripcion: g("fDesc"),
+      aviso:       g("fAviso")
+    };
+
+    try {
+      const d = await jsonp(URL_ + "?" + new URLSearchParams(params).toString());
+      if (!d || !d.ok) { toast(d?.mensaje || "Error al guardar", "err"); return; }
+      toast(editId ? "Actualizado ✓" : "Guardado ✓");
+      cerrarModal();
+      await cargar();
+    } catch(e) {
+      toast("Error de conexión", "err");
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = editId ? "Actualizar" : "Guardar";
+    }
+  }
+
+  // ── ELIMINAR ──
+  function confirmarEliminar() {
+    document.getElementById("confirmOverlay").classList.add("open");
+  }
+
+  async function eliminar() {
+    document.getElementById("confirmOverlay").classList.remove("open");
+    const id = g("editId");
+    if (!id) return;
+    try {
+      const d = await jsonp(URL_ + "?action=eliminarIntervencion&id=" + encodeURIComponent(id));
+      if (!d || !d.ok) { toast(d?.mensaje || "Error al eliminar", "err"); return; }
+      toast("Eliminado ✓");
+      cerrarModal();
+      await cargar();
+    } catch(e) {
+      toast("Error de conexión", "err");
+    }
+  }
+
+  cargar();
+</script>
+</body>
+</html>

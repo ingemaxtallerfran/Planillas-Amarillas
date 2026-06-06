@@ -1141,58 +1141,69 @@ async function init() {
     }
   } catch(e) {}
 
-  // ── Cargar listas (equipos, operarios, obras, trabajos) ──
-  let equiposLista = [];
-  try {
-    const d = await jsonp(`${URL_}?action=getListas`);
-    if (d && d.ok) {
-      S.listas = d;
-      equiposLista = d.equipos || [];
-      const { equipos, operarios, obras, trabajos } = d;
-
-      // Selects de carga
-      fillSelect("cEquipo",      equipos,   "— Seleccionar —");
-      fillSelect("cResponsable", operarios, "— Seleccionar —");
-      fillSelect("pEquipo",      equipos,   "— Seleccionar —");
-      fillSelect("pOperario",    operarios, "— Seleccionar —");
-      fillSelect("pObra",        obras,     "— Seleccionar —");
-      fillSelect("pTrabajo",     trabajos,  "— Seleccionar —");
-      fillSelect("iEquipo",      equipos,   "— Seleccionar —");
-      fillSelect("iTrabajo",     trabajos,  "— Seleccionar —");
-      fillSelect("mEquipo",      equipos,   "— Seleccionar —");
-
-      // Selects de edición
-      fillSelect("ceEquipo",      equipos,   "— Seleccionar —");
-      fillSelect("ceResponsable", operarios, "— Seleccionar —");
-      fillSelect("peEquipo",      equipos,   "— Seleccionar —");
-      fillSelect("peOperario",    operarios, "— Seleccionar —");
-      fillSelect("peObra",        obras,     "— Seleccionar —");
-      fillSelect("peTrabajo",     trabajos,  "— Seleccionar —");
-      fillSelect("ieEquipo",      equipos,   "— Seleccionar —");
-      fillSelect("ieTrabajo",     trabajos,  "— Seleccionar —");
-
-      // Filtros historial
-      equipos.forEach(eq => {
-        ["hcEquipo","hpEquipo","hiEquipo"].forEach(sid => {
-          const s = document.getElementById(sid);
-          if (s) { const o = document.createElement("option"); o.value = o.textContent = eq; s.appendChild(o); }
-        });
-      });
-      operarios.forEach(op => {
-        const s = document.getElementById("hpOperario");
-        if (s) { const o = document.createElement("option"); o.value = o.textContent = op; s.appendChild(o); }
-      });
-    }
-  } catch(e) { toast("Error cargando listas", "err"); }
-
   // Fecha default cisterna
   const cgF = document.getElementById("cgFecha");
   if (cgF) cgF.value = todayStr();
 
-  // Cargar todos los módulos en paralelo
-  await Promise.all([combCargar(), planCargar(), intervCargar(), stockCargar(), equiposCargar()]);
+  // ── Cargar listas Y maestro de equipos en paralelo ──
+  let equiposLista = [];
+  const [resListas, resEquipos] = await Promise.allSettled([
+    jsonp(`${URL_}?action=getListas`),
+    jsonp(`${URL_}?action=getInfoEquipos`)
+  ]);
 
-  // ── Fallback: si getListas no trajo equipos, usar Maestro de Equipos ──
+  // Procesar getListas
+  if (resListas.status === "fulfilled" && resListas.value?.ok) {
+    const d = resListas.value;
+    S.listas = d;
+    equiposLista = d.equipos || [];
+    const { equipos, operarios, obras, trabajos } = d;
+
+    fillSelect("cEquipo",      equipos,   "— Seleccionar —");
+    fillSelect("cResponsable", operarios, "— Seleccionar —");
+    fillSelect("pEquipo",      equipos,   "— Seleccionar —");
+    fillSelect("pOperario",    operarios, "— Seleccionar —");
+    fillSelect("pObra",        obras,     "— Seleccionar —");
+    fillSelect("pTrabajo",     trabajos,  "— Seleccionar —");
+    fillSelect("iEquipo",      equipos,   "— Seleccionar —");
+    fillSelect("iTrabajo",     trabajos,  "— Seleccionar —");
+    fillSelect("mEquipo",      equipos,   "— Seleccionar —");
+
+    fillSelect("ceEquipo",      equipos,   "— Seleccionar —");
+    fillSelect("ceResponsable", operarios, "— Seleccionar —");
+    fillSelect("peEquipo",      equipos,   "— Seleccionar —");
+    fillSelect("peOperario",    operarios, "— Seleccionar —");
+    fillSelect("peObra",        obras,     "— Seleccionar —");
+    fillSelect("peTrabajo",     trabajos,  "— Seleccionar —");
+    fillSelect("ieEquipo",      equipos,   "— Seleccionar —");
+    fillSelect("ieTrabajo",     trabajos,  "— Seleccionar —");
+
+    equipos.forEach(eq => {
+      ["hcEquipo","hpEquipo","hiEquipo"].forEach(sid => {
+        const s = document.getElementById(sid);
+        if (s) { const o = document.createElement("option"); o.value = o.textContent = eq; s.appendChild(o); }
+      });
+    });
+    operarios.forEach(op => {
+      const s = document.getElementById("hpOperario");
+      if (s) { const o = document.createElement("option"); o.value = o.textContent = op; s.appendChild(o); }
+    });
+  }
+
+  // Procesar getInfoEquipos (Maestro de Equipos)
+  if (resEquipos.status === "fulfilled" && resEquipos.value?.ok) {
+    S.equiposInfo = (resEquipos.value.equipos || []).filter(e => e.codigo && e.codigo.trim() !== "");
+    equiposRender(S.equiposInfo);
+    equiposRenderAlertas();
+  } else {
+    const msg = resEquipos.value?.mensaje || "No se pudo conectar con Maestro de Equipos";
+    const eqEl = document.getElementById("eqLista");
+    if (eqEl) eqEl.innerHTML = `<div class="empty">⚠️ ${msg}<br><small style="font-size:11px;color:var(--gris5);display:block;margin-top:6px">Verificá que la hoja "Maestro de Equipos" exista y que el script GAS tenga la acción getInfoEquipos.</small></div>`;
+    const alEl = document.getElementById("eqAlertas");
+    if (alEl) alEl.innerHTML = '<div class="empty">—</div>';
+  }
+
+  // ── Fallback equipos: si getListas trajo lista vacía, usar Maestro de Equipos ──
   if (!equiposLista.length && S.equiposInfo.length) {
     const eqCodes = [...new Set(S.equiposInfo.map(e => e.codigo).filter(Boolean))];
     const EQ_FORM = ["cEquipo","pEquipo","iEquipo","ceEquipo","peEquipo","ieEquipo","mEquipo"];
@@ -1206,6 +1217,17 @@ async function init() {
       });
     });
   }
+
+  // ── Si ninguna fuente trajo equipos, mostrar "sin datos" en selects ──
+  if (!equiposLista.length && !S.equiposInfo.length) {
+    ["cEquipo","pEquipo","iEquipo","ceEquipo","peEquipo","ieEquipo"].forEach(sid => {
+      const s = document.getElementById(sid);
+      if (s) { s.innerHTML = '<option value="">— Sin datos de equipos —</option>'; }
+    });
+  }
+
+  // Cargar resto de módulos en paralelo (equiposCargar ya corrió arriba)
+  await Promise.all([combCargar(), planCargar(), intervCargar(), stockCargar()]);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1260,9 +1282,8 @@ function combRenderHist() {
 
 async function combGuardar() {
   let ok = true;
-  if (!g("cEquipo"))      { markErr("cEquipo");      ok=false; }
-  if (!g("cCantidad"))    { markErr("cCantidad");    ok=false; }
-  if (!g("cResponsable")) { markErr("cResponsable"); ok=false; }
+  if (!g("cEquipo"))   { markErr("cEquipo");   ok=false; }
+  if (!g("cCantidad")) { markErr("cCantidad"); ok=false; }
   if (!ok) { toast("Completá los campos obligatorios","err"); return; }
   setBtnLoading("btnCombGuardar","Guardando...");
   const p = { action:"agregarCombObrador", fecha:g("cFecha"), codigo:g("cEquipo"),
@@ -1711,20 +1732,24 @@ async function intervActualizar() {
 // ═══════════════════════════════════════════════════════════
 //  MÓDULO: INFO DE EQUIPOS (Maestro de Equipos)
 // ═══════════════════════════════════════════════════════════
+// equiposCargar: llamado manual para refrescar (el init ya carga al inicio)
 async function equiposCargar() {
+  const eqEl = document.getElementById("eqLista");
+  if (eqEl) eqEl.innerHTML = '<div class="loading"><div class="spin"></div></div>';
   try {
     const d = await jsonp(`${URL_}?action=getInfoEquipos`);
     if (!d || !d.ok) {
-      document.getElementById("eqLista").innerHTML    = '<div class="empty">Error al cargar equipos</div>';
-      document.getElementById("eqAlertas").innerHTML  = '<div class="empty">—</div>';
+      const msg = d?.mensaje || "Error al cargar equipos";
+      if (eqEl) eqEl.innerHTML = `<div class="empty">⚠️ ${msg}<br><small style="font-size:11px;color:var(--gris5);display:block;margin-top:6px">Verificá que la hoja "Maestro de Equipos" exista y que el GAS tenga la acción getInfoEquipos desplegada.</small></div>`;
+      const alEl = document.getElementById("eqAlertas");
+      if (alEl) alEl.innerHTML = '<div class="empty">—</div>';
       return;
     }
-    // Filtrar filas vacías (sin código)
     S.equiposInfo = (d.equipos || []).filter(e => e.codigo && e.codigo.trim() !== "");
     equiposRender(S.equiposInfo);
     equiposRenderAlertas();
   } catch(e) {
-    document.getElementById("eqLista").innerHTML = '<div class="empty">Sin conexión con Maestro de Equipos</div>';
+    if (eqEl) eqEl.innerHTML = '<div class="empty">Sin conexión con Maestro de Equipos</div>';
   }
 }
 

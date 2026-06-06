@@ -1038,6 +1038,24 @@ function fillSelect(id, list, placeholder) {
   if (cur) s.value = cur;
 }
 
+// Rellena un <select> de equipos mostrando "CODIGO — Marca Modelo"
+function fillSelectEquipos(id, codes, placeholder) {
+  const s = document.getElementById(id);
+  if (!s) return;
+  const cur = s.value;
+  s.innerHTML = `<option value="">${placeholder}</option>`;
+  codes.forEach(code => {
+    const o = document.createElement("option");
+    o.value = code;
+    const info = S.equiposInfo.find(e => e.codigo === code);
+    o.textContent = info
+      ? `${code} — ${[info.marca, info.modelo].filter(Boolean).join(" ")}`.trim()
+      : code;
+    s.appendChild(o);
+  });
+  if (cur) s.value = cur;
+}
+
 function setBtnLoading(id, txt) {
   const b = document.getElementById(id);
   if (!b) return;
@@ -1164,43 +1182,28 @@ async function init() {
     jsonp(`${URL_}?action=getInfoEquipos`)
   ]);
 
-  // Procesar getListas
+  // Procesar getListas — solo listas que NO son equipos
   if (resListas.status === "fulfilled" && resListas.value?.ok) {
     const d = resListas.value;
     S.listas = d;
     equiposLista = d.equipos || [];
-    const { equipos, operarios, obras, trabajos } = d;
+    const { operarios, obras, trabajos } = d;
 
-    fillSelect("cEquipo",      equipos,   "— Seleccionar —");
     fillSelect("cResponsable", operarios, "— Seleccionar —");
-    fillSelect("pEquipo",      equipos,   "— Seleccionar —");
     fillSelect("pOperario",    operarios, "— Seleccionar —");
     fillSelect("pObra",        obras,     "— Seleccionar —");
     fillSelect("pTrabajo",     trabajos,  "— Seleccionar —");
-    fillSelect("iEquipo",      equipos,   "— Seleccionar —");
-    fillSelect("mEquipo",      equipos,   "— Seleccionar —");
-
-    fillSelect("ceEquipo",      equipos,   "— Seleccionar —");
     fillSelect("ceResponsable", operarios, "— Seleccionar —");
-    fillSelect("peEquipo",      equipos,   "— Seleccionar —");
     fillSelect("peOperario",    operarios, "— Seleccionar —");
     fillSelect("peObra",        obras,     "— Seleccionar —");
     fillSelect("peTrabajo",     trabajos,  "— Seleccionar —");
-    fillSelect("ieEquipo",      equipos,   "— Seleccionar —");
-
-    equipos.forEach(eq => {
-      ["hcEquipo","hpEquipo","hiEquipo"].forEach(sid => {
-        const s = document.getElementById(sid);
-        if (s) { const o = document.createElement("option"); o.value = o.textContent = eq; s.appendChild(o); }
-      });
-    });
     operarios.forEach(op => {
       const s = document.getElementById("hpOperario");
       if (s) { const o = document.createElement("option"); o.value = o.textContent = op; s.appendChild(o); }
     });
   }
 
-  // Procesar getInfoEquipos (Maestro de Equipos)
+  // Procesar getInfoEquipos (Maestro)
   if (resEquipos.status === "fulfilled" && resEquipos.value?.ok) {
     S.equiposInfo = (resEquipos.value.equipos || []).filter(e => e.codigo && e.codigo.trim() !== "");
     equiposRender(S.equiposInfo);
@@ -1208,21 +1211,29 @@ async function init() {
   } else {
     const msg = resEquipos.value?.mensaje || "No se pudo conectar con Maestro de Equipos";
     const eqEl = document.getElementById("eqLista");
-    if (eqEl) eqEl.innerHTML = `<div class="empty">⚠️ ${msg}<br><small style="font-size:11px;color:var(--gris5);display:block;margin-top:6px">Verificá que la hoja "Maestro de Equipos" exista y que el script GAS tenga la acción getInfoEquipos.</small></div>`;
+    if (eqEl) eqEl.innerHTML = `<div class="empty">⚠️ ${msg}<br><small style="font-size:11px;color:var(--gris5);display:block;margin-top:6px">Verificá que la hoja "Maestro" exista y que el script GAS tenga la acción getInfoEquipos.</small></div>`;
     const alEl = document.getElementById("eqAlertas");
     if (alEl) alEl.innerHTML = '<div class="empty">—</div>';
   }
 
-  // ── Fallback equipos: si getListas trajo lista vacía, usar Maestro de Equipos ──
-  if (!equiposLista.length && S.equiposInfo.length) {
-    const eqCodes = [...new Set(S.equiposInfo.map(e => e.codigo).filter(Boolean))];
-    const EQ_FORM = ["cEquipo","pEquipo","iEquipo","ceEquipo","peEquipo","ieEquipo","mEquipo"];
-    EQ_FORM.forEach(sid => fillSelect(sid, eqCodes, "— Seleccionar —"));
-    eqCodes.forEach(eq => {
+  // ── Poblar selects de equipos con "CODIGO — Marca Modelo" usando ambas fuentes ──
+  // Fuente preferida: equiposLista (hoja Equipos); si está vacía, usar códigos del Maestro
+  const finalCodes = equiposLista.length
+    ? equiposLista
+    : [...new Set(S.equiposInfo.map(e => e.codigo).filter(Boolean))];
+
+  if (finalCodes.length) {
+    ["cEquipo","pEquipo","iEquipo","ceEquipo","peEquipo","ieEquipo","mEquipo"]
+      .forEach(sid => fillSelectEquipos(sid, finalCodes, "— Seleccionar —"));
+    finalCodes.forEach(code => {
       ["hcEquipo","hpEquipo","hiEquipo"].forEach(sid => {
         const s = document.getElementById(sid);
-        if (s && !Array.from(s.options).some(o => o.value === eq)) {
-          const o = document.createElement("option"); o.value = o.textContent = eq; s.appendChild(o);
+        if (s && !Array.from(s.options).some(o => o.value === code)) {
+          const o = document.createElement("option");
+          o.value = code;
+          const info = S.equiposInfo.find(e => e.codigo === code);
+          o.textContent = info ? `${code} — ${[info.marca, info.modelo].filter(Boolean).join(" ")}` : code;
+          s.appendChild(o);
         }
       });
     });

@@ -313,14 +313,14 @@
     .section-divider { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--gris5); padding: 4px 0 10px; border-bottom: 1px solid var(--borde); margin-bottom: 14px; }
 
     /* ─── FILTROS SERVICE ─── */
-    .filtro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 6px; }
+    .filtro-grid { display: flex; flex-direction: column; gap: 7px; margin-top: 6px; }
     .filtro-pill {
-      padding: 9px 8px; border: 1px solid var(--borde); border-radius: var(--rsm);
+      padding: 12px 16px; border: 1px solid var(--borde); border-radius: var(--rsm);
       background: var(--gris2); color: var(--texto2);
-      font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700;
       cursor: pointer; transition: all .15s; text-align: center; user-select: none;
     }
-    .filtro-pill.selected { border-color: var(--verde); background: rgba(34,197,94,.1); color: var(--verde); }
+    .filtro-pill.selected { border-color: var(--naranja); background: var(--naranja); color: #fff; }
     .filtro-wrap { margin-bottom: 12px; }
 
     /* ─── INFO DE EQUIPOS ─── */
@@ -732,20 +732,22 @@
         <textarea id="iDescripcion" rows="2" placeholder="Detalle de la intervención"></textarea>
       </div>
 
-      <!-- Filtros service — se muestra solo cuando trabajo contiene "service" -->
+      <!-- Filtros service — se muestra solo cuando trabajo contiene "service"/"servis" -->
       <div id="iFiltrosWrap" class="filtro-wrap" style="display:none">
-        <div class="section-divider">Filtros / Partes cambiadas</div>
+        <div class="section-divider">Filtros cambiados</div>
         <div class="filtro-grid">
-          <div class="filtro-pill" onclick="this.classList.toggle('selected')">🛢 Aceite motor</div>
-          <div class="filtro-pill" onclick="this.classList.toggle('selected')">🔵 Filtro de aceite</div>
-          <div class="filtro-pill" onclick="this.classList.toggle('selected')">💨 Filtro de aire</div>
-          <div class="filtro-pill" onclick="this.classList.toggle('selected')">⛽ Filtro combustible</div>
-          <div class="filtro-pill" onclick="this.classList.toggle('selected')">🔧 Filtro hidráulico</div>
-          <div class="filtro-pill" onclick="this.classList.toggle('selected')">⚙️ Filtro transmisión</div>
-          <div class="filtro-pill" onclick="this.classList.toggle('selected')">🔗 Correa / Cadena</div>
-          <div class="filtro-pill" onclick="this.classList.toggle('selected')">🌡️ Refrigerante</div>
+          <div class="filtro-pill" onclick="this.classList.toggle('selected')">Aceite</div>
+          <div class="filtro-pill" onclick="this.classList.toggle('selected')">Combustible</div>
+          <div class="filtro-pill" onclick="this.classList.toggle('selected')">Trampa de agua</div>
+          <div class="filtro-pill" onclick="this.classList.toggle('selected')">Aire</div>
+          <div class="filtro-pill" onclick="this.classList.toggle('selected')">Habitáculo</div>
+        </div>
+        <div class="f" style="margin-top:10px">
+          <label>Aceite (tipo)</label>
+          <input type="text" id="iAceiteType" list="listAceites" placeholder="Ej: 15w40 r4, 20w50..." autocomplete="off">
         </div>
       </div>
+      <datalist id="listAceites"></datalist>
 
       <div class="section-divider">Aceite / Service</div>
 
@@ -929,16 +931,17 @@
     <div class="f"><label>Descripción</label><textarea id="ieDescripcion" rows="2"></textarea></div>
     <!-- Filtros service en modo edición -->
     <div id="ieFiltrosWrap" class="filtro-wrap" style="display:none">
-      <div class="section-divider">Filtros / Partes cambiadas</div>
+      <div class="section-divider">Filtros cambiados</div>
       <div class="filtro-grid">
-        <div class="filtro-pill" onclick="this.classList.toggle('selected')">🛢 Aceite motor</div>
-        <div class="filtro-pill" onclick="this.classList.toggle('selected')">🔵 Filtro de aceite</div>
-        <div class="filtro-pill" onclick="this.classList.toggle('selected')">💨 Filtro de aire</div>
-        <div class="filtro-pill" onclick="this.classList.toggle('selected')">⛽ Filtro combustible</div>
-        <div class="filtro-pill" onclick="this.classList.toggle('selected')">🔧 Filtro hidráulico</div>
-        <div class="filtro-pill" onclick="this.classList.toggle('selected')">⚙️ Filtro transmisión</div>
-        <div class="filtro-pill" onclick="this.classList.toggle('selected')">🔗 Correa / Cadena</div>
-        <div class="filtro-pill" onclick="this.classList.toggle('selected')">🌡️ Refrigerante</div>
+        <div class="filtro-pill" onclick="this.classList.toggle('selected')">Aceite</div>
+        <div class="filtro-pill" onclick="this.classList.toggle('selected')">Combustible</div>
+        <div class="filtro-pill" onclick="this.classList.toggle('selected')">Trampa de agua</div>
+        <div class="filtro-pill" onclick="this.classList.toggle('selected')">Aire</div>
+        <div class="filtro-pill" onclick="this.classList.toggle('selected')">Habitáculo</div>
+      </div>
+      <div class="f" style="margin-top:10px">
+        <label>Aceite (tipo)</label>
+        <input type="text" id="ieAceiteType" list="listAceites" placeholder="Ej: 15w40 r4, 20w50..." autocomplete="off">
       </div>
     </div>
     <div class="row2">
@@ -1664,7 +1667,7 @@ async function planActualizar() {
 //  MÓDULO: INTERVENCIONES
 // ═══════════════════════════════════════════════════════════
 
-// Puebla los datalist de trabajo y taller con valores ya usados
+// Puebla los datalist de trabajo, taller y tipo de aceite con valores ya usados
 function poblarDatalistsInterv() {
   const trabajosHist = [...new Set(S.intervRegistros.map(r => r.trabajo).filter(Boolean))];
   const trabajosBase = S.listas.trabajos || [];
@@ -1675,46 +1678,63 @@ function poblarDatalistsInterv() {
   const talleres = [...new Set(S.intervRegistros.map(r => r.taller).filter(Boolean))].sort();
   const dlTa = document.getElementById("listTalleres");
   if (dlTa) dlTa.innerHTML = talleres.map(t => `<option value="${t}">`).join("");
+
+  // Tipos de aceite: predefinidos + histórico extraído de descripción
+  const aceitesPred = ["15w40 r4","15w40","20w50","10w30","10w40","SAE 30","SAE 40","85w140","75w90"];
+  const aceitesHist = S.intervRegistros.map(r => {
+    const m = (r.descripcion || "").match(/\[Aceite: ([^\]]+)\]/);
+    return m ? m[1] : null;
+  }).filter(Boolean);
+  const allAceites = [...new Set([...aceitesPred, ...aceitesHist])];
+  const dlA = document.getElementById("listAceites");
+  if (dlA) dlA.innerHTML = allAceites.map(a => `<option value="${a}">`).join("");
 }
 
 // Muestra/oculta sección de filtros y autoactiva el pill de Service
 function checkServicio() {
   const val = (document.getElementById("iTrabajo")?.value || "").toLowerCase();
-  const es  = val.includes("service") || val.includes("servicio");
+  const es  = val.includes("service") || val.includes("servicio") || val.includes("servis");
   const wrap = document.getElementById("iFiltrosWrap");
   if (wrap) wrap.style.display = es ? "block" : "none";
   if (es) selBool("iServis", "si", document.getElementById("ipill-servis-si"));
 }
 function checkServicioEdit() {
   const val = (document.getElementById("ieTrabajo")?.value || "").toLowerCase();
-  const es  = val.includes("service") || val.includes("servicio");
+  const es  = val.includes("service") || val.includes("servicio") || val.includes("servis");
   const wrap = document.getElementById("ieFiltrosWrap");
   if (wrap) wrap.style.display = es ? "block" : "none";
   if (es) selBool("ieServis", "si", document.getElementById("iepill-servis-si"));
 }
 
-// Lee las pills seleccionadas y devuelve texto para guardar en descripción
+// Lee las pills seleccionadas y tipo de aceite; devuelve texto para guardar en descripción
 function getFiltros(wrapId) {
   const wrap = document.getElementById(wrapId);
   if (!wrap || wrap.style.display === "none") return "";
   const sel = wrap.querySelectorAll(".filtro-pill.selected");
-  if (!sel.length) return "";
-  return "[Filtros: " + Array.from(sel).map(p => p.textContent.trim()).join(" · ") + "]";
+  const aceiteType = (wrap.querySelector('input[list="listAceites"]')?.value || "").trim();
+  const parts = [];
+  if (sel.length) parts.push("[Filtros: " + Array.from(sel).map(p => p.textContent.trim()).join(" · ") + "]");
+  if (aceiteType) parts.push("[Aceite: " + aceiteType + "]");
+  return parts.join(" ");
 }
 
 // Al abrir para editar, detecta y re-selecciona filtros guardados en descripción
 function restoreFiltros(wrapId, descripcion) {
-  const match = (descripcion || "").match(/\[Filtros: ([^\]]+)\]/);
-  if (!match) return;
-  const guardados = match[1].split(" · ").map(s => s.trim().toLowerCase());
   const wrap = document.getElementById(wrapId);
   if (!wrap) return;
-  wrap.querySelectorAll(".filtro-pill").forEach(p => {
-    const txt = p.textContent.trim().toLowerCase();
-    if (guardados.some(g => txt.includes(g.replace(/[^a-záéíóúñ]/gi,"").substring(0,6)) || g.includes(txt.replace(/[^a-záéíóúñ]/gi,"").substring(0,6)))) {
-      p.classList.add("selected");
-    }
-  });
+  const matchF = (descripcion || "").match(/\[Filtros: ([^\]]+)\]/);
+  const matchA = (descripcion || "").match(/\[Aceite: ([^\]]+)\]/);
+  if (!matchF && !matchA) return;
+  if (matchF) {
+    const guardados = matchF[1].split(" · ").map(s => s.trim().toLowerCase());
+    wrap.querySelectorAll(".filtro-pill").forEach(p => {
+      if (guardados.includes(p.textContent.trim().toLowerCase())) p.classList.add("selected");
+    });
+  }
+  if (matchA) {
+    const inp = wrap.querySelector('input[list="listAceites"]');
+    if (inp) inp.value = matchA[1];
+  }
   wrap.style.display = "block";
 }
 
@@ -1723,6 +1743,8 @@ function resetFiltros(wrapId) {
   const wrap = document.getElementById(wrapId);
   if (!wrap) return;
   wrap.querySelectorAll(".filtro-pill").forEach(p => p.classList.remove("selected"));
+  const inp = wrap.querySelector('input[list="listAceites"]');
+  if (inp) inp.value = "";
   wrap.style.display = "none";
 }
 
@@ -1803,7 +1825,7 @@ function intervAbrirEditar(id) {
   document.getElementById("ieTaller").value      = r.taller||"";
   // Separar filtros guardados de la descripción limpia
   const descRaw = r.descripcion || "";
-  const descLimpia = descRaw.replace(/\[Filtros:[^\]]*\]/g, "").trim();
+  const descLimpia = descRaw.replace(/\[Filtros:[^\]]*\]/g, "").replace(/\[Aceite:[^\]]*\]/g, "").trim();
   document.getElementById("ieDescripcion").value = descLimpia;
   // Restaurar filtros seleccionados
   resetFiltros("ieFiltrosWrap");

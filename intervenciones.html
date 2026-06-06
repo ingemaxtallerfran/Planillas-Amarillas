@@ -1218,14 +1218,6 @@ async function init() {
     });
   }
 
-  // ── Si ninguna fuente trajo equipos, mostrar "sin datos" en selects ──
-  if (!equiposLista.length && !S.equiposInfo.length) {
-    ["cEquipo","pEquipo","iEquipo","ceEquipo","peEquipo","ieEquipo"].forEach(sid => {
-      const s = document.getElementById(sid);
-      if (s) { s.innerHTML = '<option value="">— Sin datos de equipos —</option>'; }
-    });
-  }
-
   // Cargar resto de módulos en paralelo (equiposCargar ya corrió arriba)
   await Promise.all([combCargar(), planCargar(), intervCargar(), stockCargar()]);
 }

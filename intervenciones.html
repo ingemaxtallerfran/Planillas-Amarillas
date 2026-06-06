@@ -3,40 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <title>Ingemax — Intervenciones</title>
+  <title>Ingemax — Sistema de Gestión</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
       --naranja: #E8651A;
-      --naranja2: #ff7a2f;
-      --negro: #0f0f0f;
-      --gris1: #1a1a1a;
-      --gris2: #252525;
-      --gris3: #333;
-      --gris4: #555;
-      --gris5: #888;
-      --borde: #2e2e2e;
-      --texto: #f0f0f0;
-      --texto2: #aaa;
-      --radius: 10px;
-      --rsm: 7px;
+      --negro:   #0f0f0f;
+      --gris1:   #1a1a1a;
+      --gris2:   #252525;
+      --gris3:   #333;
+      --gris4:   #555;
+      --gris5:   #888;
+      --borde:   #2e2e2e;
+      --texto:   #f0f0f0;
+      --texto2:  #aaa;
+      --verde:   #22c55e;
+      --azul:    #3b82f6;
+      --radius:  10px;
+      --rsm:     7px;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Barlow', sans-serif; background: var(--negro); color: var(--texto); min-height: 100vh; }
 
-    body {
-      font-family: 'Barlow', sans-serif;
-      background: var(--negro);
-      color: var(--texto);
-      min-height: 100vh;
-      overscroll-behavior: none;
-    }
-
-    /* ── HEADER ── */
+    /* ─── HEADER ─── */
     .header {
       background: var(--gris1);
-      border-bottom: 1px solid var(--borde);
+      border-bottom: 2px solid var(--naranja);
       padding: 0 16px;
       display: flex;
       align-items: center;
@@ -46,308 +39,90 @@
       top: 0;
       z-index: 100;
     }
-
-    .logo {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: .04em;
-    }
+    .logo { font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 800; letter-spacing: .04em; }
     .logo span { color: var(--naranja); }
+    .header-sub { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--gris5); }
 
-    .header-title {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: .15em;
-      text-transform: uppercase;
-      color: var(--texto2);
-    }
-
-    /* ── TOOLBAR ── */
-    .toolbar {
+    /* ─── BOTTOM NAV ─── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
       background: var(--gris1);
-      border-bottom: 1px solid var(--borde);
-      padding: 10px 14px;
+      border-top: 1px solid var(--borde);
       display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
+      z-index: 100;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
-
-    .search-wrap {
+    .nav-btn {
       flex: 1;
-      min-width: 160px;
-      position: relative;
-    }
-
-    .search-wrap input {
-      width: 100%;
-      background: var(--gris2);
-      border: 1px solid var(--borde);
-      border-radius: var(--rsm);
-      color: var(--texto);
-      font-family: 'Barlow', sans-serif;
-      font-size: 14px;
-      padding: 8px 12px 8px 34px;
-      outline: none;
-      transition: border-color .2s;
-    }
-    .search-wrap input:focus { border-color: var(--naranja); }
-    .search-wrap input::placeholder { color: var(--gris5); }
-
-    .search-icon {
-      position: absolute;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--gris5);
-      font-size: 15px;
-    }
-
-    .filter-btn {
-      background: var(--gris2);
-      border: 1px solid var(--borde);
-      border-radius: var(--rsm);
-      color: var(--texto2);
-      font-family: 'Barlow', sans-serif;
-      font-size: 13px;
-      padding: 8px 12px;
-      cursor: pointer;
-      transition: border-color .2s, color .2s;
-      white-space: nowrap;
-    }
-    .filter-btn.active { border-color: var(--naranja); color: var(--naranja); }
-
-    /* ── FILTERS ROW ── */
-    .filters {
-      display: none;
-      background: var(--gris1);
-      border-bottom: 1px solid var(--borde);
-      padding: 10px 14px;
-      gap: 8px;
-    }
-    .filters.open { display: flex; flex-wrap: wrap; }
-
-    .filters select {
-      flex: 1;
-      min-width: 130px;
-      background: var(--gris2);
-      border: 1px solid var(--borde);
-      border-radius: var(--rsm);
-      color: var(--texto);
-      font-family: 'Barlow', sans-serif;
-      font-size: 13px;
-      padding: 8px 10px;
-      outline: none;
-      -webkit-appearance: none;
-      appearance: none;
-      cursor: pointer;
-    }
-    .filters select:focus { border-color: var(--naranja); }
-
-    .filters-clear {
-      background: none;
-      border: 1px solid var(--gris4);
-      border-radius: var(--rsm);
-      color: var(--gris5);
-      font-family: 'Barlow', sans-serif;
-      font-size: 12px;
-      padding: 8px 12px;
-      cursor: pointer;
-    }
-
-    /* ── STATS BAR ── */
-    .stats {
-      padding: 8px 16px;
-      font-size: 12px;
-      color: var(--gris5);
-      border-bottom: 1px solid var(--borde);
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
       align-items: center;
+      justify-content: center;
+      padding: 10px 4px 8px;
+      border: none;
+      background: none;
+      color: var(--gris5);
+      cursor: pointer;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      gap: 3px;
+      transition: color .2s;
     }
-    .stats strong { color: var(--naranja); }
-
-    /* ── LIST ── */
-    .list {
-      padding: 12px 14px;
-      padding-bottom: 100px;
-      max-width: 600px;
-      margin: 0 auto;
+    .nav-btn.active { color: var(--naranja); }
+    .nav-btn .nav-icon { font-size: 20px; line-height: 1; }
+    .nav-indicator {
+      position: absolute;
+      top: 0;
+      height: 2px;
+      background: var(--naranja);
+      transition: left .25s ease, width .25s ease;
+      border-radius: 0 0 2px 2px;
     }
 
-    .item {
+    /* ─── PAGES ─── */
+    .page { display: none; padding: 16px; max-width: 580px; margin: 0 auto; padding-bottom: 90px; }
+    .page.active { display: block; }
+
+    /* ─── SECTION TABS (sub-tabs dentro de cada módulo) ─── */
+    .stabs { display: grid; grid-template-columns: repeat(var(--stab-cols, 2), 1fr); background: var(--gris1); border-bottom: 1px solid var(--borde); margin: -16px -16px 16px; }
+    .stab { padding: 11px; font-size: 13px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: .05em; border: none; background: none; color: var(--gris5); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -1px; text-transform: uppercase; transition: color .2s, border-color .2s; }
+    .stab.active { color: var(--naranja); border-bottom-color: var(--naranja); }
+    .stab-sec { display: none; }
+    .stab-sec.active { display: block; }
+
+    /* ─── STAT CARDS ─── */
+    .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .stat-card {
       background: var(--gris1);
       border: 1px solid var(--borde);
       border-radius: var(--radius);
-      margin-bottom: 8px;
-      overflow: hidden;
-      transition: border-color .2s;
-      cursor: pointer;
+      padding: 14px 16px;
     }
-    .item:active { border-color: var(--naranja); }
+    .stat-card.accent { border-left: 4px solid var(--naranja); }
+    .stat-card.verde  { border-left: 4px solid var(--verde); }
+    .stat-card.azul   { border-left: 4px solid var(--azul); }
+    .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--texto2); margin-bottom: 4px; }
+    .stat-val { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 800; }
+    .stat-val.naranja { color: var(--naranja); }
+    .stat-val.verde   { color: var(--verde); }
+    .stat-val.azul    { color: var(--azul); }
+    .stat-unit { font-size: 13px; font-weight: 600; color: var(--gris5); margin-left: 3px; }
 
-    .item-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 14px 8px;
-      gap: 8px;
-    }
+    /* ─── CARD / FORM ─── */
+    .card { background: var(--gris1); border: 1px solid var(--borde); border-radius: var(--radius); padding: 18px; margin-bottom: 14px; }
+    .card-title { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--texto2); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .card-title::before { content: ''; width: 4px; height: 15px; background: var(--naranja); border-radius: 2px; flex-shrink: 0; }
 
-    .item-equipo {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: .02em;
-      color: var(--texto);
-      flex: 1;
-    }
-
-    .item-fecha {
-      font-size: 12px;
-      color: var(--texto2);
-      white-space: nowrap;
-    }
-
-    .item-body {
-      padding: 0 14px 12px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 9px;
-      border-radius: 20px;
-      letter-spacing: .03em;
-      text-transform: uppercase;
-    }
-
-    .tag-trabajo { background: rgba(232,101,26,.15); color: var(--naranja); border: 1px solid rgba(232,101,26,.3); }
-    .tag-service { background: rgba(59,130,246,.15); color: #60a5fa; border: 1px solid rgba(59,130,246,.3); }
-    .tag-taller  { background: rgba(255,255,255,.07); color: var(--texto2); border: 1px solid var(--borde); }
-    .tag-odometro{ background: rgba(255,255,255,.05); color: var(--gris5); border: 1px solid var(--borde); font-family: 'Barlow Condensed', sans-serif; font-size: 12px; }
-
-    .item-desc {
-      padding: 0 14px 12px;
-      font-size: 13px;
-      color: var(--texto2);
-      line-height: 1.4;
-      border-top: 1px solid var(--borde);
-      padding-top: 8px;
-      margin-top: -4px;
-    }
-
-    /* ── EMPTY ── */
-    .empty {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--gris5);
-    }
-    .empty-icon { font-size: 40px; margin-bottom: 12px; }
-    .empty p { font-size: 14px; }
-
-    /* ── FAB ── */
-    .fab {
-      position: fixed;
-      bottom: 24px;
-      right: 20px;
-      width: 56px;
-      height: 56px;
-      background: var(--naranja);
-      border: none;
-      border-radius: 50%;
-      color: #fff;
-      font-size: 26px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 20px rgba(232,101,26,.5);
-      transition: transform .15s, box-shadow .15s;
-      z-index: 90;
-    }
-    .fab:active { transform: scale(.93); box-shadow: 0 2px 10px rgba(232,101,26,.4); }
-
-    /* ── MODAL ── */
-    .overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.75);
-      z-index: 200;
-      display: none;
-      align-items: flex-end;
-      justify-content: center;
-    }
-    .overlay.open { display: flex; }
-
-    .modal {
-      background: var(--gris1);
-      border-radius: 18px 18px 0 0;
-      border-top: 1px solid var(--borde);
-      width: 100%;
-      max-width: 600px;
-      max-height: 92vh;
-      overflow-y: auto;
-      padding: 20px 18px 40px;
-      animation: slideUp .25s ease;
-    }
-
-    @keyframes slideUp { from { transform: translateY(60px); opacity:0; } to { transform: translateY(0); opacity:1; } }
-
-    .modal-handle {
-      width: 36px;
-      height: 4px;
-      background: var(--gris3);
-      border-radius: 2px;
-      margin: 0 auto 18px;
-    }
-
-    .modal-title {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: .04em;
-      margin-bottom: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .modal-close {
-      background: var(--gris2);
-      border: none;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      color: var(--texto2);
-      font-size: 16px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    /* ── FORM ── */
-    .f { margin-bottom: 14px; }
-    .f label {
-      display: block;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--gris5);
-      margin-bottom: 5px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-    }
+    .f { margin-bottom: 12px; }
+    .f:last-child { margin-bottom: 0; }
+    .f label { display: block; font-size: 11px; font-weight: 600; color: var(--gris5); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .08em; }
     .req { color: var(--naranja); }
-
     .f select, .f input, .f textarea {
       width: 100%;
       background: var(--gris2);
@@ -361,560 +136,1445 @@
       -webkit-appearance: none;
       appearance: none;
       transition: border-color .2s;
+      resize: none;
     }
     .f select:focus, .f input:focus, .f textarea:focus { border-color: var(--naranja); }
     .f select.error, .f input.error { border-color: #ef4444; }
-    .f textarea { resize: none; height: 75px; font-size: 14px; }
-
-    /* service filters checkboxes */
-    .filtros-service {
-      display: none;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 4px;
-    }
-    .filtros-service.visible { display: flex; }
-
-    .chk-label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--gris2);
-      border: 1px solid var(--borde);
-      border-radius: 20px;
-      padding: 6px 12px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: border-color .2s, background .2s;
-      user-select: none;
-    }
-    .chk-label input { display: none; }
-    .chk-label input:checked + span { color: var(--naranja); }
-    .chk-label:has(input:checked) {
-      border-color: var(--naranja);
-      background: rgba(232,101,26,.1);
-    }
-
     .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 
-    /* ── BUTTONS ── */
-    .btn-row { display: flex; gap: 10px; margin-top: 6px; }
+    /* ─── PILLS ─── */
+    .pill-row { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 2px; }
+    .pill { padding: 9px 12px; border: 1px solid var(--borde); border-radius: var(--rsm); background: var(--gris2); color: var(--texto2); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all .15s; flex: 1; text-align: center; min-width: 80px; }
+    .pill.selected { border-color: var(--naranja); background: rgba(232,101,26,.15); color: var(--naranja); }
+    .pill.verde-sel { border-color: var(--verde); background: rgba(34,197,94,.1); color: var(--verde); }
 
-    .btn {
-      flex: 1;
-      padding: 13px;
-      border: none;
-      border-radius: var(--rsm);
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: .05em;
-      cursor: pointer;
-      transition: opacity .15s;
-    }
-    .btn:active { opacity: .8; }
+    /* ─── BUTTONS ─── */
+    .btn { width: 100%; padding: 13px; border: none; border-radius: var(--rsm); font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 800; letter-spacing: .04em; cursor: pointer; transition: opacity .15s; margin-top: 6px; }
     .btn-primary { background: var(--naranja); color: #fff; }
-    .btn-danger  { background: #2a1010; color: #ef4444; border: 1px solid #3d1515; }
     .btn-cancel  { background: var(--gris2); color: var(--texto2); border: 1px solid var(--borde); }
+    .btn-danger  { background: #2a1010; color: #ef4444; border: 1px solid #3d1515; }
+    .btn-verde   { background: rgba(34,197,94,.2); color: var(--verde); border: 1px solid rgba(34,197,94,.3); }
     .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-row { display: flex; gap: 8px; margin-top: 8px; }
+    .btn-row .btn { margin-top: 0; }
 
-    .spin { display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:5px; }
+    /* ─── HISTORIAL ─── */
+    .toolbar { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    .toolbar select, .toolbar input {
+      flex: 1; min-width: 110px;
+      background: var(--gris2); border: 1px solid var(--borde); border-radius: var(--rsm);
+      color: var(--texto); font-family: 'Barlow', sans-serif; font-size: 13px;
+      padding: 8px 10px; outline: none; -webkit-appearance: none; appearance: none;
+    }
+    .toolbar select:focus, .toolbar input:focus { border-color: var(--naranja); }
+
+    .list-item { background: var(--gris1); border: 1px solid var(--borde); border-radius: var(--radius); padding: 13px 15px; margin-bottom: 8px; cursor: pointer; transition: border-color .15s; }
+    .list-item:active { border-color: var(--naranja); }
+    .item-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+    .item-title { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; line-height: 1.2; }
+    .item-date { font-size: 11px; color: var(--texto2); white-space: nowrap; margin-left: 8px; flex-shrink: 0; }
+    .item-body { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 4px; }
+    .tag { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; letter-spacing: .03em; }
+    .tag-orange { background: rgba(232,101,26,.15); color: var(--naranja); border: 1px solid rgba(232,101,26,.3); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; }
+    .tag-gray   { background: rgba(255,255,255,.07); color: var(--texto2); border: 1px solid var(--borde); }
+    .tag-green  { background: rgba(34,197,94,.12); color: var(--verde); border: 1px solid rgba(34,197,94,.25); }
+    .tag-blue   { background: rgba(59,130,246,.12); color: var(--azul); border: 1px solid rgba(59,130,246,.25); }
+
+    .stats { font-size: 12px; color: var(--gris5); margin-bottom: 10px; padding: 6px 10px; background: var(--gris1); border-radius: var(--rsm); border: 1px solid var(--borde); }
+    .stats strong { color: var(--naranja); }
+    .empty { text-align: center; padding: 50px 20px; color: var(--gris5); font-size: 14px; }
+    .loading { text-align: center; padding: 40px; color: var(--gris5); }
+    .spin { display: inline-block; width: 28px; height: 28px; border: 3px solid var(--gris3); border-top-color: var(--naranja); border-radius: 50%; animation: sp .7s linear infinite; }
+    .spin-sm { display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:5px; }
     @keyframes sp { to { transform: rotate(360deg); } }
 
-    /* ── TOAST ── */
-    .toast { position:fixed;bottom:90px;left:50%;transform:translateX(-50%);padding:11px 20px;border-radius:var(--rsm);font-size:13px;font-weight:600;z-index:999;max-width:90vw;text-align:center;pointer-events:none;white-space:nowrap; }
-    .toast.ok  { background:#1a3326;color:#4ade80;border:1px solid #2d5c42; }
-    .toast.err { background:#2d1515;color:#f87171;border:1px solid #5a2020; }
-    .toast.hidden { display:none; }
-
-    /* ── CONFIRM DELETE ── */
-    .confirm-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.85);
-      z-index: 300;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .confirm-overlay.open { display: flex; }
-    .confirm-box {
+    /* ─── CISTERNAS STOCK ─── */
+    .cisterna-card {
       background: var(--gris1);
       border: 1px solid var(--borde);
       border-radius: var(--radius);
-      padding: 24px 20px;
-      max-width: 320px;
-      width: 100%;
-      text-align: center;
+      padding: 16px;
+      margin-bottom: 10px;
     }
-    .confirm-box h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; margin-bottom: 8px; }
+    .cist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .cist-nombre { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; }
+    .cist-tipo { font-size: 10px; padding: 3px 8px; border-radius: 20px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+    .cist-tipo.central { background: rgba(232,101,26,.15); color: var(--naranja); border: 1px solid rgba(232,101,26,.3); }
+    .cist-tipo.obra    { background: rgba(59,130,246,.12); color: var(--azul); border: 1px solid rgba(59,130,246,.25); }
+    .cist-tipo.movil   { background: rgba(34,197,94,.1); color: var(--verde); border: 1px solid rgba(34,197,94,.25); }
+    .cist-barra-bg { background: var(--gris2); border-radius: 4px; height: 8px; overflow: hidden; margin-bottom: 8px; }
+    .cist-barra { height: 100%; border-radius: 4px; transition: width .4s ease; }
+    .barra-ok     { background: var(--verde); }
+    .barra-medio  { background: #f59e0b; }
+    .barra-bajo   { background: #ef4444; }
+    .cist-nums { display: flex; justify-content: space-between; font-size: 12px; color: var(--texto2); }
+    .cist-stock { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; }
+
+    /* ─── MODAL ─── */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 200; display: none; align-items: flex-end; justify-content: center; }
+    .overlay.open { display: flex; }
+    .modal { background: var(--gris1); border-radius: 18px 18px 0 0; border-top: 1px solid var(--borde); width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; padding: 20px 18px 40px; animation: slideUp .22s ease; }
+    @keyframes slideUp { from { transform: translateY(60px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+    .modal-handle { width: 36px; height: 4px; background: var(--gris3); border-radius: 2px; margin: 0 auto 18px; }
+    .modal-title { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; }
+    .modal-close { background: var(--gris2); border: 1px solid var(--borde); border-radius: 50%; width: 30px; height: 30px; color: var(--texto2); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    /* ─── CONFIRM ─── */
+    .confirm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 300; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .confirm-overlay.open { display: flex; }
+    .confirm-box { background: var(--gris1); border: 1px solid var(--borde); border-radius: var(--radius); padding: 24px 20px; max-width: 300px; width: 100%; text-align: center; }
+    .confirm-box h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; margin-bottom: 8px; }
     .confirm-box p { font-size: 13px; color: var(--texto2); margin-bottom: 20px; }
 
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: var(--gris5);
-      font-size: 14px;
+    /* ─── TOAST ─── */
+    .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); padding: 11px 20px; border-radius: var(--rsm); font-size: 13px; font-weight: 600; z-index: 999; max-width: 90vw; text-align: center; pointer-events: none; white-space: nowrap; transition: opacity .3s; }
+    .toast.ok  { background: #1a3326; color: #4ade80; border: 1px solid #2d5c42; }
+    .toast.err { background: #2d1515; color: #f87171; border: 1px solid #5a2020; }
+    .toast.hidden { opacity: 0; pointer-events: none; }
+
+    /* ─── CISTERNA GRANDE ─── */
+    .cist-grande-card {
+      background: var(--gris1);
+      border: 1px solid var(--borde);
+      border-top: 3px solid var(--naranja);
+      border-radius: var(--radius);
+      padding: 18px 18px 14px;
+      margin-bottom: 4px;
     }
-    .loading-dot {
-      display: inline-block;
-      animation: blink 1.2s infinite;
+    .cist-grande-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .cist-grande-label { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--gris5); margin-bottom: 4px; }
+    .cist-grande-stock { font-family: 'Barlow Condensed', sans-serif; font-size: 48px; font-weight: 800; color: var(--naranja); line-height: 1; }
+    .cist-grande-cap { font-size: 12px; color: var(--gris5); margin-top: 4px; }
+    .btn-refresh { background: var(--gris2); border: 1px solid var(--borde); border-radius: 50%; width: 36px; height: 36px; color: var(--naranja); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform .3s; }
+    .btn-refresh:active { transform: rotate(180deg); }
+
+    /* GAUGE */
+    .gauge-wrap { width: 100%; max-width: 220px; margin: 8px auto 4px; }
+    .gauge-svg { width: 100%; height: auto; }
+    .gauge-track { fill: none; stroke: var(--gris2); stroke-width: 16; stroke-linecap: round; }
+    .gauge-fill  { fill: none; stroke: var(--naranja); stroke-width: 16; stroke-linecap: round; transition: stroke-dasharray .8s ease, stroke .4s; }
+    .gauge-pct   { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 800; fill: var(--texto); text-anchor: middle; dominant-baseline: auto; }
+    .gauge-sub   { font-size: 9px; fill: var(--gris5); text-anchor: middle; dominant-baseline: auto; font-family: 'Barlow', sans-serif; }
+
+    .cist-mini-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; border-top: 1px solid var(--borde); padding-top: 12px; }
+    .cist-mini-label { font-size: 9px; text-transform: uppercase; letter-spacing: .08em; color: var(--gris5); margin-bottom: 3px; }
+    .cist-mini-val   { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; }
+    .cist-mini-val.verde   { color: var(--verde); }
+    .cist-mini-val.naranja { color: var(--naranja); }
+
+    /* CALENDARIO */
+    .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .cal-mes-label { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+    .cal-nav-btn { background: var(--gris2); border: 1px solid var(--borde); border-radius: var(--rsm); width: 36px; height: 36px; color: var(--texto); font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+    .cal-dow { text-align: center; font-size: 10px; font-weight: 700; color: var(--gris5); padding: 4px 0; letter-spacing: .06em; text-transform: uppercase; }
+    .cal-dia {
+      background: var(--gris1);
+      border: 1px solid var(--borde);
+      border-radius: 6px;
+      min-height: 52px;
+      padding: 4px;
+      cursor: pointer;
+      transition: border-color .15s;
+      position: relative;
+      overflow: hidden;
     }
-    @keyframes blink { 0%,100%{opacity:.2} 50%{opacity:1} }
+    .cal-dia:active { border-color: var(--naranja); }
+    .cal-dia.vacio  { background: transparent; border-color: transparent; cursor: default; }
+    .cal-dia.hoy    { border-color: var(--naranja); }
+    .cal-dia.seleccionado { border-color: var(--naranja); background: rgba(232,101,26,.08); }
+    .cal-num { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; color: var(--texto2); }
+    .cal-dia.hoy .cal-num { color: var(--naranja); }
+    .cal-eventos { margin-top: 2px; display: flex; flex-direction: column; gap: 2px; }
+    .cal-ev-carga    { background: rgba(34,197,94,.2);  color: var(--verde);   border-radius: 3px; font-size: 9px; font-weight: 700; padding: 1px 3px; font-family: 'Barlow Condensed', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cal-ev-descarga { background: rgba(232,101,26,.2); color: var(--naranja); border-radius: 3px; font-size: 9px; font-weight: 700; padding: 1px 3px; font-family: 'Barlow Condensed', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .det-mov { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--borde); }
+    .det-mov:last-child { border-bottom: none; }
+    .det-tipo { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; }
+    .det-tipo.carga    { color: var(--verde); }
+    .det-tipo.descarga { color: var(--naranja); }
+    .det-info { font-size: 12px; color: var(--texto2); margin-top: 2px; }
+    .det-cant { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; }
+    .det-cant.carga    { color: var(--verde); }
+    .det-cant.descarga { color: var(--naranja); }
+    .det-del { background: none; border: none; color: var(--gris4); cursor: pointer; font-size: 16px; padding: 4px 8px; }
+    .det-del:active { color: #ef4444; }
+
+    /* ─── INTERVENCIONES ─── */
+    .aviso-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; letter-spacing: .05em; }
+    .aviso-alto  { background: rgba(239,68,68,.15); color: #f87171; border: 1px solid rgba(239,68,68,.3); }
+    .aviso-medio { background: rgba(245,158,11,.12); color: #fbbf24; border: 1px solid rgba(245,158,11,.25); }
+    .aviso-bajo  { background: rgba(34,197,94,.1); color: #4ade80; border: 1px solid rgba(34,197,94,.25); }
+
+    /* ─── PLANILLAS ─── */
+    .section-divider { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--gris5); padding: 4px 0 10px; border-bottom: 1px solid var(--borde); margin-bottom: 14px; }
   </style>
 </head>
 <body>
 
 <div class="header">
   <div class="logo">INGEMA<span>X</span></div>
-  <div class="header-title">Intervenciones</div>
-  <div style="width:80px"></div>
+  <div class="header-sub">Gestión de Equipos</div>
+  <div style="width:70px"></div>
 </div>
 
-<div class="toolbar">
-  <div class="search-wrap">
-    <span class="search-icon">🔍</span>
-    <input type="search" id="searchInput" placeholder="Buscar equipo, trabajo..." oninput="applyFilters()">
+<!-- ══════════ PÁGINAS ══════════ -->
+
+<!-- ── COMBUSTIBLE ── -->
+<div class="page active" id="page-combustible">
+  <div class="stabs">
+    <button class="stab active" onclick="switchStab('combustible','cargar',this)">⛽ Cargar</button>
+    <button class="stab"        onclick="switchStab('combustible','historial',this)">📋 Historial</button>
   </div>
-  <button class="filter-btn" id="filterToggle" onclick="toggleFilters()">⚙ Filtros</button>
-</div>
 
-<div class="filters" id="filtersRow">
-  <select id="fEquipo" onchange="applyFilters()">
-    <option value="">Todos los equipos</option>
-  </select>
-  <select id="fTrabajo" onchange="applyFilters()">
-    <option value="">Todos los trabajos</option>
-    <option>Servis</option>
-    <option>Reparación</option>
-    <option>Mantenimiento</option>
-    <option>Diagnóstico</option>
-    <option>Otro</option>
-  </select>
-  <select id="fTaller" onchange="applyFilters()">
-    <option value="">Todos los talleres</option>
-    <option>Interno</option>
-    <option>Externo</option>
-  </select>
-  <button class="filters-clear" onclick="clearFilters()">✕ Limpiar</button>
-</div>
-
-<div class="stats" id="statsBar">
-  <span>Cargando...</span>
-</div>
-
-<div class="list" id="lista">
-  <div class="loading">Cargando intervenciones<span class="loading-dot">...</span></div>
-</div>
-
-<!-- FAB -->
-<button class="fab" onclick="abrirModal()" title="Nueva intervención">+</button>
-
-<!-- MODAL FORM -->
-<div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
-  <div class="modal" id="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">
-      <span id="modalTitulo">Nueva intervención</span>
-      <button class="modal-close" onclick="cerrarModal()">✕</button>
-    </div>
-
-    <input type="hidden" id="editId">
-
-    <div class="row2">
-      <div class="f">
-        <label>Fecha <span class="req">*</span></label>
-        <input type="date" id="fFecha">
+  <!-- Cargar -->
+  <div class="stab-sec active" id="combustible-cargar">
+    <div class="stat-row">
+      <div class="stat-card accent">
+        <div class="stat-label">Total hoy</div>
+        <div class="stat-val naranja" id="combTotalHoy">—<span class="stat-unit">L</span></div>
       </div>
-      <div class="f">
-        <label>Odómetro</label>
-        <input type="number" id="fOdometro" placeholder="hs / km" inputmode="numeric">
+      <div class="stat-card verde">
+        <div class="stat-label">Este mes</div>
+        <div class="stat-val verde" id="combTotalMes">—<span class="stat-unit">L</span></div>
       </div>
     </div>
 
-    <div class="f">
-      <label>Equipo <span class="req">*</span></label>
-      <select id="fEquipoForm"><option value="">— Seleccionar —</option></select>
+    <div class="card">
+      <div class="card-title">Nueva carga</div>
+
+      <div class="row2">
+        <div class="f">
+          <label>Fecha <span class="req">*</span></label>
+          <input type="date" id="cFecha">
+        </div>
+        <div class="f">
+          <label>Cantidad (L) <span class="req">*</span></label>
+          <input type="number" id="cCantidad" placeholder="Ej: 80" inputmode="decimal">
+        </div>
+      </div>
+
+      <div class="f">
+        <label>Equipo <span class="req">*</span></label>
+        <select id="cEquipo"><option value="">— Cargando... —</option></select>
+      </div>
+
+      <div class="f">
+        <label>Odómetro / Horómetro</label>
+        <input type="number" id="cOdometro" placeholder="hs o km — Opcional" inputmode="numeric">
+      </div>
+
+      <div class="f">
+        <label>Chulengo <span class="req">*</span></label>
+        <div class="pill-row">
+          <div class="pill selected" id="cpill-cesar"   onclick="selPill('c','chulengo','CH7-Cesar',this)">CH7 — Cesar</div>
+          <div class="pill"          id="cpill-obrador" onclick="selPill('c','chulengo','CH3-Obrador',this)">CH3 — Obrador</div>
+        </div>
+        <input type="hidden" id="cChulengo" value="CH7-Cesar">
+      </div>
+
+      <div class="f">
+        <label>Responsable <span class="req">*</span></label>
+        <select id="cResponsable"><option value="">— Cargando... —</option></select>
+      </div>
+
+      <button class="btn btn-primary" id="btnCombGuardar" onclick="combGuardar()">Guardar carga</button>
+    </div>
+  </div>
+
+  <!-- Historial combustible -->
+  <div class="stab-sec" id="combustible-historial">
+    <div class="toolbar">
+      <select id="hcEquipo" onchange="combRenderHist()"><option value="">Todos los equipos</option></select>
+      <input type="date" id="hcFecha" onchange="combRenderHist()">
+    </div>
+    <div class="stats" id="combHistStats"></div>
+    <div id="combListaHist"><div class="loading"><div class="spin"></div></div></div>
+  </div>
+</div>
+
+<!-- ── STOCK ── -->
+<div class="page" id="page-stock">
+  <div class="stabs">
+    <button class="stab active" onclick="switchStab('stock','resumen',this)">🛢️ Stock</button>
+    <button class="stab"        onclick="switchStab('stock','calendario',this)">📅 Calendario</button>
+    <button class="stab"        onclick="switchStab('stock','nuevo',this)">+ Nuevo</button>
+  </div>
+
+  <!-- RESUMEN STOCK -->
+  <div class="stab-sec active" id="stock-resumen">
+
+    <!-- Gauge grande -->
+    <div class="cist-grande-card" id="cistGrandeCard">
+      <div class="cist-grande-header">
+        <div>
+          <div class="cist-grande-label">Cisterna Grande</div>
+          <div class="cist-grande-stock" id="cgStock">—</div>
+          <div class="cist-grande-cap" id="cgCap">Cargando...</div>
+        </div>
+        <button class="btn-refresh" onclick="stockCargar()" title="Actualizar">↻</button>
+      </div>
+      <!-- SVG gauge circular -->
+      <div class="gauge-wrap">
+        <svg viewBox="0 0 200 120" class="gauge-svg">
+          <path class="gauge-track" d="M20,100 A80,80 0 0,1 180,100"/>
+          <path class="gauge-fill" id="gaugeFill" d="M20,100 A80,80 0 0,1 180,100" stroke-dasharray="0 251.2"/>
+          <text x="100" y="88" class="gauge-pct" id="gaugePct">—</text>
+          <text x="100" y="105" class="gauge-sub">% capacidad</text>
+        </svg>
+      </div>
+      <!-- mini stats -->
+      <div class="cist-mini-stats">
+        <div class="cist-mini">
+          <div class="cist-mini-label">Cargas (mes)</div>
+          <div class="cist-mini-val verde" id="cgCargasMes">—</div>
+        </div>
+        <div class="cist-mini">
+          <div class="cist-mini-label">Descargas (mes)</div>
+          <div class="cist-mini-val naranja" id="cgDescargasMes">—</div>
+        </div>
+        <div class="cist-mini">
+          <div class="cist-mini-label">Último movimiento</div>
+          <div class="cist-mini-val" id="cgUltimo">—</div>
+        </div>
+      </div>
     </div>
 
-    <div class="row2">
-      <div class="f">
-        <label>Trabajo <span class="req">*</span></label>
-        <select id="fTrabajo2" onchange="onTrabajoChange()">
-          <option value="">— Seleccionar —</option>
-          <option>Servis</option>
-          <option>Reparación</option>
-          <option>Mantenimiento</option>
-          <option>Diagnóstico</option>
-          <option>Otro</option>
-        </select>
+    <!-- Últimos movimientos -->
+    <div style="margin-top:14px">
+      <div class="card-title" style="margin-bottom:10px">Últimos movimientos</div>
+      <div id="cgUltMov"><div class="loading"><div class="spin"></div></div></div>
+    </div>
+  </div>
+
+  <!-- CALENDARIO -->
+  <div class="stab-sec" id="stock-calendario">
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="calPrev()">‹</button>
+      <div class="cal-mes-label" id="calMesLabel"></div>
+      <button class="cal-nav-btn" onclick="calNext()">›</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <!-- detalle día -->
+    <div id="calDetalle" style="display:none;margin-top:12px">
+      <div class="card">
+        <div class="card-title" id="calDetalleTitulo">Movimientos del día</div>
+        <div id="calDetalleBody"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- NUEVO MOVIMIENTO -->
+  <div class="stab-sec" id="stock-nuevo">
+    <div class="card">
+      <div class="card-title">Nuevo movimiento</div>
+
+      <div class="f">
+        <label>Tipo <span class="req">*</span></label>
+        <div class="pill-row">
+          <div class="pill verde-sel selected" id="cgpill-carga"    onclick="selCgTipo('Carga',this)">📥 Carga</div>
+          <div class="pill"                    id="cgpill-descarga" onclick="selCgTipo('Descarga',this)">📤 Descarga</div>
+        </div>
+        <input type="hidden" id="cgTipo" value="Carga">
+      </div>
+
+      <div class="row2">
+        <div class="f">
+          <label>Fecha <span class="req">*</span></label>
+          <input type="date" id="cgFecha">
+        </div>
+        <div class="f">
+          <label>Cantidad (L) <span class="req">*</span></label>
+          <input type="number" id="cgCantidad" placeholder="Ej: 5000" inputmode="decimal">
+        </div>
+      </div>
+
+      <div class="f" id="cgVehiculoWrap">
+        <label>Vehículo / Destino</label>
+        <input type="text" id="cgVehiculo" placeholder="Ej: CH4-DOCTA — Opcional">
+      </div>
+
+      <div class="row2">
+        <div class="f">
+          <label>Odómetro</label>
+          <input type="number" id="cgOdometro" placeholder="Opcional" inputmode="numeric">
+        </div>
+        <div class="f" id="cgPrecioWrap">
+          <label>Precio/L</label>
+          <input type="number" id="cgPrecio" placeholder="Solo en Carga" inputmode="decimal">
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="btnCgGuardar" onclick="cgGuardar()">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PLANILLAS ── -->
+<div class="page" id="page-planillas">
+  <div class="stabs">
+    <button class="stab active" onclick="switchStab('planillas','nueva',this)">✏️ Nueva</button>
+    <button class="stab"        onclick="switchStab('planillas','historial',this)">📋 Historial</button>
+  </div>
+
+  <!-- Nueva planilla -->
+  <div class="stab-sec active" id="planillas-nueva">
+    <div class="card">
+      <div class="card-title">Registro de uso</div>
+
+      <div class="row2">
+        <div class="f">
+          <label>Fecha <span class="req">*</span></label>
+          <input type="date" id="pFecha">
+        </div>
+        <div class="f">
+          <label>Hs / Km</label>
+          <input type="number" id="pHsKm" placeholder="Opcional" inputmode="numeric">
+        </div>
+      </div>
+
+      <div class="f">
+        <label>Equipo <span class="req">*</span></label>
+        <select id="pEquipo"><option value="">— Cargando... —</option></select>
+      </div>
+
+      <div class="f">
+        <label>Operario <span class="req">*</span></label>
+        <select id="pOperario"><option value="">— Cargando... —</option></select>
+      </div>
+
+      <div class="f">
+        <label>Obra <span class="req">*</span></label>
+        <select id="pObra"><option value="">— Cargando... —</option></select>
+      </div>
+
+      <div class="f">
+        <label>Trabajo realizado</label>
+        <select id="pTrabajo"><option value="">— Cargando... —</option></select>
+      </div>
+
+      <div class="row2">
+        <div class="f">
+          <label>Litros cargados</label>
+          <input type="number" id="pLitros" placeholder="Opcional" inputmode="decimal">
+        </div>
+        <div class="f">
+          <label>Arreglos</label>
+          <input type="text" id="pArreglos" placeholder="Opcional">
+        </div>
+      </div>
+
+      <div class="f">
+        <label>Observaciones</label>
+        <textarea id="pObservaciones" rows="2" placeholder="Opcional"></textarea>
+      </div>
+
+      <button class="btn btn-primary" id="btnPlanGuardar" onclick="planGuardar()">Guardar registro</button>
+    </div>
+  </div>
+
+  <!-- Historial planillas -->
+  <div class="stab-sec" id="planillas-historial">
+    <div class="toolbar">
+      <select id="hpEquipo" onchange="planRenderHist()"><option value="">Todos los equipos</option></select>
+      <select id="hpOperario" onchange="planRenderHist()"><option value="">Todos los operarios</option></select>
+    </div>
+    <div class="stats" id="planHistStats"></div>
+    <div id="planListaHist"><div class="loading"><div class="spin"></div></div></div>
+  </div>
+</div>
+
+<!-- ── INTERVENCIONES ── -->
+<div class="page" id="page-interv">
+  <div class="stabs">
+    <button class="stab active" onclick="switchStab('interv','nueva',this)">🔧 Nueva</button>
+    <button class="stab"        onclick="switchStab('interv','historial',this)">📋 Historial</button>
+  </div>
+
+  <!-- Nueva intervención -->
+  <div class="stab-sec active" id="interv-nueva">
+    <div class="card">
+      <div class="card-title">Nueva intervención</div>
+
+      <div class="row2">
+        <div class="f">
+          <label>Fecha <span class="req">*</span></label>
+          <input type="date" id="iFecha">
+        </div>
+        <div class="f">
+          <label>Odómetro</label>
+          <input type="number" id="iOdometro" placeholder="hs / km" inputmode="numeric">
+        </div>
+      </div>
+
+      <div class="f">
+        <label>Equipo <span class="req">*</span></label>
+        <select id="iEquipo"><option value="">— Cargando... —</option></select>
+      </div>
+
+      <div class="f">
+        <label>Trabajo / Tipo</label>
+        <select id="iTrabajo"><option value="">— Cargando... —</option></select>
+      </div>
+
       <div class="f">
         <label>Taller</label>
-        <select id="fTallerForm">
-          <option value="">— Seleccionar —</option>
-          <option>Interno</option>
-          <option>Externo</option>
-        </select>
+        <input type="text" id="iTaller" placeholder="Nombre del taller — Opcional">
       </div>
-    </div>
 
-    <!-- Filtros service (solo si Trabajo = Servis) -->
-    <div class="f" id="serviceSection" style="display:none">
-      <label>Filtros cambiados</label>
-      <div class="filtros-service visible">
-        <label class="chk-label"><input type="checkbox" id="chkAceite"><span>🛢 Aceite</span></label>
-        <label class="chk-label"><input type="checkbox" id="chkCombustible"><span>⛽ Combustible</span></label>
-        <label class="chk-label"><input type="checkbox" id="chkAire"><span>💨 Aire</span></label>
-        <label class="chk-label"><input type="checkbox" id="chkAgua"><span>💧 Trampa de agua</span></label>
-        <label class="chk-label"><input type="checkbox" id="chkHabitaculo"><span>🚗 Habitáculo</span></label>
-        <label class="chk-label"><input type="checkbox" id="chkHidraulico"><span>🔧 Hidráulico</span></label>
+      <div class="f">
+        <label>Descripción</label>
+        <textarea id="iDescripcion" rows="2" placeholder="Detalle de la intervención"></textarea>
       </div>
-      <div class="f" style="margin-top:10px;margin-bottom:0">
-        <label>Aceite utilizado</label>
-        <select id="fAceite">
-          <option value="">— Seleccionar —</option>
-          <option>15W40</option>
-          <option>10W30</option>
-          <option>SAE 30</option>
-          <option>SAE 40</option>
-          <option>Hidráulico AW46</option>
-          <option>Otro</option>
-        </select>
+
+      <div class="section-divider">Aceite / Service</div>
+
+      <div class="row2">
+        <div class="f">
+          <label>Service</label>
+          <div class="pill-row">
+            <div class="pill" id="ipill-servis-si" onclick="selBool('iServis','si',this)">Sí</div>
+            <div class="pill selected" id="ipill-servis-no" onclick="selBool('iServis','no',this)">No</div>
+          </div>
+          <input type="hidden" id="iServis" value="no">
+        </div>
+        <div class="f">
+          <label>Aceite</label>
+          <div class="pill-row">
+            <div class="pill" id="ipill-aceite-si" onclick="selBool('iAceite','si',this)">Sí</div>
+            <div class="pill selected" id="ipill-aceite-no" onclick="selBool('iAceite','no',this)">No</div>
+          </div>
+          <input type="hidden" id="iAceite" value="no">
+        </div>
       </div>
-    </div>
 
-    <div class="f">
-      <label>Descripción</label>
-      <textarea id="fDesc" placeholder="Detalle de la intervención..."></textarea>
-    </div>
+      <div class="f">
+        <label>Aviso / Prioridad</label>
+        <div class="pill-row">
+          <div class="pill" id="ipill-aviso-alto"  onclick="selAviso('alto',this)">🔴 Alto</div>
+          <div class="pill" id="ipill-aviso-medio" onclick="selAviso('medio',this)">🟡 Medio</div>
+          <div class="pill selected" id="ipill-aviso-ninguno" onclick="selAviso('',this)">Sin aviso</div>
+        </div>
+        <input type="hidden" id="iAviso" value="">
+      </div>
 
-    <div class="f">
-      <label>Aviso de mejora</label>
-      <input type="text" id="fAviso" placeholder="Opcional">
+      <button class="btn btn-primary" id="btnIntervGuardar" onclick="intervGuardar()">Guardar intervención</button>
     </div>
+  </div>
 
-    <div class="btn-row">
-      <button class="btn btn-cancel" onclick="cerrarModal()">Cancelar</button>
-      <button class="btn btn-primary" id="btnGuardar" onclick="guardar()">Guardar</button>
+  <!-- Historial intervenciones -->
+  <div class="stab-sec" id="interv-historial">
+    <div class="toolbar">
+      <select id="hiEquipo" onchange="intervRenderHist()"><option value="">Todos los equipos</option></select>
+      <select id="hiAviso" onchange="intervRenderHist()">
+        <option value="">Todos los avisos</option>
+        <option value="alto">🔴 Alto</option>
+        <option value="medio">🟡 Medio</option>
+      </select>
     </div>
-
-    <div id="deleteRow" style="display:none;margin-top:10px">
-      <button class="btn btn-danger" style="width:100%" onclick="confirmarEliminar()">🗑 Eliminar intervención</button>
-    </div>
+    <div class="stats" id="intervHistStats"></div>
+    <div id="intervListaHist"><div class="loading"><div class="spin"></div></div></div>
   </div>
 </div>
 
-<!-- CONFIRM DELETE -->
+
+<!-- ══════════ BOTTOM NAV ══════════ -->
+<nav class="bottom-nav" id="bottomNav">
+  <div class="nav-indicator" id="navIndicator"></div>
+  <button class="nav-btn active" onclick="switchPage('combustible',0,this)" data-page="combustible">
+    <span class="nav-icon">⛽</span>Combustible
+  </button>
+  <button class="nav-btn" onclick="switchPage('stock',1,this)" data-page="stock">
+    <span class="nav-icon">🛢️</span>Stock
+  </button>
+  <button class="nav-btn" onclick="switchPage('planillas',2,this)" data-page="planillas">
+    <span class="nav-icon">📋</span>Planillas
+  </button>
+  <button class="nav-btn" onclick="switchPage('interv',3,this)" data-page="interv">
+    <span class="nav-icon">🔧</span>Mantenimiento
+  </button>
+</nav>
+
+
+<!-- ══════════ MODAL EDITAR COMBUSTIBLE ══════════ -->
+<div class="overlay" id="combModal" onclick="handleOverlay(event,'combModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">
+      <span>Editar carga</span>
+      <button class="modal-close" onclick="cerrarModal('combModal')">✕</button>
+    </div>
+    <input type="hidden" id="ceId">
+    <div class="row2">
+      <div class="f"><label>Fecha <span class="req">*</span></label><input type="date" id="ceFecha"></div>
+      <div class="f"><label>Cantidad (L) <span class="req">*</span></label><input type="number" id="ceCantidad" inputmode="decimal"></div>
+    </div>
+    <div class="f"><label>Equipo <span class="req">*</span></label><select id="ceEquipo"></select></div>
+    <div class="f"><label>Odómetro</label><input type="number" id="ceOdometro" inputmode="numeric"></div>
+    <div class="f">
+      <label>Chulengo</label>
+      <div class="pill-row">
+        <div class="pill selected" id="cepill-cesar"   onclick="selPill('ce','chulengo','CH7-Cesar',this)">CH7 — Cesar</div>
+        <div class="pill"          id="cepill-obrador" onclick="selPill('ce','chulengo','CH3-Obrador',this)">CH3 — Obrador</div>
+      </div>
+      <input type="hidden" id="ceChulengo" value="CH7-Cesar">
+    </div>
+    <div class="f"><label>Responsable</label><select id="ceResponsable"></select></div>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn btn-cancel" onclick="cerrarModal('combModal')">Cancelar</button>
+      <button class="btn btn-primary" id="btnCombActualizar" onclick="combActualizar()">Actualizar</button>
+    </div>
+    <button class="btn btn-danger" style="margin-top:8px" onclick="confirmar('comb')">🗑 Eliminar</button>
+  </div>
+</div>
+
+<!-- ══════════ MODAL EDITAR PLANILLA ══════════ -->
+<div class="overlay" id="planModal" onclick="handleOverlay(event,'planModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">
+      <span>Editar registro</span>
+      <button class="modal-close" onclick="cerrarModal('planModal')">✕</button>
+    </div>
+    <input type="hidden" id="peId">
+    <div class="row2">
+      <div class="f"><label>Fecha <span class="req">*</span></label><input type="date" id="peFecha"></div>
+      <div class="f"><label>Hs / Km</label><input type="number" id="peHsKm" inputmode="numeric"></div>
+    </div>
+    <div class="f"><label>Equipo <span class="req">*</span></label><select id="peEquipo"></select></div>
+    <div class="f"><label>Operario</label><select id="peOperario"></select></div>
+    <div class="f"><label>Obra</label><select id="peObra"></select></div>
+    <div class="f"><label>Trabajo</label><select id="peTrabajo"></select></div>
+    <div class="row2">
+      <div class="f"><label>Litros</label><input type="number" id="peLitros" inputmode="decimal"></div>
+      <div class="f"><label>Arreglos</label><input type="text" id="peArreglos"></div>
+    </div>
+    <div class="f"><label>Observaciones</label><textarea id="peObservaciones" rows="2"></textarea></div>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn btn-cancel" onclick="cerrarModal('planModal')">Cancelar</button>
+      <button class="btn btn-primary" id="btnPlanActualizar" onclick="planActualizar()">Actualizar</button>
+    </div>
+    <button class="btn btn-danger" style="margin-top:8px" onclick="confirmar('plan')">🗑 Eliminar</button>
+  </div>
+</div>
+
+<!-- ══════════ MODAL EDITAR INTERVENCIÓN ══════════ -->
+<div class="overlay" id="intervModal" onclick="handleOverlay(event,'intervModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">
+      <span>Editar intervención</span>
+      <button class="modal-close" onclick="cerrarModal('intervModal')">✕</button>
+    </div>
+    <input type="hidden" id="ieId">
+    <div class="row2">
+      <div class="f"><label>Fecha <span class="req">*</span></label><input type="date" id="ieFecha"></div>
+      <div class="f"><label>Odómetro</label><input type="number" id="ieOdometro" inputmode="numeric"></div>
+    </div>
+    <div class="f"><label>Equipo <span class="req">*</span></label><select id="ieEquipo"></select></div>
+    <div class="f"><label>Trabajo</label><select id="ieTrabajo"></select></div>
+    <div class="f"><label>Taller</label><input type="text" id="ieTaller"></div>
+    <div class="f"><label>Descripción</label><textarea id="ieDescripcion" rows="2"></textarea></div>
+    <div class="row2">
+      <div class="f">
+        <label>Service</label>
+        <div class="pill-row">
+          <div class="pill" id="iepill-servis-si" onclick="selBoolEdit('ieServis','si',this)">Sí</div>
+          <div class="pill selected" id="iepill-servis-no" onclick="selBoolEdit('ieServis','no',this)">No</div>
+        </div>
+        <input type="hidden" id="ieServis" value="no">
+      </div>
+      <div class="f">
+        <label>Aceite</label>
+        <div class="pill-row">
+          <div class="pill" id="iepill-aceite-si" onclick="selBoolEdit('ieAceite','si',this)">Sí</div>
+          <div class="pill selected" id="iepill-aceite-no" onclick="selBoolEdit('ieAceite','no',this)">No</div>
+        </div>
+        <input type="hidden" id="ieAceite" value="no">
+      </div>
+    </div>
+    <div class="f">
+      <label>Aviso</label>
+      <div class="pill-row">
+        <div class="pill" id="iepill-aviso-alto"    onclick="selAvisoEdit('alto',this)">🔴 Alto</div>
+        <div class="pill" id="iepill-aviso-medio"   onclick="selAvisoEdit('medio',this)">🟡 Medio</div>
+        <div class="pill selected" id="iepill-aviso-ninguno" onclick="selAvisoEdit('',this)">Sin aviso</div>
+      </div>
+      <input type="hidden" id="ieAviso" value="">
+    </div>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn btn-cancel" onclick="cerrarModal('intervModal')">Cancelar</button>
+      <button class="btn btn-primary" id="btnIntervActualizar" onclick="intervActualizar()">Actualizar</button>
+    </div>
+    <button class="btn btn-danger" style="margin-top:8px" onclick="confirmar('interv')">🗑 Eliminar</button>
+  </div>
+</div>
+
+<!-- ══════════ CONFIRM ══════════ -->
 <div class="confirm-overlay" id="confirmOverlay">
   <div class="confirm-box">
-    <h3>¿Eliminar?</h3>
+    <h3>¿Eliminar registro?</h3>
     <p>Esta acción no se puede deshacer.</p>
     <div class="btn-row">
       <button class="btn btn-cancel" onclick="document.getElementById('confirmOverlay').classList.remove('open')">Cancelar</button>
-      <button class="btn btn-danger" onclick="eliminar()">Eliminar</button>
+      <button class="btn btn-danger" id="btnConfirmElim" onclick="ejecutarEliminar()">Eliminar</button>
     </div>
   </div>
 </div>
 
 <div class="toast hidden" id="toast"></div>
 
+<!-- ══════════════════════════════
+     JAVASCRIPT
+══════════════════════════════ -->
 <script>
-  const URL_ = "https://script.google.com/macros/s/AKfycbwh9fSHZ0Tt6nGQFcWFJg7P5L4jUVoRdhs1QhulVECMqmn7ACv58VUUprOhMQviszKSew/exec";
+// ─── CONFIG ───────────────────────────────────────────────
+const URL_ = "https://script.google.com/macros/s/AKfycbwh9fSHZ0Tt6nGQFcWFJg7P5L4jUVoRdhs1QhulVECMqmn7ACv58VUUprOhMQviszKSew/exec";
 
-  let TODOS = [];
-  let FILTRADOS = [];
+// Estado global
+const S = {
+  listas:        { equipos:[], operarios:[], obras:[], trabajos:[] },
+  combRegistros: [],
+  planRegistros: [],
+  intervRegistros: [],
+  movimientos:   [],
+  cisternas:     [],
+  pendingDelete: null,   // { tipo, id }
+};
 
-  // ── JSONP ──
-  function jsonp(url) {
-    return new Promise((resolve, reject) => {
-      const cb = "cb_" + Date.now() + "_" + Math.floor(Math.random() * 1e5);
-      const s = document.createElement("script");
-      let done = false;
-      function clean() { done = true; try{delete window[cb];}catch(e){} try{s.remove();}catch(e){} }
-      window[cb] = d => { if(done)return; clean(); resolve(d); };
-      s.onerror = () => { if(done)return; clean(); reject(new Error("error")); };
-      s.src = url + (url.includes("?")?"&":"?") + "callback=" + cb + "&_=" + Date.now();
-      document.body.appendChild(s);
-      setTimeout(() => { if(done)return; clean(); reject(new Error("timeout")); }, 12000);
-    });
-  }
+// ─── JSONP ────────────────────────────────────────────────
+function jsonp(url) {
+  return new Promise((resolve, reject) => {
+    const cb = "cb_" + Date.now() + "_" + Math.floor(Math.random() * 1e5);
+    const s = document.createElement("script");
+    let done = false;
+    const clean = () => { done=true; try{delete window[cb];}catch(e){} try{s.remove();}catch(e){}};
+    window[cb] = d => { if(done)return; clean(); resolve(d); };
+    s.onerror   = () => { if(done)return; clean(); reject(new Error("error")); };
+    s.src = url + (url.includes("?")?"&":"?") + "callback=" + cb + "&_=" + Date.now();
+    document.body.appendChild(s);
+    setTimeout(() => { if(done)return; clean(); reject(new Error("timeout")); }, 14000);
+  });
+}
 
-  // ── TOAST ──
-  function toast(msg, type) {
-    const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.className = "toast " + (type || "ok");
-    setTimeout(() => t.classList.add("hidden"), 3000);
-  }
+// ─── UTILS ────────────────────────────────────────────────
+function toast(msg, type) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast " + (type||"ok");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.add("hidden"), 3200);
+}
 
-  // ── CARGAR ──
-  async function cargar() {
-    try {
-      const d = await jsonp(URL_ + "?action=getIntervenciones");
-      if (!d || !d.ok) { showError("No se pudieron cargar los datos"); return; }
-      TODOS = d.intervenciones || [];
-      // fill equipo filter
-      const equipos = [...new Set(TODOS.map(x => x.equipo).filter(Boolean))].sort();
-      const fEq = document.getElementById("fEquipo");
-      equipos.forEach(eq => {
-        const o = document.createElement("option");
-        o.value = o.textContent = eq;
-        fEq.appendChild(o);
-      });
-      // fill equipo in form
-      fillEquiposForm(equipos);
-      applyFilters();
-    } catch(e) {
-      showError("Error de conexión");
-    }
-  }
+function g(id)  { const el = document.getElementById(id); return el ? el.value.trim() : ""; }
+function gv(id) { const el = document.getElementById(id); return el ? el.value : ""; }
 
-  function fillEquiposForm(equipos) {
-    const s = document.getElementById("fEquipoForm");
-    s.innerHTML = '<option value="">— Seleccionar —</option>';
-    equipos.forEach(eq => {
-      const o = document.createElement("option");
-      o.value = o.textContent = eq;
-      s.appendChild(o);
-    });
-  }
+function markErr(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add("error");
+  ["change","input"].forEach(ev => el.addEventListener(ev, () => el.classList.remove("error"), {once:true}));
+}
 
-  function showError(msg) {
-    document.getElementById("lista").innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><p>${msg}</p></div>`;
-    document.getElementById("statsBar").innerHTML = `<span>${msg}</span>`;
-  }
+function todayStr() { return new Date().toISOString().split("T")[0]; }
+function mesStr()   { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
 
-  // ── FILTERS ──
-  function toggleFilters() {
-    const r = document.getElementById("filtersRow");
-    const b = document.getElementById("filterToggle");
-    r.classList.toggle("open");
-    b.classList.toggle("active");
-  }
+function fmtFecha(f) {
+  if (!f) return "";
+  return new Date(f + "T00:00:00").toLocaleDateString("es-AR", {day:"2-digit",month:"2-digit",year:"2-digit"});
+}
 
-  function clearFilters() {
-    document.getElementById("searchInput").value = "";
-    document.getElementById("fEquipo").value = "";
-    document.getElementById("fTrabajo").value = "";
-    document.getElementById("fTaller").value = "";
-    applyFilters();
-  }
+function fillSelect(id, list, placeholder) {
+  const s = document.getElementById(id);
+  if (!s) return;
+  const cur = s.value;
+  s.innerHTML = `<option value="">${placeholder}</option>`;
+  list.forEach(v => { const o = document.createElement("option"); o.value = o.textContent = v; s.appendChild(o); });
+  if (cur) s.value = cur;
+}
 
-  function applyFilters() {
-    const q     = document.getElementById("searchInput").value.toLowerCase();
-    const eq    = document.getElementById("fEquipo").value;
-    const trab  = document.getElementById("fTrabajo").value;
-    const tall  = document.getElementById("fTaller").value;
+function setBtnLoading(id, txt) {
+  const b = document.getElementById(id);
+  if (!b) return;
+  b.disabled = true;
+  b.innerHTML = `<span class="spin-sm"></span>${txt}`;
+}
+function resetBtn(id, txt) {
+  const b = document.getElementById(id);
+  if (!b) return;
+  b.disabled = false;
+  b.innerHTML = txt;
+}
 
-    FILTRADOS = TODOS.filter(i => {
-      if (eq   && i.equipo  !== eq)   return false;
-      if (trab && i.trabajo !== trab) return false;
-      if (tall && i.taller  !== tall) return false;
-      if (q) {
-        const hay = [i.equipo, i.trabajo, i.taller, i.descripcion, i.normalizado]
-          .join(" ").toLowerCase();
-        if (!hay.includes(q)) return false;
-      }
-      return true;
-    });
+// ─── NAVEGACIÓN ───────────────────────────────────────────
+function switchPage(name, idx, btn) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("page-" + name).classList.add("active");
+  btn.classList.add("active");
+  // indicador
+  const nav = document.getElementById("bottomNav");
+  const btns = nav.querySelectorAll(".nav-btn");
+  const ind  = document.getElementById("navIndicator");
+  const w = 100 / btns.length;
+  ind.style.left  = (w * idx) + "%";
+  ind.style.width = w + "%";
+}
 
-    renderLista();
-  }
+function switchStab(mod, name, btn) {
+  const prefix = mod + "-";
+  document.querySelectorAll(`[id^="${prefix}"]`).forEach(s => s.classList.remove("active"));
+  btn.closest(".stabs").querySelectorAll(".stab").forEach(b => b.classList.remove("active"));
+  document.getElementById(prefix + name).classList.add("active");
+  btn.classList.add("active");
+}
 
-  // ── RENDER ──
-  function renderLista() {
-    const c = document.getElementById("lista");
-    document.getElementById("statsBar").innerHTML =
-      `<span><strong>${FILTRADOS.length}</strong> de ${TODOS.length} intervenciones</span>` +
-      `<span>${TODOS.length ? formatFecha(TODOS[0].fecha) : ""}</span>`;
+// ─── MODALES ──────────────────────────────────────────────
+function cerrarModal(id)       { document.getElementById(id).classList.remove("open"); }
+function handleOverlay(e, id)  { if (e.target.id === id) cerrarModal(id); }
 
-    if (!FILTRADOS.length) {
-      c.innerHTML = `<div class="empty"><div class="empty-icon">🔧</div><p>Sin intervenciones</p></div>`;
-      return;
-    }
+function confirmar(tipo) {
+  S.pendingDelete = { tipo, id: tipo === "comb" ? g("ceId") : tipo === "plan" ? g("peId") : g("ieId") };
+  document.getElementById("confirmOverlay").classList.add("open");
+}
 
-    c.innerHTML = FILTRADOS.map(item => {
-      const filtros = parseFiltros(item.servis);
-      return `
-      <div class="item" onclick="abrirEditar('${item.id}')">
-        <div class="item-header">
-          <div class="item-equipo">${item.equipo || "—"}</div>
-          <div class="item-fecha">${formatFecha(item.fecha)}</div>
-        </div>
-        <div class="item-body">
-          ${item.trabajo ? `<span class="tag tag-trabajo">${item.trabajo}</span>` : ""}
-          ${filtros.length ? `<span class="tag tag-service">🔩 ${filtros.join(" · ")}</span>` : ""}
-          ${item.taller ? `<span class="tag tag-taller">${item.taller}</span>` : ""}
-          ${item.odometro ? `<span class="tag tag-odometro">⏱ ${Number(item.odometro).toLocaleString("es-AR")} hs/km</span>` : ""}
-        </div>
-        ${item.descripcion ? `<div class="item-desc">${item.descripcion}</div>` : ""}
-      </div>`;
-    }).join("");
-  }
+async function ejecutarEliminar() {
+  document.getElementById("confirmOverlay").classList.remove("open");
+  const { tipo, id } = S.pendingDelete || {};
+  if (!id) return;
+  let action = tipo === "comb" ? "eliminarCombObrador" : tipo === "plan" ? "eliminarRegistro" : "eliminarIntervencion";
+  // nota: ajustar action según backend real
+  try {
+    const d = await jsonp(`${URL_}?action=${action}&id=${encodeURIComponent(id)}`);
+    if (!d || !d.ok) { toast(d?.mensaje || "Error al eliminar", "err"); return; }
+    toast("Eliminado ✓");
+    if (tipo === "comb")  { cerrarModal("combModal");  await combCargar(); }
+    if (tipo === "plan")  { cerrarModal("planModal");  await planCargar(); }
+    if (tipo === "interv"){ cerrarModal("intervModal"); await intervCargar(); }
+  } catch(e) { toast("Error de conexión", "err"); }
+}
 
-  function parseFiltros(val) {
-    if (!val) return [];
-    return val.split(",").map(s => s.trim()).filter(Boolean);
-  }
+// ─── PILLS helpers ────────────────────────────────────────
+function selPill(prefix, field, val, el) {
+  const hidId = prefix + field.charAt(0).toUpperCase() + field.slice(1);
+  document.getElementById(hidId).value = val;
+  // deselect siblings
+  el.closest(".pill-row").querySelectorAll(".pill").forEach(p => p.classList.remove("selected"));
+  el.classList.add("selected");
+}
 
-  function formatFecha(f) {
-    if (!f) return "";
-    const d = new Date(f);
-    if (isNaN(d)) return f;
-    return d.toLocaleDateString("es-AR", { day:"2-digit", month:"2-digit", year:"2-digit" });
-  }
+function selMovTipo(val, el) {
+  document.getElementById("mTipo").value = val;
+  document.getElementById("mpill-entrada").classList.remove("selected");
+  document.getElementById("mpill-traslado").classList.remove("selected");
+  document.getElementById("mpill-carga").classList.remove("selected");
+  el.classList.add("selected");
+  // mostrar/ocultar origen
+  document.getElementById("mOrigenWrap").style.display  = val === "entrada"  ? "none" : "block";
+  document.getElementById("mDestinoWrap").style.display = val === "carga_equipo" ? "none" : "block";
+  document.getElementById("mEquipoWrap").style.display  = val === "carga_equipo" ? "block" : "none";
+}
 
-  // ── MODAL ──
-  function abrirModal() {
-    document.getElementById("editId").value = "";
-    document.getElementById("modalTitulo").textContent = "Nueva intervención";
-    document.getElementById("deleteRow").style.display = "none";
-    document.getElementById("btnGuardar").textContent = "Guardar";
-    limpiarForm();
-    // set today
-    document.getElementById("fFecha").value = new Date().toISOString().split("T")[0];
-    document.getElementById("overlay").classList.add("open");
-  }
+function selBool(hidId, val, el) {
+  document.getElementById(hidId).value = val;
+  el.closest(".pill-row").querySelectorAll(".pill").forEach(p => p.classList.remove("selected"));
+  el.classList.add("selected");
+}
+function selBoolEdit(hidId, val, el) { selBool(hidId, val, el); }
 
-  function abrirEditar(id) {
-    const item = TODOS.find(x => x.id === id);
-    if (!item) return;
-    document.getElementById("editId").value = id;
-    document.getElementById("modalTitulo").textContent = "Editar intervención";
-    document.getElementById("deleteRow").style.display = "block";
-    document.getElementById("btnGuardar").textContent = "Actualizar";
+function selAviso(val, el) {
+  document.getElementById("iAviso").value = val;
+  ["alto","medio","ninguno"].forEach(v => document.getElementById("ipill-aviso-"+v).classList.remove("selected"));
+  el.classList.add("selected");
+}
+function selAvisoEdit(val, el) {
+  document.getElementById("ieAviso").value = val;
+  ["alto","medio","ninguno"].forEach(v => document.getElementById("iepill-aviso-"+v).classList.remove("selected"));
+  el.classList.add("selected");
+}
 
-    document.getElementById("fFecha").value = item.fecha ? item.fecha.split("T")[0] : "";
-    document.getElementById("fOdometro").value = item.odometro || "";
-    document.getElementById("fEquipoForm").value = item.equipo || "";
-    document.getElementById("fTrabajo2").value = item.trabajo || "";
-    document.getElementById("fTallerForm").value = item.taller || "";
-    document.getElementById("fDesc").value = item.descripcion || "";
-    document.getElementById("fAviso").value = item.aviso || "";
-
-    onTrabajoChange();
-
-    if (item.servis) {
-      const filtros = parseFiltros(item.servis);
-      ["Aceite","Combustible","Aire","Agua","Habitaculo","Hidraulico"].forEach(f => {
-        const chk = document.getElementById("chk" + f);
-        if (chk) chk.checked = filtros.some(x => x.toLowerCase().includes(f.toLowerCase()));
-      });
-    }
-    if (item.aceite) document.getElementById("fAceite").value = item.aceite;
-
-    document.getElementById("overlay").classList.add("open");
-  }
-
-  function cerrarModal() {
-    document.getElementById("overlay").classList.remove("open");
-  }
-
-  function handleOverlayClick(e) {
-    if (e.target === document.getElementById("overlay")) cerrarModal();
-  }
-
-  function limpiarForm() {
-    ["fFecha","fOdometro","fEquipoForm","fTrabajo2","fTallerForm","fDesc","fAviso","fAceite"].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = "";
-    });
-    ["chkAceite","chkCombustible","chkAire","chkAgua","chkHabitaculo","chkHidraulico"].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.checked = false;
-    });
-    document.getElementById("serviceSection").style.display = "none";
-  }
-
-  function onTrabajoChange() {
-    const val = document.getElementById("fTrabajo2").value;
-    document.getElementById("serviceSection").style.display = val === "Servis" ? "block" : "none";
-  }
-
-  function getFiltrosSeleccionados() {
-    const map = {
-      chkAceite: "Aceite", chkCombustible: "Combustible", chkAire: "Aire",
-      chkAgua: "Trampa de agua", chkHabitaculo: "Habitáculo", chkHidraulico: "Hidráulico"
-    };
-    return Object.entries(map)
-      .filter(([id]) => document.getElementById(id)?.checked)
-      .map(([,v]) => v).join(", ");
-  }
-
-  function g(id) { const el = document.getElementById(id); return el ? el.value.trim() : ""; }
-
-  function marcarError(id) {
+// ─── INIT ─────────────────────────────────────────────────
+async function init() {
+  // fechas default
+  ["cFecha","mFecha","pFecha","iFecha"].forEach(id => {
     const el = document.getElementById(id);
-    if (el) {
-      el.classList.add("error");
-      ["change","input"].forEach(ev => el.addEventListener(ev, () => el.classList.remove("error"), {once:true}));
+    if (el) el.value = todayStr();
+  });
+
+  // indicador nav inicial
+  const btns = document.querySelectorAll(".nav-btn");
+  const ind  = document.getElementById("navIndicator");
+  ind.style.left  = "0%";
+  ind.style.width = (100/btns.length) + "%";
+
+  try {
+    const d = await jsonp(`${URL_}?action=getListas`);
+    if (d && d.ok) {
+      S.listas = d;
+      const { equipos, operarios, obras, trabajos } = d;
+
+      // Selects de carga
+      fillSelect("cEquipo",      equipos,   "— Seleccionar —");
+      fillSelect("cResponsable", operarios, "— Seleccionar —");
+      fillSelect("pEquipo",      equipos,   "— Seleccionar —");
+      fillSelect("pOperario",    operarios, "— Seleccionar —");
+      fillSelect("pObra",        obras,     "— Seleccionar —");
+      fillSelect("pTrabajo",     trabajos,  "— Seleccionar —");
+      fillSelect("iEquipo",      equipos,   "— Seleccionar —");
+      fillSelect("iTrabajo",     trabajos,  "— Seleccionar —");
+      fillSelect("mEquipo",      equipos,   "— Seleccionar —");
+
+      // Selects de edición
+      fillSelect("ceEquipo",     equipos,   "— Seleccionar —");
+      fillSelect("ceResponsable",operarios, "— Seleccionar —");
+      fillSelect("peEquipo",     equipos,   "— Seleccionar —");
+      fillSelect("peOperario",   operarios, "— Seleccionar —");
+      fillSelect("peObra",       obras,     "— Seleccionar —");
+      fillSelect("peTrabajo",    trabajos,  "— Seleccionar —");
+      fillSelect("ieEquipo",     equipos,   "— Seleccionar —");
+      fillSelect("ieTrabajo",    trabajos,  "— Seleccionar —");
+
+      // Filtros historial
+      equipos.forEach(eq => {
+        ["hcEquipo","hpEquipo","hiEquipo"].forEach(sid => {
+          const s = document.getElementById(sid);
+          if (s) { const o = document.createElement("option"); o.value = o.textContent = eq; s.appendChild(o); }
+        });
+      });
+      operarios.forEach(op => {
+        const s = document.getElementById("hpOperario");
+        if (s) { const o = document.createElement("option"); o.value = o.textContent = op; s.appendChild(o); }
+      });
     }
+  } catch(e) { toast("Error cargando listas", "err"); }
+
+  // fecha default formulario cisterna
+  const cgF = document.getElementById("cgFecha");
+  if (cgF) cgF.value = todayStr();
+
+  // Cargar datos
+  await Promise.all([combCargar(), planCargar(), intervCargar(), stockCargar()]);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MÓDULO: COMBUSTIBLE OBRADOR
+// ═══════════════════════════════════════════════════════════
+async function combCargar() {
+  try {
+    const d = await jsonp(`${URL_}?action=getCombustibleObrador`);
+    if (!d || !d.ok) return;
+    S.combRegistros = d.registros || [];
+    combCalcStats();
+    combRenderHist();
+  } catch(e) { toast("Error cargando combustible", "err"); }
+}
+
+function combCalcStats() {
+  const hoy = todayStr();
+  const mes = mesStr();
+  const totalHoy = S.combRegistros
+    .filter(r => r.fecha === hoy)
+    .reduce((s,r) => s + (parseFloat(r.cantidad)||0), 0);
+  const totalMes = S.combRegistros
+    .filter(r => r.fecha && r.fecha.startsWith(mes))
+    .reduce((s,r) => s + (parseFloat(r.cantidad)||0), 0);
+  document.getElementById("combTotalHoy").innerHTML = `${totalHoy||0}<span class="stat-unit">L</span>`;
+  document.getElementById("combTotalMes").innerHTML = `${totalMes||0}<span class="stat-unit">L</span>`;
+}
+
+function combRenderHist() {
+  const eq = g("hcEquipo"), fe = g("hcFecha");
+  let lista = [...S.combRegistros];
+  if (eq) lista = lista.filter(r => r.codigo === eq);
+  if (fe) lista = lista.filter(r => r.fecha  === fe);
+  const total = lista.reduce((s,r) => s+(parseFloat(r.cantidad)||0),0);
+  document.getElementById("combHistStats").innerHTML = `<strong>${lista.length}</strong> registros · Total: <strong>${total} L</strong>`;
+  const c = document.getElementById("combListaHist");
+  if (!lista.length) { c.innerHTML = '<div class="empty">Sin registros</div>'; return; }
+  c.innerHTML = lista.map(r => `
+    <div class="list-item" onclick="combAbrirEditar('${r.id}')">
+      <div class="item-top">
+        <div class="item-title">${r.codigo||"—"}</div>
+        <div class="item-date">${fmtFecha(r.fecha)}</div>
+      </div>
+      <div class="item-body">
+        <span class="tag tag-orange">⛽ ${r.cantidad} L</span>
+        <span class="tag tag-gray">${r.chulengo||"—"}</span>
+        ${r.odometro ? `<span class="tag tag-gray">⏱ ${Number(r.odometro).toLocaleString("es-AR")}</span>`:""}
+        ${r.responsable ? `<span class="tag tag-gray">👤 ${r.responsable}</span>`:""}
+      </div>
+    </div>`).join("");
+}
+
+async function combGuardar() {
+  let ok = true;
+  if (!g("cEquipo"))      { markErr("cEquipo");      ok=false; }
+  if (!g("cCantidad"))    { markErr("cCantidad");    ok=false; }
+  if (!g("cResponsable")) { markErr("cResponsable"); ok=false; }
+  if (!ok) { toast("Completá los campos obligatorios","err"); return; }
+  setBtnLoading("btnCombGuardar","Guardando...");
+  const p = { action:"agregarCombObrador", fecha:g("cFecha"), codigo:g("cEquipo"),
+              cantidad:g("cCantidad"), odometro:g("cOdometro"),
+              chulengo:g("cChulengo"), responsable:g("cResponsable") };
+  try {
+    const d = await jsonp(`${URL_}?${new URLSearchParams(p)}`);
+    if (!d||!d.ok) { toast(d?.mensaje||"Error al guardar","err"); return; }
+    toast("Carga guardada ✓");
+    // limpiar
+    ["cCantidad","cOdometro"].forEach(id => document.getElementById(id).value="");
+    document.getElementById("cEquipo").value = "";
+    document.getElementById("cResponsable").value = "";
+    document.getElementById("cFecha").value = todayStr();
+    document.getElementById("cChulengo").value = "CH7-Cesar";
+    document.getElementById("cpill-cesar").classList.add("selected");
+    document.getElementById("cpill-obrador").classList.remove("selected");
+    await combCargar();
+  } catch(e) { toast("Error de conexión","err"); }
+  finally { resetBtn("btnCombGuardar","Guardar carga"); }
+}
+
+function combAbrirEditar(id) {
+  const r = S.combRegistros.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById("ceId").value        = id;
+  document.getElementById("ceFecha").value     = r.fecha||"";
+  document.getElementById("ceCantidad").value  = r.cantidad||"";
+  document.getElementById("ceOdometro").value  = r.odometro||"";
+  document.getElementById("ceEquipo").value    = r.codigo||"";
+  document.getElementById("ceResponsable").value = r.responsable||"";
+  const ch = r.chulengo||"CH7-Cesar";
+  document.getElementById("ceChulengo").value = ch;
+  document.getElementById("cepill-cesar").classList.toggle("selected", ch==="CH7-Cesar");
+  document.getElementById("cepill-obrador").classList.toggle("selected", ch==="CH3-Obrador");
+  document.getElementById("combModal").classList.add("open");
+}
+
+async function combActualizar() {
+  const id = g("ceId"); if (!id) return;
+  setBtnLoading("btnCombActualizar","Actualizando...");
+  const p = { action:"editarCombObrador", id, fecha:g("ceFecha"), codigo:g("ceEquipo"),
+              cantidad:g("ceCantidad"), odometro:g("ceOdometro"),
+              chulengo:g("ceChulengo"), responsable:g("ceResponsable") };
+  try {
+    const d = await jsonp(`${URL_}?${new URLSearchParams(p)}`);
+    if (!d||!d.ok) { toast(d?.mensaje||"Error","err"); return; }
+    toast("Actualizado ✓");
+    cerrarModal("combModal");
+    await combCargar();
+  } catch(e) { toast("Error de conexión","err"); }
+  finally { resetBtn("btnCombActualizar","Actualizar"); }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MÓDULO: STOCK CISTERNA GRANDE
+// ═══════════════════════════════════════════════════════════
+const CAP_CISTERNA = 10000; // capacidad total en litros
+let CG_MOVS = [];
+let calMesActual = new Date();
+let calDiaSeleccionado = null;
+
+async function stockCargar() {
+  await Promise.all([cgCargarStock(), cgCargarMovs()]);
+}
+
+async function cgCargarStock() {
+  try {
+    const d = await jsonp(`${URL_}?action=getStockCisterna`);
+    if (!d || !d.ok) return;
+    const stock = d.stock || 0;
+    document.getElementById("cgStock").textContent = stock.toLocaleString("es-AR") + " L";
+    document.getElementById("cgCap").textContent = `de ${CAP_CISTERNA.toLocaleString("es-AR")} L capacidad`;
+    const pct = Math.min(100, Math.round((stock / CAP_CISTERNA) * 100));
+    document.getElementById("gaugePct").textContent = pct + "%";
+    // arc path: recorrido total del semicírculo = 251.2 (π * 80 * 1)
+    const arc = (pct / 100) * 251.2;
+    const fill = document.getElementById("gaugeFill");
+    fill.setAttribute("stroke-dasharray", arc + " 251.2");
+    fill.style.stroke = pct > 40 ? "var(--verde)" : pct > 20 ? "#f59e0b" : "#ef4444";
+    document.getElementById("cgStock").style.color = pct > 40 ? "var(--verde)" : pct > 20 ? "#f59e0b" : "#ef4444";
+  } catch(e) { /* silencioso */ }
+}
+
+async function cgCargarMovs() {
+  try {
+    const d = await jsonp(`${URL_}?action=getMovCisterna`);
+    if (!d || !d.ok) return;
+    CG_MOVS = d.movimientos || [];
+    cgCalcStats();
+    cgRenderUltimos();
+    calRender();
+  } catch(e) { /* silencioso */ }
+}
+
+function cgCalcStats() {
+  const mes = mesStr();
+  const movsMes = CG_MOVS.filter(r => r.fecha && r.fecha.startsWith(mes));
+  const cargas    = movsMes.filter(r => r.tipo === "Carga").reduce((s,r) => s + r.cantidad, 0);
+  const descargas = movsMes.filter(r => r.tipo === "Descarga").reduce((s,r) => s + r.cantidad, 0);
+  document.getElementById("cgCargasMes").textContent    = cargas.toLocaleString("es-AR") + " L";
+  document.getElementById("cgDescargasMes").textContent = descargas.toLocaleString("es-AR") + " L";
+  const ult = CG_MOVS[0];
+  document.getElementById("cgUltimo").textContent = ult ? fmtFecha(ult.fecha) : "—";
+}
+
+function cgRenderUltimos() {
+  const lista = CG_MOVS.slice(0, 8);
+  const c = document.getElementById("cgUltMov");
+  if (!lista.length) { c.innerHTML = '<div class="empty">Sin movimientos</div>'; return; }
+  c.innerHTML = lista.map(r => {
+    const esCarga = r.tipo === "Carga";
+    return `<div class="list-item">
+      <div class="item-top">
+        <div class="item-title" style="color:${esCarga?'var(--verde)':'var(--naranja)'}">${esCarga?'📥':'📤'} ${r.tipo}</div>
+        <div class="item-date">${fmtFecha(r.fecha)}</div>
+      </div>
+      <div class="item-body">
+        <span class="tag ${esCarga?'tag-green':'tag-orange'}" style="font-size:15px;font-family:'Barlow Condensed',sans-serif">${r.cantidad.toLocaleString("es-AR")} L</span>
+        ${r.vehiculo ? `<span class="tag tag-gray">🚛 ${r.vehiculo}</span>`:""}
+        ${r.precio   ? `<span class="tag tag-gray">$ ${r.precio}/L</span>`:""}
+        ${r.odometro ? `<span class="tag tag-gray">⏱ ${Number(r.odometro).toLocaleString("es-AR")}</span>`:""}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// ── Guardar nuevo movimiento ──
+function selCgTipo(val, el) {
+  document.getElementById("cgTipo").value = val;
+  document.getElementById("cgpill-carga").classList.toggle("selected", val === "Carga");
+  document.getElementById("cgpill-carga").classList.toggle("verde-sel", val === "Carga");
+  document.getElementById("cgpill-descarga").classList.toggle("selected", val === "Descarga");
+  document.getElementById("cgPrecioWrap").style.opacity = val === "Carga" ? "1" : ".4";
+}
+
+async function cgGuardar() {
+  if (!g("cgCantidad")) { markErr("cgCantidad"); toast("Ingresá la cantidad","err"); return; }
+  setBtnLoading("btnCgGuardar","Registrando...");
+  const p = {
+    action: "agregarMovCisterna",
+    tipo:      g("cgTipo"),
+    fecha:     g("cgFecha"),
+    cantidad:  g("cgCantidad"),
+    vehiculo:  g("cgVehiculo"),
+    odometro:  g("cgOdometro"),
+    precio:    g("cgPrecio")
+  };
+  try {
+    const d = await jsonp(`${URL_}?${new URLSearchParams(p)}`);
+    if (!d || !d.ok) { toast(d?.mensaje || "Error", "err"); return; }
+    toast("Registrado ✓");
+    ["cgCantidad","cgVehiculo","cgOdometro","cgPrecio"].forEach(id => document.getElementById(id).value = "");
+    document.getElementById("cgFecha").value = todayStr();
+    await stockCargar();
+    // volver a tab resumen
+    const stab = document.querySelector('#page-stock .stab');
+    switchStab('stock', 'resumen', stab);
+  } catch(e) { toast("Error de conexión","err"); }
+  finally { resetBtn("btnCgGuardar","Registrar"); }
+}
+
+async function cgEliminar(id) {
+  try {
+    const d = await jsonp(`${URL_}?action=eliminarMovCisterna&id=${encodeURIComponent(id)}`);
+    if (!d || !d.ok) { toast(d?.mensaje || "Error","err"); return; }
+    toast("Eliminado ✓");
+    document.getElementById("calDetalle").style.display = "none";
+    await stockCargar();
+  } catch(e) { toast("Error de conexión","err"); }
+}
+
+// ── CALENDARIO ──
+const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const DOWS  = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+
+function calPrev() { calMesActual.setMonth(calMesActual.getMonth() - 1); calRender(); }
+function calNext() { calMesActual.setMonth(calMesActual.getMonth() + 1); calRender(); }
+
+function calRender() {
+  const año = calMesActual.getFullYear();
+  const mes = calMesActual.getMonth();
+  document.getElementById("calMesLabel").textContent = MESES[mes] + " " + año;
+
+  const primerDia = new Date(año, mes, 1).getDay();
+  const diasEnMes = new Date(año, mes + 1, 0).getDate();
+  const hoy = todayStr();
+  const mesStr2 = `${año}-${String(mes+1).padStart(2,'0')}`;
+
+  // Agrupar movs por fecha
+  const porFecha = {};
+  CG_MOVS.forEach(r => {
+    if (!r.fecha || !r.fecha.startsWith(mesStr2)) return;
+    if (!porFecha[r.fecha]) porFecha[r.fecha] = [];
+    porFecha[r.fecha].push(r);
+  });
+
+  let html = DOWS.map(d => `<div class="cal-dow">${d}</div>`).join("");
+  // celdas vacías inicio
+  for (let i = 0; i < primerDia; i++) html += `<div class="cal-dia vacio"></div>`;
+
+  for (let d = 1; d <= diasEnMes; d++) {
+    const fechaKey = `${año}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const movs = porFecha[fechaKey] || [];
+    const esHoy = fechaKey === hoy;
+    const esSel = fechaKey === calDiaSeleccionado;
+
+    const cargas    = movs.filter(r => r.tipo === "Carga");
+    const descargas = movs.filter(r => r.tipo === "Descarga");
+
+    const evs = [
+      ...cargas.map(r    => `<div class="cal-ev-carga">+${r.cantidad}L</div>`),
+      ...descargas.map(r => `<div class="cal-ev-descarga">-${r.cantidad}L</div>`)
+    ].join("");
+
+    html += `<div class="cal-dia${esHoy?' hoy':''}${esSel?' seleccionado':''}" onclick="calSelDia('${fechaKey}')">
+      <div class="cal-num">${d}</div>
+      <div class="cal-eventos">${evs}</div>
+    </div>`;
   }
+  document.getElementById("calGrid").innerHTML = html;
+}
 
-  // ── GUARDAR ──
-  async function guardar() {
-    let ok = true;
-    if (!g("fEquipoForm")) { marcarError("fEquipoForm"); ok = false; }
-    if (!g("fTrabajo2"))   { marcarError("fTrabajo2");   ok = false; }
-    if (!g("fFecha"))      { marcarError("fFecha");      ok = false; }
-    if (!ok) { toast("Completá los campos obligatorios", "err"); return; }
+function calSelDia(fecha) {
+  calDiaSeleccionado = fecha;
+  calRender();
+  const movs = CG_MOVS.filter(r => r.fecha === fecha);
+  const det = document.getElementById("calDetalle");
+  if (!movs.length) { det.style.display = "none"; return; }
 
-    const btn = document.getElementById("btnGuardar");
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spin"></span>Guardando...';
+  const [y,m,d] = fecha.split("-");
+  document.getElementById("calDetalleTitulo").textContent =
+    `${parseInt(d)}/${parseInt(m)}/${y.slice(2)} — ${movs.length} movimiento${movs.length>1?"s":""}`;
 
-    const editId = g("editId");
-    const params = {
-      action:      editId ? "editarIntervencion" : "agregarIntervencion",
-      id:          editId,
-      fecha:       g("fFecha"),
-      equipo:      g("fEquipoForm"),
-      odometro:    g("fOdometro"),
-      trabajo:     g("fTrabajo2"),
-      servis:      getFiltrosSeleccionados(),
-      aceite:      g("fAceite"),
-      taller:      g("fTallerForm"),
-      descripcion: g("fDesc"),
-      aviso:       g("fAviso")
-    };
+  document.getElementById("calDetalleBody").innerHTML = movs.map(r => {
+    const esCarga = r.tipo === "Carga";
+    return `<div class="det-mov">
+      <div>
+        <div class="det-tipo ${esCarga?'carga':'descarga'}">${esCarga?'📥 Carga':'📤 Descarga'}</div>
+        <div class="det-info">${r.vehiculo||''}${r.precio?' · $'+r.precio+'/L':''}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="det-cant ${esCarga?'carga':'descarga'}">${esCarga?'+':'-'}${r.cantidad.toLocaleString("es-AR")}L</span>
+        <button class="det-del" onclick="cgEliminar('${r.id}')" title="Eliminar">🗑</button>
+      </div>
+    </div>`;
+  }).join("");
+  det.style.display = "block";
+}
 
-    try {
-      const d = await jsonp(URL_ + "?" + new URLSearchParams(params).toString());
-      if (!d || !d.ok) { toast(d?.mensaje || "Error al guardar", "err"); return; }
-      toast(editId ? "Actualizado ✓" : "Guardado ✓");
-      cerrarModal();
-      await cargar();
-    } catch(e) {
-      toast("Error de conexión", "err");
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = editId ? "Actualizar" : "Guardar";
-    }
-  }
 
-  // ── ELIMINAR ──
-  function confirmarEliminar() {
-    document.getElementById("confirmOverlay").classList.add("open");
-  }
 
-  async function eliminar() {
-    document.getElementById("confirmOverlay").classList.remove("open");
-    const id = g("editId");
-    if (!id) return;
-    try {
-      const d = await jsonp(URL_ + "?action=eliminarIntervencion&id=" + encodeURIComponent(id));
-      if (!d || !d.ok) { toast(d?.mensaje || "Error al eliminar", "err"); return; }
-      toast("Eliminado ✓");
-      cerrarModal();
-      await cargar();
-    } catch(e) {
-      toast("Error de conexión", "err");
-    }
-  }
+// ═══════════════════════════════════════════════════════════
+//  MÓDULO: PLANILLAS
+// ═══════════════════════════════════════════════════════════
+async function planCargar() {
+  try {
+    const d = await jsonp(`${URL_}?action=getRegistros`);
+    if (!d||!d.ok) return;
+    S.planRegistros = d.registros || [];
+    planRenderHist();
+  } catch(e) { /* silencioso */ }
+}
 
-  cargar();
+function planRenderHist() {
+  const eq = g("hpEquipo"), op = g("hpOperario");
+  let lista = [...S.planRegistros];
+  if (eq) lista = lista.filter(r => r.equipo === eq);
+  if (op) lista = lista.filter(r => r.operario === op);
+  document.getElementById("planHistStats").innerHTML = `<strong>${lista.length}</strong> registros`;
+  const c = document.getElementById("planListaHist");
+  if (!lista.length) { c.innerHTML = '<div class="empty">Sin registros</div>'; return; }
+  c.innerHTML = lista.map(r => `
+    <div class="list-item" onclick="planAbrirEditar('${r.id}')">
+      <div class="item-top">
+        <div class="item-title">${r.equipo||"—"}</div>
+        <div class="item-date">${fmtFecha(r.fecha)}</div>
+      </div>
+      <div class="item-body">
+        ${r.operario ? `<span class="tag tag-gray">👤 ${r.operario}</span>`:""}
+        ${r.obra     ? `<span class="tag tag-blue">📍 ${r.obra}</span>`:""}
+        ${r.horasKm  ? `<span class="tag tag-gray">⏱ ${r.horasKm}</span>`:""}
+        ${r.litros   ? `<span class="tag tag-orange">⛽ ${r.litros}L</span>`:""}
+      </div>
+    </div>`).join("");
+}
+
+async function planGuardar() {
+  let ok = true;
+  if (!g("pEquipo"))  { markErr("pEquipo");  ok=false; }
+  if (!g("pOperario")){ markErr("pOperario"); ok=false; }
+  if (!g("pObra"))    { markErr("pObra");     ok=false; }
+  if (!ok) { toast("Completá los campos obligatorios","err"); return; }
+  setBtnLoading("btnPlanGuardar","Guardando...");
+  const p = {
+    action:"registrar", fecha:g("pFecha"), equipo:g("pEquipo"),
+    operario:g("pOperario"), obra:g("pObra"), trabajo:g("pTrabajo"),
+    horasKm:g("pHsKm"), litros:g("pLitros"),
+    arreglos:g("pArreglos"), observaciones:g("pObservaciones")
+  };
+  try {
+    const d = await jsonp(`${URL_}?${new URLSearchParams(p)}`);
+    if (!d||!d.ok) { toast(d?.mensaje||"Error","err"); return; }
+    toast("Registro guardado ✓");
+    ["pHsKm","pLitros","pArreglos","pObservaciones"].forEach(id => document.getElementById(id).value="");
+    document.getElementById("pEquipo").value   = "";
+    document.getElementById("pOperario").value = "";
+    document.getElementById("pObra").value     = "";
+    document.getElementById("pTrabajo").value  = "";
+    document.getElementById("pFecha").value    = todayStr();
+    await planCargar();
+  } catch(e) { toast("Error de conexión","err"); }
+  finally { resetBtn("btnPlanGuardar","Guardar registro"); }
+}
+
+function planAbrirEditar(id) {
+  const r = S.planRegistros.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById("peId").value           = id;
+  document.getElementById("peFecha").value        = r.fecha||"";
+  document.getElementById("peEquipo").value       = r.equipo||"";
+  document.getElementById("peOperario").value     = r.operario||"";
+  document.getElementById("peObra").value         = r.obra||"";
+  document.getElementById("peTrabajo").value      = r.trabajo||"";
+  document.getElementById("peHsKm").value         = r.horasKm||"";
+  document.getElementById("peLitros").value       = r.litros||"";
+  document.getElementById("peArreglos").value     = r.arreglos||"";
+  document.getElementById("peObservaciones").value= r.observaciones||"";
+  document.getElementById("planModal").classList.add("open");
+}
+
+async function planActualizar() {
+  const id = g("peId"); if (!id) return;
+  setBtnLoading("btnPlanActualizar","Actualizando...");
+  const p = {
+    action:"editarRegistro", id, fecha:g("peFecha"), equipo:g("peEquipo"),
+    operario:g("peOperario"), obra:g("peObra"), trabajo:g("peTrabajo"),
+    horasKm:g("peHsKm"), litros:g("peLitros"),
+    arreglos:g("peArreglos"), observaciones:g("peObservaciones")
+  };
+  try {
+    const d = await jsonp(`${URL_}?${new URLSearchParams(p)}`);
+    if (!d||!d.ok) { toast(d?.mensaje||"Error","err"); return; }
+    toast("Actualizado ✓");
+    cerrarModal("planModal");
+    await planCargar();
+  } catch(e) { toast("Error de conexión","err"); }
+  finally { resetBtn("btnPlanActualizar","Actualizar"); }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MÓDULO: INTERVENCIONES
+// ═══════════════════════════════════════════════════════════
+async function intervCargar() {
+  try {
+    const d = await jsonp(`${URL_}?action=getIntervenciones`);
+    if (!d||!d.ok) return;
+    S.intervRegistros = d.intervenciones || [];
+    intervRenderHist();
+  } catch(e) { /* silencioso */ }
+}
+
+function intervRenderHist() {
+  const eq = g("hiEquipo"), av = g("hiAviso");
+  let lista = [...S.intervRegistros];
+  if (eq) lista = lista.filter(r => r.equipo === eq || r.normalizado === eq);
+  if (av) lista = lista.filter(r => r.aviso === av);
+  document.getElementById("intervHistStats").innerHTML = `<strong>${lista.length}</strong> intervenciones`;
+  const c = document.getElementById("intervListaHist");
+  if (!lista.length) { c.innerHTML = '<div class="empty">Sin intervenciones</div>'; return; }
+  c.innerHTML = lista.map(r => {
+    const avisoHtml = r.aviso === "alto"  ? `<span class="aviso-badge aviso-alto">🔴 URGENTE</span>` :
+                      r.aviso === "medio" ? `<span class="aviso-badge aviso-medio">🟡 AVISO</span>` : "";
+    return `
+    <div class="list-item" onclick="intervAbrirEditar('${r.id}')">
+      <div class="item-top">
+        <div class="item-title">${r.equipo||"—"} ${avisoHtml}</div>
+        <div class="item-date">${fmtFecha(r.fecha)}</div>
+      </div>
+      <div class="item-body">
+        ${r.trabajo ? `<span class="tag tag-gray">🔧 ${r.trabajo}</span>`:""}
+        ${r.taller  ? `<span class="tag tag-blue">🏭 ${r.taller}</span>`:""}
+        ${r.servis==="si" ? `<span class="tag tag-green">✓ Service</span>`:""}
+        ${r.aceite==="si" ? `<span class="tag tag-green">✓ Aceite</span>`:""}
+        ${r.odometro ? `<span class="tag tag-gray">⏱ ${Number(r.odometro).toLocaleString("es-AR")}</span>`:""}
+      </div>
+      ${r.descripcion ? `<div style="font-size:12px;color:var(--texto2);margin-top:6px;padding-top:6px;border-top:1px solid var(--borde)">${r.descripcion}</div>`:""}
+    </div>`}).join("");
+}
+
+async function intervGuardar() {
+  if (!g("iEquipo")) { markErr("iEquipo"); toast("Seleccioná el equipo","err"); return; }
+  setBtnLoading("btnIntervGuardar","Guardando...");
+  const p = {
+    action:"agregarIntervencion", fecha:g("iFecha"), equipo:g("iEquipo"),
+    odometro:g("iOdometro"), trabajo:g("iTrabajo"), taller:g("iTaller"),
+    descripcion:g("iDescripcion"), servis:g("iServis"),
+    aceite:g("iAceite"), aviso:g("iAviso")
+  };
+  try {
+    const d = await jsonp(`${URL_}?${new URLSearchParams(p)}`);
+    if (!d||!d.ok) { toast(d?.mensaje||"Error","err"); return; }
+    toast("Intervención guardada ✓");
+    ["iOdometro","iTaller","iDescripcion"].forEach(id => document.getElementById(id).value="");
+    document.getElementById("iEquipo").value  = "";
+    document.getElementById("iTrabajo").value = "";
+    document.getElementById("iFecha").value   = todayStr();
+    // reset pills
+    selBool("iServis","no",document.getElementById("ipill-servis-no"));
+    selBool("iAceite","no",document.getElementById("ipill-aceite-no"));
+    selAviso("",document.getElementById("ipill-aviso-ninguno"));
+    await intervCargar();
+  } catch(e) { toast("Error de conexión","err"); }
+  finally { resetBtn("btnIntervGuardar","Guardar intervención"); }
+}
+
+function intervAbrirEditar(id) {
+  const r = S.intervRegistros.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById("ieId").value          = id;
+  document.getElementById("ieFecha").value       = r.fecha||"";
+  document.getElementById("ieEquipo").value      = r.equipo||"";
+  document.getElementById("ieOdometro").value    = r.odometro||"";
+  document.getElementById("ieTrabajo").value     = r.trabajo||"";
+  document.getElementById("ieTaller").value      = r.taller||"";
+  document.getElementById("ieDescripcion").value = r.descripcion||"";
+  // pills
+  const serv = r.servis||"no"; const ace = r.aceite||"no";
+  document.getElementById("ieServis").value = serv;
+  document.getElementById("iepill-servis-si").classList.toggle("selected", serv==="si");
+  document.getElementById("iepill-servis-no").classList.toggle("selected", serv!=="si");
+  document.getElementById("ieAceite").value = ace;
+  document.getElementById("iepill-aceite-si").classList.toggle("selected", ace==="si");
+  document.getElementById("iepill-aceite-no").classList.toggle("selected", ace!=="si");
+  const av = r.aviso||"";
+  document.getElementById("ieAviso").value = av;
+  ["alto","medio","ninguno"].forEach(v => document.getElementById("iepill-aviso-"+v).classList.toggle("selected", (av||"ninguno")===v));
+  document.getElementById("intervModal").classList.add("open");
+}
+
+async function intervActualizar() {
+  const id = g("ieId"); if (!id) return;
+  setBtnLoading("btnIntervActualizar","Actualizando...");
+  const p = {
+    action:"editarIntervencion", id, fecha:g("ieFecha"), equipo:g("ieEquipo"),
+    odometro:g("ieOdometro"), trabajo:g("ieTrabajo"), taller:g("ieTaller"),
+    descripcion:g("ieDescripcion"), servis:g("ieServis"),
+    aceite:g("ieAceite"), aviso:g("ieAviso")
+  };
+  try {
+    const d = await jsonp(`${URL_}?${new URLSearchParams(p)}`);
+    if (!d||!d.ok) { toast(d?.mensaje||"Error","err"); return; }
+    toast("Actualizado ✓");
+    cerrarModal("intervModal");
+    await intervCargar();
+  } catch(e) { toast("Error de conexión","err"); }
+  finally { resetBtn("btnIntervActualizar","Actualizar"); }
+}
+
+// ─── ARRANQUE ─────────────────────────────────────────────
+init();
 </script>
 </body>
 </html>

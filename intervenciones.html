@@ -749,27 +749,6 @@
       </div>
       <datalist id="listAceites"></datalist>
 
-      <div class="section-divider">Aceite / Service</div>
-
-      <div class="row2">
-        <div class="f">
-          <label>Service</label>
-          <div class="pill-row">
-            <div class="pill" id="ipill-servis-si" onclick="selBool('iServis','si',this)">Sí</div>
-            <div class="pill selected" id="ipill-servis-no" onclick="selBool('iServis','no',this)">No</div>
-          </div>
-          <input type="hidden" id="iServis" value="no">
-        </div>
-        <div class="f">
-          <label>Aceite</label>
-          <div class="pill-row">
-            <div class="pill" id="ipill-aceite-si" onclick="selBool('iAceite','si',this)">Sí</div>
-            <div class="pill selected" id="ipill-aceite-no" onclick="selBool('iAceite','no',this)">No</div>
-          </div>
-          <input type="hidden" id="iAceite" value="no">
-        </div>
-      </div>
-
       <div class="f">
         <label>Aviso / Prioridad</label>
         <div class="pill-row">
@@ -942,24 +921,6 @@
       <div class="f" style="margin-top:10px">
         <label>Aceite (tipo)</label>
         <input type="text" id="ieAceiteType" list="listAceites" placeholder="Ej: 15w40 r4, 20w50..." autocomplete="off">
-      </div>
-    </div>
-    <div class="row2">
-      <div class="f">
-        <label>Service</label>
-        <div class="pill-row">
-          <div class="pill" id="iepill-servis-si" onclick="selBoolEdit('ieServis','si',this)">Sí</div>
-          <div class="pill selected" id="iepill-servis-no" onclick="selBoolEdit('ieServis','no',this)">No</div>
-        </div>
-        <input type="hidden" id="ieServis" value="no">
-      </div>
-      <div class="f">
-        <label>Aceite</label>
-        <div class="pill-row">
-          <div class="pill" id="iepill-aceite-si" onclick="selBoolEdit('ieAceite','si',this)">Sí</div>
-          <div class="pill selected" id="iepill-aceite-no" onclick="selBoolEdit('ieAceite','no',this)">No</div>
-        </div>
-        <input type="hidden" id="ieAceite" value="no">
       </div>
     </div>
     <div class="f">
@@ -1682,7 +1643,7 @@ function poblarDatalistsInterv() {
   // Tipos de aceite: predefinidos + histórico extraído de descripción
   const aceitesPred = ["15w40 r4","15w40","20w50","10w30","10w40","SAE 30","SAE 40","85w140","75w90"];
   const aceitesHist = S.intervRegistros.map(r => {
-    const m = (r.descripcion || "").match(/\[Aceite: ([^\]]+)\]/);
+    const m = (r.servis || r.descripcion || "").match(/\[Aceite: ([^\]]+)\]/);
     return m ? m[1] : null;
   }).filter(Boolean);
   const allAceites = [...new Set([...aceitesPred, ...aceitesHist])];
@@ -1696,14 +1657,12 @@ function checkServicio() {
   const es  = val.includes("service") || val.includes("servicio") || val.includes("servis");
   const wrap = document.getElementById("iFiltrosWrap");
   if (wrap) wrap.style.display = es ? "block" : "none";
-  if (es) selBool("iServis", "si", document.getElementById("ipill-servis-si"));
 }
 function checkServicioEdit() {
   const val = (document.getElementById("ieTrabajo")?.value || "").toLowerCase();
   const es  = val.includes("service") || val.includes("servicio") || val.includes("servis");
   const wrap = document.getElementById("ieFiltrosWrap");
   if (wrap) wrap.style.display = es ? "block" : "none";
-  if (es) selBool("ieServis", "si", document.getElementById("iepill-servis-si"));
 }
 
 // Lee las pills seleccionadas y tipo de aceite; devuelve texto para guardar en descripción
@@ -1778,10 +1737,10 @@ function intervRenderHist() {
       <div class="item-body">
         ${r.trabajo ? `<span class="tag tag-gray">🔧 ${r.trabajo}</span>`:""}
         ${r.taller  ? `<span class="tag tag-blue">🏭 ${r.taller}</span>`:""}
-        ${r.servis==="si" ? `<span class="tag tag-green">✓ Service</span>`:""}
-        ${r.aceite==="si" ? `<span class="tag tag-green">✓ Aceite</span>`:""}
+        ${r.servis && r.servis !== "no" ? `<span class="tag tag-green">✓ Service</span>`:""}
         ${r.odometro ? `<span class="tag tag-gray">⏱ ${Number(r.odometro).toLocaleString("es-AR")}</span>`:""}
       </div>
+      ${(r.servis && r.servis !== "no") ? `<div style="font-size:12px;color:var(--naranja);margin-top:4px">${r.servis.replace(/\[Filtros: /g,"").replace(/\[Aceite: /g,"🛢 ").replace(/\]/g,"")}</div>`:""}
       ${r.descripcion ? `<div style="font-size:12px;color:var(--texto2);margin-top:6px;padding-top:6px;border-top:1px solid var(--borde)">${r.descripcion}</div>`:""}
     </div>`}).join("");
 }
@@ -1790,12 +1749,11 @@ async function intervGuardar() {
   if (!g("iEquipo")) { markErr("iEquipo"); toast("Seleccioná el equipo","err"); return; }
   setBtnLoading("btnIntervGuardar","Guardando...");
   const filtros = getFiltros("iFiltrosWrap");
-  const desc    = [g("iDescripcion"), filtros].filter(Boolean).join("\n");
   const p = {
     action:"agregarIntervencion", fecha:g("iFecha"), equipo:g("iEquipo"),
     odometro:g("iOdometro"), trabajo:g("iTrabajo"), taller:g("iTaller"),
-    descripcion:desc, servis:g("iServis"),
-    aceite:g("iAceite"), aviso:g("iAviso")
+    descripcion:g("iDescripcion"), servis:filtros || "no",
+    aceite:filtros.includes("Aceite") ? "si" : "no", aviso:g("iAviso")
   };
   try {
     const d = await jsonp(`${URL_}?${new URLSearchParams(p)}`);
@@ -1806,8 +1764,6 @@ async function intervGuardar() {
     document.getElementById("iTrabajo").value = "";
     document.getElementById("iFecha").value   = todayStr();
     resetFiltros("iFiltrosWrap");
-    selBool("iServis","no",document.getElementById("ipill-servis-no"));
-    selBool("iAceite","no",document.getElementById("ipill-aceite-no"));
     selAviso("",document.getElementById("ipill-aviso-ninguno"));
     await intervCargar();
   } catch(e) { toast("Error de conexión","err"); }
@@ -1823,21 +1779,11 @@ function intervAbrirEditar(id) {
   document.getElementById("ieOdometro").value    = r.odometro||"";
   document.getElementById("ieTrabajo").value     = r.trabajo||"";
   document.getElementById("ieTaller").value      = r.taller||"";
-  // Separar filtros guardados de la descripción limpia
-  const descRaw = r.descripcion || "";
-  const descLimpia = descRaw.replace(/\[Filtros:[^\]]*\]/g, "").replace(/\[Aceite:[^\]]*\]/g, "").trim();
-  document.getElementById("ieDescripcion").value = descLimpia;
-  // Restaurar filtros seleccionados
+  document.getElementById("ieDescripcion").value = r.descripcion||"";
+  // Restaurar filtros seleccionados desde columna servis
   resetFiltros("ieFiltrosWrap");
-  restoreFiltros("ieFiltrosWrap", descRaw);
+  restoreFiltros("ieFiltrosWrap", r.servis||"");
   checkServicioEdit();
-  const serv = r.servis||"no"; const ace = r.aceite||"no";
-  document.getElementById("ieServis").value = serv;
-  document.getElementById("iepill-servis-si").classList.toggle("selected", serv==="si");
-  document.getElementById("iepill-servis-no").classList.toggle("selected", serv!=="si");
-  document.getElementById("ieAceite").value = ace;
-  document.getElementById("iepill-aceite-si").classList.toggle("selected", ace==="si");
-  document.getElementById("iepill-aceite-no").classList.toggle("selected", ace!=="si");
   const av = r.aviso||"";
   document.getElementById("ieAviso").value = av;
   ["alto","medio","ninguno"].forEach(v => document.getElementById("iepill-aviso-"+v).classList.toggle("selected", (av||"ninguno")===v));
@@ -1848,12 +1794,11 @@ async function intervActualizar() {
   const id = g("ieId"); if (!id) return;
   setBtnLoading("btnIntervActualizar","Actualizando...");
   const filtrosEdit = getFiltros("ieFiltrosWrap");
-  const descEdit    = [g("ieDescripcion"), filtrosEdit].filter(Boolean).join("\n");
   const p = {
     action:"editarIntervencion", id, fecha:g("ieFecha"), equipo:g("ieEquipo"),
     odometro:g("ieOdometro"), trabajo:g("ieTrabajo"), taller:g("ieTaller"),
-    descripcion:descEdit, servis:g("ieServis"),
-    aceite:g("ieAceite"), aviso:g("ieAviso")
+    descripcion:g("ieDescripcion"), servis:filtrosEdit || "no",
+    aceite:filtrosEdit.includes("Aceite") ? "si" : "no", aviso:g("ieAviso")
   };
   try {
     const d = await jsonp(`${URL_}?${new URLSearchParams(p)}`);

@@ -761,6 +761,11 @@
         <option value="medio">🟡 Medio</option>
       </select>
     </div>
+    <div class="toolbar" style="padding:4px 12px 0">
+      <input type="search" id="hiBuscar" placeholder="🔍 Buscar equipo, trabajo, taller, descripción..."
+             oninput="intervRenderHist()" autocomplete="off"
+             style="width:100%;padding:10px 12px;background:var(--gris2);border:1px solid var(--borde);border-radius:var(--rsm);color:var(--texto);font-size:14px;font-family:'Barlow',sans-serif">
+    </div>
     <div class="stats" id="intervHistStats"></div>
     <div id="intervListaHist"><div class="loading"><div class="spin"></div></div></div>
   </div>
@@ -1753,9 +1758,18 @@ async function intervCargar() {
 
 function intervRenderHist() {
   const eq = g("hiEquipo"), av = g("hiAviso");
+  const q  = (document.getElementById("hiBuscar")?.value || "").toLowerCase().trim();
   let lista = [...S.intervRegistros];
   if (eq) lista = lista.filter(r => r.equipo === eq || r.normalizado === eq);
   if (av) lista = lista.filter(r => r.aviso === av);
+  if (q)  lista = lista.filter(r =>
+    (r.equipo      || "").toLowerCase().includes(q) ||
+    (r.trabajo     || "").toLowerCase().includes(q) ||
+    (r.taller      || "").toLowerCase().includes(q) ||
+    (r.descripcion || "").toLowerCase().includes(q) ||
+    (r.servis      || "").toLowerCase().includes(q) ||
+    (r.fecha       || "").includes(q)
+  );
   document.getElementById("intervHistStats").innerHTML = `<strong>${lista.length}</strong> intervenciones`;
   const c = document.getElementById("intervListaHist");
   if (!lista.length) { c.innerHTML = '<div class="empty">Sin intervenciones</div>'; return; }

@@ -615,76 +615,15 @@
 
 <!-- ── PLANILLAS ── -->
 <div class="page" id="page-planillas">
-  <div class="stabs">
-    <button class="stab active" onclick="switchStab('planillas','nueva',this)">✏️ Nueva</button>
-    <button class="stab"        onclick="switchStab('planillas','historial',this)">📋 Historial</button>
+  <div class="toolbar" style="padding:10px 12px 0">
+    <select id="hpEquipo"   onchange="planRenderHist()"><option value="">Todos los equipos</option></select>
+    <select id="hpOperario" onchange="planRenderHist()"><option value="">Todos los operarios</option></select>
   </div>
-
-  <!-- Nueva planilla -->
-  <div class="stab-sec active" id="planillas-nueva">
-    <div class="card">
-      <div class="card-title">Registro de uso</div>
-
-      <div class="row2">
-        <div class="f">
-          <label>Fecha <span class="req">*</span></label>
-          <input type="date" id="pFecha">
-        </div>
-        <div class="f">
-          <label>Hs / Km</label>
-          <input type="number" id="pHsKm" placeholder="Opcional" inputmode="numeric">
-        </div>
-      </div>
-
-      <div class="f">
-        <label>Equipo <span class="req">*</span></label>
-        <select id="pEquipo"><option value="">— Cargando... —</option></select>
-      </div>
-
-      <div class="f">
-        <label>Operario <span class="req">*</span></label>
-        <select id="pOperario"><option value="">— Cargando... —</option></select>
-      </div>
-
-      <div class="f">
-        <label>Obra <span class="req">*</span></label>
-        <select id="pObra"><option value="">— Cargando... —</option></select>
-      </div>
-
-      <div class="f">
-        <label>Trabajo realizado</label>
-        <select id="pTrabajo"><option value="">— Cargando... —</option></select>
-      </div>
-
-      <div class="row2">
-        <div class="f">
-          <label>Litros cargados</label>
-          <input type="number" id="pLitros" placeholder="Opcional" inputmode="decimal">
-        </div>
-        <div class="f">
-          <label>Arreglos</label>
-          <input type="text" id="pArreglos" placeholder="Opcional">
-        </div>
-      </div>
-
-      <div class="f">
-        <label>Observaciones</label>
-        <textarea id="pObservaciones" rows="2" placeholder="Opcional"></textarea>
-      </div>
-
-      <button class="btn btn-primary" id="btnPlanGuardar" onclick="planGuardar()">Guardar registro</button>
-    </div>
+  <div class="toolbar" style="padding:4px 12px 0">
+    <select id="hpObra" onchange="planRenderHist()" style="width:100%"><option value="">Todas las obras / ubicaciones</option></select>
   </div>
-
-  <!-- Historial planillas -->
-  <div class="stab-sec" id="planillas-historial">
-    <div class="toolbar">
-      <select id="hpEquipo" onchange="planRenderHist()"><option value="">Todos los equipos</option></select>
-      <select id="hpOperario" onchange="planRenderHist()"><option value="">Todos los operarios</option></select>
-    </div>
-    <div class="stats" id="planHistStats"></div>
-    <div id="planListaHist"><div class="loading"><div class="spin"></div></div></div>
-  </div>
+  <div class="stats" id="planHistStats" style="padding:8px 12px 0"></div>
+  <div id="planListaHist"><div class="loading"><div class="spin"></div></div></div>
 </div>
 
 <!-- ── INTERVENCIONES ── -->
@@ -1189,14 +1128,9 @@ async function init() {
     equiposLista = d.equipos || [];
     const { operarios, obras, trabajos } = d;
 
-    fillSelect("cResponsable", operarios, "— Seleccionar —");
-    fillSelect("pOperario",    operarios, "— Seleccionar —");
-    fillSelect("pObra",        obras,     "— Seleccionar —");
-    fillSelect("pTrabajo",     trabajos,  "— Seleccionar —");
+    fillSelect("cResponsable",  operarios, "— Seleccionar —");
     fillSelect("ceResponsable", operarios, "— Seleccionar —");
-    fillSelect("peOperario",    operarios, "— Seleccionar —");
-    fillSelect("peObra",        obras,     "— Seleccionar —");
-    fillSelect("peTrabajo",     trabajos,  "— Seleccionar —");
+    // Poblar filtro de operarios en planillas
     operarios.forEach(op => {
       const s = document.getElementById("hpOperario");
       if (s) { const o = document.createElement("option"); o.value = o.textContent = op; s.appendChild(o); }
@@ -1223,10 +1157,10 @@ async function init() {
     : [...new Set(S.equiposInfo.map(e => e.codigo).filter(Boolean))];
 
   if (finalCodes.length) {
-    ["cEquipo","pEquipo","iEquipo","ceEquipo","peEquipo","ieEquipo","mEquipo"]
+    ["cEquipo","iEquipo","ceEquipo","ieEquipo","mEquipo"]
       .forEach(sid => fillSelectEquipos(sid, finalCodes, "— Seleccionar —"));
     finalCodes.forEach(code => {
-      ["hcEquipo","hpEquipo","hiEquipo"].forEach(sid => {
+      ["hcEquipo","hiEquipo"].forEach(sid => {
         const s = document.getElementById(sid);
         if (s && !Array.from(s.options).some(o => o.value === code)) {
           const o = document.createElement("option");
@@ -1251,6 +1185,12 @@ async function combCargar() {
     const d = await jsonp(`${URL_}?action=getCombustibleObrador`);
     if (!d || !d.ok) return;
     S.combRegistros = d.registros || [];
+    // Fallback: si operarios llegó vacío de getListas, armarlo desde el historial
+    if (!(S.listas.operarios||[]).length && S.combRegistros.length) {
+      const hist = [...new Set(S.combRegistros.map(r => r.responsable).filter(Boolean))].sort();
+      fillSelect("cResponsable",  hist, "— Seleccionar —");
+      fillSelect("ceResponsable", hist, "— Seleccionar —");
+    }
     combCalcStats();
     combRenderHist();
   } catch(e) { toast("Error cargando combustible", "err"); }
@@ -1545,16 +1485,46 @@ async function planCargar() {
     const d = await jsonp(`${URL_}?action=getRegistros`);
     if (!d||!d.ok) return;
     S.planRegistros = d.registros || [];
+    // Poblar filtros desde historial
+    const obras = [...new Set(S.planRegistros.map(r => r.obra).filter(Boolean))].sort();
+    const obrasSel = document.getElementById("hpObra");
+    if (obrasSel) {
+      const curO = obrasSel.value;
+      obrasSel.innerHTML = '<option value="">Todas las obras / ubicaciones</option>' +
+        obras.map(o => `<option value="${o}">${o}</option>`).join("");
+      if (curO) obrasSel.value = curO;
+    }
+    // Poblar filtro de operarios si no vino de getListas
+    const ops = [...new Set(S.planRegistros.map(r => r.operario).filter(Boolean))].sort();
+    const opSel = document.getElementById("hpOperario");
+    if (opSel && opSel.options.length <= 1) {
+      opSel.innerHTML = '<option value="">Todos los operarios</option>' +
+        ops.map(o => `<option value="${o}">${o}</option>`).join("");
+    }
+    // Poblar filtro de equipos en planillas desde historial
+    const eqs = [...new Set(S.planRegistros.map(r => r.equipo).filter(Boolean))].sort();
+    const eqSel = document.getElementById("hpEquipo");
+    if (eqSel) {
+      const curE = eqSel.value;
+      eqSel.innerHTML = '<option value="">Todos los equipos</option>' +
+        eqs.map(eq => {
+          const info = S.equiposInfo.find(e => e.codigo === eq);
+          const label = info ? `${eq} — ${[info.marca, info.modelo].filter(Boolean).join(" ")}` : eq;
+          return `<option value="${eq}">${label}</option>`;
+        }).join("");
+      if (curE) eqSel.value = curE;
+    }
     planRenderHist();
   } catch(e) { /* silencioso */ }
 }
 
 function planRenderHist() {
-  const eq = g("hpEquipo"), op = g("hpOperario");
+  const eq   = g("hpEquipo"), op = g("hpOperario"), ob = g("hpObra");
   let lista = [...S.planRegistros];
-  if (eq) lista = lista.filter(r => r.equipo === eq);
+  if (eq) lista = lista.filter(r => r.equipo   === eq);
   if (op) lista = lista.filter(r => r.operario === op);
-  document.getElementById("planHistStats").innerHTML = `<strong>${lista.length}</strong> registros`;
+  if (ob) lista = lista.filter(r => r.obra     === ob);
+  document.getElementById("planHistStats").innerHTML = `<strong>${lista.length}</strong> registro${lista.length!==1?"s":""}`;
   const c = document.getElementById("planListaHist");
   if (!lista.length) { c.innerHTML = '<div class="empty">Sin registros</div>'; return; }
   c.innerHTML = lista.map(r => `
@@ -1563,12 +1533,14 @@ function planRenderHist() {
         <div class="item-title">${r.equipo||"—"}</div>
         <div class="item-date">${fmtFecha(r.fecha)}</div>
       </div>
-      <div class="item-body">
+      <div class="item-body" style="flex-wrap:wrap;gap:5px">
         ${r.operario ? `<span class="tag tag-gray">👤 ${r.operario}</span>`:""}
         ${r.obra     ? `<span class="tag tag-blue">📍 ${r.obra}</span>`:""}
-        ${r.horasKm  ? `<span class="tag tag-gray">⏱ ${r.horasKm}</span>`:""}
-        ${r.litros   ? `<span class="tag tag-orange">⛽ ${r.litros}L</span>`:""}
+        ${r.horasKm  ? `<span class="tag tag-gray">⏱ ${Number(r.horasKm).toLocaleString("es-AR")} hs/km</span>`:""}
+        ${r.litros   ? `<span class="tag tag-orange">⛽ ${r.litros} L</span>`:""}
+        ${r.trabajo  ? `<span class="tag tag-gray">🔧 ${r.trabajo}</span>`:""}
       </div>
+      ${r.observaciones ? `<div style="font-size:12px;color:var(--texto2);margin-top:5px;padding-top:5px;border-top:1px solid var(--borde)">${r.observaciones}</div>`:""}
     </div>`).join("");
 }
 

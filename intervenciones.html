@@ -1852,10 +1852,24 @@ function eqStatusBadges(eq) {
 }
 
 // Genera el HTML de una card de equipo
+// Convierte cualquier URL de Google Drive a URL directa de imagen
+function driveImgUrl(url) {
+  if (!url) return null;
+  // Ya es URL directa o thumbnail
+  if (url.includes("thumbnail?id=") || url.includes("uc?export=view") || url.startsWith("https://lh3.google")) return url;
+  // https://drive.google.com/file/d/ID/view  o  /open?id=ID
+  const m = url.match(/\/d\/([a-zA-Z0-9_-]{10,})/);
+  if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w400`;
+  const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);
+  if (m2) return `https://drive.google.com/thumbnail?id=${m2[1]}&sz=w400`;
+  // Otra URL cualquiera
+  return url;
+}
+
 function equipoCardHTML(eq, idx) {
-  const fotoSrc = eq.foto && (eq.foto.startsWith("http") || eq.foto.startsWith("//"));
-  const fotoHtml = fotoSrc
-    ? `<img class="eq-thumb" src="${eq.foto}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`
+  const fotoUrl = driveImgUrl(eq.foto);
+  const fotoHtml = fotoUrl
+    ? `<img class="eq-thumb" src="${fotoUrl}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`
     + `<div class="eq-no-foto" style="display:none">🚜</div>`
     : `<div class="eq-no-foto">🚜</div>`;
 
@@ -1881,8 +1895,8 @@ function equipoCardHTML(eq, idx) {
     eq.ubicacion    ? `<div class="eq-det-item"><div class="eq-det-label">Ubicación / Obra</div><div class="eq-det-val">${eq.ubicacion}</div></div>` : "",
   ].filter(Boolean).join("");
 
-  const fotoFull = fotoSrc
-    ? `<img class="eq-foto-full" src="${eq.foto}" onerror="this.style.display='none'" loading="lazy">`
+  const fotoFull = fotoUrl
+    ? `<img class="eq-foto-full" src="${fotoUrl}" onerror="this.style.display='none'" loading="lazy">`
     : "";
 
   return `

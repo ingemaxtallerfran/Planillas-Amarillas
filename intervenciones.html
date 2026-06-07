@@ -326,6 +326,29 @@
     .filtro-pill.selected { border-color: var(--naranja); background: var(--naranja); color: #fff; }
     .filtro-wrap { margin-bottom: 12px; }
 
+    /* ─── FOTO UPLOAD ─── */
+    .foto-btn-label {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 13px; border: 1.5px dashed var(--borde);
+      border-radius: var(--rsm); background: var(--gris2); color: var(--texto2);
+      font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: border-color .15s, color .15s;
+    }
+    .foto-btn-label:active { border-color: var(--naranja); color: var(--naranja); }
+    .foto-preview-wrap {
+      position: relative; margin-top: 8px; border-radius: var(--rsm); overflow: hidden;
+    }
+    .foto-preview-img {
+      width: 100%; max-height: 200px; object-fit: cover; display: block;
+      border-radius: var(--rsm); background: var(--gris3);
+    }
+    .foto-preview-quit {
+      position: absolute; top: 6px; right: 6px;
+      background: rgba(0,0,0,.65); border: none; color: #fff;
+      border-radius: 50%; width: 28px; height: 28px; font-size: 15px;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+
     /* ─── INFO DE EQUIPOS ─── */
     .equipo-card {
       background: var(--gris1);
@@ -349,6 +372,15 @@
       border-radius: 8px;
       flex-shrink: 0;
       background: var(--gris2);
+    }
+    .interv-foto {
+      width: 100%;
+      max-height: 180px;
+      object-fit: cover;
+      border-radius: 7px;
+      margin-top: 8px;
+      background: var(--gris2);
+      display: block;
     }
     .eq-no-foto {
       width: 62px;
@@ -672,6 +704,20 @@
       <div class="f">
         <label>Descripción</label>
         <textarea id="iDescripcion" rows="2" placeholder="Detalle de la intervención"></textarea>
+      </div>
+
+      <!-- Foto opcional -->
+      <div class="f">
+        <label>Foto (opcional)</label>
+        <div id="iFotoPreviewWrap" class="foto-preview-wrap" style="display:none">
+          <img id="iFotoPreview" class="foto-preview-img">
+          <button type="button" class="foto-preview-quit" onclick="quitarFoto('i')" title="Quitar foto">✕</button>
+        </div>
+        <label class="foto-btn-label" for="iFotoInput" id="iFotoBtnLabel">
+          📷 Sacar / elegir foto
+        </label>
+        <input type="file" id="iFotoInput" accept="image/*" capture="environment"
+               style="display:none" onchange="onFotoSelected(this,'i')">
       </div>
 
       <!-- Filtros service — se muestra solo cuando trabajo contiene "service"/"servis" -->
@@ -1215,8 +1261,9 @@ function combCalcStats() {
 function combRenderHist() {
   const eq = g("hcEquipo"), fe = g("hcFecha");
   let lista = [...S.combRegistros];
-  if (eq) lista = lista.filter(r => r.codigo === eq);
+  if (eq) lista = lista.filter(r => r.equipo === eq);
   if (fe) lista = lista.filter(r => r.fecha  === fe);
+  lista.sort((a,b) => (b.fecha||"").localeCompare(a.fecha||""));
   const total = lista.reduce((s,r) => s+(parseFloat(r.cantidad)||0),0);
   document.getElementById("combHistStats").innerHTML = `<strong>${lista.length}</strong> registros · Total: <strong>${total} L</strong>`;
   const c = document.getElementById("combListaHist");
@@ -1224,7 +1271,7 @@ function combRenderHist() {
   c.innerHTML = lista.map(r => `
     <div class="list-item" onclick="combAbrirEditar('${r.id}')">
       <div class="item-top">
-        <div class="item-title">${r.codigo||"—"}</div>
+        <div class="item-title">${r.equipo||"—"}</div>
         <div class="item-date">${fmtFecha(r.fecha)}</div>
       </div>
       <div class="item-body">
@@ -1527,6 +1574,7 @@ function planRenderHist() {
   if (eq) lista = lista.filter(r => r.equipo   === eq);
   if (op) lista = lista.filter(r => r.operario === op);
   if (ob) lista = lista.filter(r => r.obra     === ob);
+  lista.sort((a,b) => (b.fecha||"").localeCompare(a.fecha||""));
   document.getElementById("planHistStats").innerHTML = `<strong>${lista.length}</strong> registro${lista.length!==1?"s":""}`;
   const c = document.getElementById("planListaHist");
   if (!lista.length) { c.innerHTML = '<div class="empty">Sin registros</div>'; return; }
@@ -1714,6 +1762,7 @@ function intervRenderHist() {
   c.innerHTML = lista.map(r => {
     const avisoHtml = r.aviso === "alto"  ? `<span class="aviso-badge aviso-alto">🔴 URGENTE</span>` :
                       r.aviso === "medio" ? `<span class="aviso-badge aviso-medio">🟡 AVISO</span>` : "";
+    const fotoUrl = driveImgUrl(r.foto);
     return `
     <div class="list-item" onclick="intervAbrirEditar('${r.id}')">
       <div class="item-top">
@@ -1728,18 +1777,81 @@ function intervRenderHist() {
       </div>
       ${(r.servis && r.servis !== "no") ? `<div style="font-size:12px;color:var(--naranja);margin-top:4px">${r.servis.replace(/\[Filtros: /g,"").replace(/\[Aceite: /g,"🛢 ").replace(/\]/g,"")}</div>`:""}
       ${r.descripcion ? `<div style="font-size:12px;color:var(--texto2);margin-top:6px;padding-top:6px;border-top:1px solid var(--borde)">${r.descripcion}</div>`:""}
+      ${fotoUrl ? `<img class="interv-foto" src="${fotoUrl}" loading="lazy" onerror="this.style.display='none'">`:""}
     </div>`}).join("");
 }
+
+// ── FOTO UPLOAD ──────────────────────────────────────────────
+const fotoFiles = {}; // { 'i': File|null, 'ie': File|null }
+
+function onFotoSelected(input, prefix) {
+  const file = input.files[0];
+  if (!file) return;
+  fotoFiles[prefix] = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById(prefix + "FotoPreview");
+    const wrap    = document.getElementById(prefix + "FotoPreviewWrap");
+    const label   = document.getElementById(prefix + "FotoBtnLabel");
+    if (preview) preview.src = e.target.result;
+    if (wrap)    wrap.style.display = "block";
+    if (label)   label.style.display = "none";
+  };
+  reader.readAsDataURL(file);
+}
+
+function quitarFoto(prefix) {
+  fotoFiles[prefix] = null;
+  const input   = document.getElementById(prefix + "FotoInput");
+  const preview = document.getElementById(prefix + "FotoPreview");
+  const wrap    = document.getElementById(prefix + "FotoPreviewWrap");
+  const label   = document.getElementById(prefix + "FotoBtnLabel");
+  if (input)   input.value = "";
+  if (preview) preview.src = "";
+  if (wrap)    wrap.style.display = "none";
+  if (label)   label.style.display = "flex";
+}
+
+async function subirFoto(file) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = async e => {
+      try {
+        const base64 = e.target.result.split(",")[1];
+        const ext      = (file.name.split(".").pop() || "jpg").toLowerCase();
+        const filename = "Foto." + Date.now() + "." + ext;
+        const resp = await fetch(URL_, {
+          method: "POST",
+          redirect: "follow",
+          body: JSON.stringify({ action: "subirFoto", imagen: base64, filename })
+        });
+        const d = await resp.json();
+        resolve(d.ok ? ("Intervenciones_Images/" + filename) : null);
+      } catch(err) { resolve(null); }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+// ─────────────────────────────────────────────────────────────
 
 async function intervGuardar() {
   if (!g("iEquipo")) { markErr("iEquipo"); toast("Seleccioná el equipo","err"); return; }
   setBtnLoading("btnIntervGuardar","Guardando...");
+  // Subir foto si hay una seleccionada
+  let fotoPath = "";
+  if (fotoFiles["i"]) {
+    setBtnLoading("btnIntervGuardar","Subiendo foto...");
+    fotoPath = (await subirFoto(fotoFiles["i"])) || "";
+    if (!fotoPath) toast("No se pudo subir la foto, se guardará sin imagen","warn");
+    setBtnLoading("btnIntervGuardar","Guardando...");
+  }
   const filtros = getFiltros("iFiltrosWrap");
   const p = {
     action:"agregarIntervencion", fecha:g("iFecha"), equipo:g("iEquipo"),
     odometro:g("iOdometro"), trabajo:g("iTrabajo"), taller:g("iTaller"),
     descripcion:g("iDescripcion"), servis:filtros || "no",
-    aceite:filtros.includes("Aceite") ? "si" : "no", aviso:g("iAviso")
+    aceite:filtros.includes("Aceite") ? "si" : "no", aviso:g("iAviso"),
+    foto:fotoPath
   };
   try {
     const d = await jsonp(`${URL_}?${new URLSearchParams(p)}`);
@@ -1751,6 +1863,7 @@ async function intervGuardar() {
     document.getElementById("iFecha").value   = todayStr();
     resetFiltros("iFiltrosWrap");
     selAviso("",document.getElementById("ipill-aviso-ninguno"));
+    quitarFoto("i");
     await intervCargar();
   } catch(e) { toast("Error de conexión","err"); }
   finally { resetBtn("btnIntervGuardar","Guardar intervención"); }
@@ -1852,18 +1965,25 @@ function eqStatusBadges(eq) {
 }
 
 // Genera el HTML de una card de equipo
-// Convierte cualquier URL de Google Drive a URL directa de imagen
+// Resuelve la URL de imagen del equipo
+// - Si es ruta relativa (ej: Maestro_Images/foto.jpg) → arma URL de GitHub Pages
+// - Si es URL de Google Drive → convierte a thumbnail directo
+// - Cualquier otra URL completa → la devuelve tal cual
+const IMG_BASE = "https://ingemaxtallerfran.github.io/Planillas-Amarillas/";
 function driveImgUrl(url) {
-  if (!url) return null;
-  // Ya es URL directa o thumbnail
-  if (url.includes("thumbnail?id=") || url.includes("uc?export=view") || url.startsWith("https://lh3.google")) return url;
-  // https://drive.google.com/file/d/ID/view  o  /open?id=ID
-  const m = url.match(/\/d\/([a-zA-Z0-9_-]{10,})/);
-  if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w400`;
-  const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);
-  if (m2) return `https://drive.google.com/thumbnail?id=${m2[1]}&sz=w400`;
-  // Otra URL cualquiera
-  return url;
+  if (!url || !url.trim()) return null;
+  const u = url.trim();
+  // URL completa de Drive → convertir a thumbnail
+  if (u.includes("drive.google.com")) {
+    const m = u.match(/\/d\/([a-zA-Z0-9_-]{10,})/);
+    if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w400`;
+    const m2 = u.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);
+    if (m2) return `https://drive.google.com/thumbnail?id=${m2[1]}&sz=w400`;
+  }
+  // URL completa → devolver tal cual
+  if (u.startsWith("http://") || u.startsWith("https://") || u.startsWith("//")) return u;
+  // Ruta relativa → construir URL de GitHub Pages
+  return IMG_BASE + u;
 }
 
 function equipoCardHTML(eq, idx) {
@@ -1888,7 +2008,6 @@ function equipoCardHTML(eq, idx) {
     eq.ultimoService? `<div class="eq-det-item"><div class="eq-det-label">Último service</div><div class="eq-det-val">${eq.ultimoService}</div></div>` : "",
     eq.diferencia   ? `<div class="eq-det-item"><div class="eq-det-label">Diferencia service</div><div class="eq-det-val ${parseNum(eq.diferencia)<0?'danger':'ok'}">${eq.diferencia}</div></div>` : "",
     eq.cubiertas    ? `<div class="eq-det-item"><div class="eq-det-label">Cubiertas (km)</div><div class="eq-det-val">${eq.cubiertas}</div></div>` : "",
-    eq.difCubiertas ? `<div class="eq-det-item"><div class="eq-det-label">Dif. cubiertas</div><div class="eq-det-val ${parseNum(eq.difCubiertas)<0?'danger':'ok'}">${eq.difCubiertas}</div></div>` : "",
     eq.bateria      ? `<div class="eq-det-item"><div class="eq-det-label">Batería</div><div class="eq-det-val">${eq.bateria}</div></div>` : "",
     eq.fechaBateria ? `<div class="eq-det-item"><div class="eq-det-label">Fecha batería</div><div class="eq-det-val">${fmtFechaAny(eq.fechaBateria)}</div></div>` : "",
     eq.encargado    ? `<div class="eq-det-item"><div class="eq-det-label">Operario / Encargado</div><div class="eq-det-val">${eq.encargado}</div></div>` : "",
@@ -1931,8 +2050,36 @@ function equipoCardHTML(eq, idx) {
     <div class="eq-detail" id="eq-detail-${idx}" style="display:none">
       <div class="eq-detail-grid">${detItems}</div>
       ${fotoFull}
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--borde)">
+        <div style="font-size:11px;font-weight:700;color:var(--texto2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Cambiar ubicación</div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="nuevaUbic-${idx}" placeholder="Ej: Obra norte, Taller..."
+            value="${eq.ubicacion||""}"
+            style="flex:1;background:var(--gris2);border:1px solid var(--borde);color:var(--texto);border-radius:var(--rsm);padding:8px 10px;font-size:14px;font-family:inherit">
+          <button onclick="cambiarUbicacion('${eq.codigo}','nuevaUbic-${idx}',this)"
+            style="background:var(--naranja);color:#fff;border:none;border-radius:var(--rsm);padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">
+            Guardar
+          </button>
+        </div>
+      </div>
     </div>
   </div>`;
+}
+
+async function cambiarUbicacion(codigo, inputId, btn) {
+  const nuevaUbic = (document.getElementById(inputId)?.value || "").trim();
+  if (!nuevaUbic) { toast("Escribí la nueva ubicación","err"); return; }
+  const txt = btn.textContent;
+  btn.textContent = "..."; btn.disabled = true;
+  try {
+    const d = await jsonp(`${URL_}?action=actualizarUbicacion&codigo=${encodeURIComponent(codigo)}&ubicacion=${encodeURIComponent(nuevaUbic)}`);
+    if (!d||!d.ok) { toast(d?.mensaje||"Error","err"); return; }
+    toast("Ubicación actualizada ✓");
+    // Actualizar en memoria sin recargar todo
+    const eq = S.equiposInfo.find(e => e.codigo === codigo);
+    if (eq) eq.ubicacion = nuevaUbic;
+  } catch(e) { toast("Error de conexión","err"); }
+  finally { btn.textContent = txt; btn.disabled = false; }
 }
 
 function toggleEquipoDetail(detId, arrId) {

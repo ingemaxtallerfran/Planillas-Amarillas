@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Ingemax — Sistema de Gestión</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
@@ -1182,7 +1185,7 @@ async function init() {
 // ═══════════════════════════════════════════════════════════
 async function combCargar() {
   try {
-    const d = await jsonp(`${URL_}?action=getCombustibleObrador`);
+    const d = await jsonp(`${URL_}?action=getCombustiblesTotal`);
     if (!d || !d.ok) return;
     S.combRegistros = d.registros || [];
     // Fallback: si operarios llegó vacío de getListas, armarlo desde el historial

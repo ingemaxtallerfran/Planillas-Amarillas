@@ -179,7 +179,30 @@
     .toast.ok{background:#1a3326;color:#4ade80;border:1px solid #2d5c42}
     .toast.err{background:#2d1515;color:#f87171;border:1px solid #5a2020}
     .toast.hidden{opacity:0;pointer-events:none}
-    /* datalist input combo */
+    /* ── SEARCHABLE SELECT ── */
+    .ss-wrap{position:relative;width:100%}
+    .ss-input{width:100%;background:var(--gris2);border:1px solid var(--borde);border-radius:var(--rsm);color:var(--texto);font-family:'Barlow',sans-serif;font-size:15px;padding:10px 36px 10px 12px;outline:none;-webkit-appearance:none;appearance:none;transition:border-color .2s;cursor:pointer}
+    .ss-input:focus{border-color:var(--naranja)}
+    .ss-input.error{border-color:#ef4444}
+    .ss-arrow{position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gris5);font-size:12px}
+    .ss-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--gris1);border:1px solid var(--naranja);border-radius:var(--rsm);z-index:500;max-height:220px;overflow:hidden;display:none;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+    .ss-dropdown.open{display:flex}
+    .ss-search{padding:8px 10px;background:var(--gris2);border:none;border-bottom:1px solid var(--borde);color:var(--texto);font-family:'Barlow',sans-serif;font-size:14px;outline:none;width:100%;flex-shrink:0}
+    .ss-list{overflow-y:auto;flex:1}
+    .ss-opt{padding:10px 12px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--borde);color:var(--texto);transition:background .1s}
+    .ss-opt:last-child{border-bottom:none}
+    .ss-opt:active,.ss-opt.focused{background:rgba(232,101,26,.15);color:var(--naranja)}
+    .ss-opt.add-new{color:var(--naranja);font-style:italic}
+    .ss-empty{padding:10px 12px;font-size:13px;color:var(--gris5);text-align:center}
+    /* ── GRUPOS EQUIPOS ── */
+    .eq-grupos{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
+    .eq-grupo-btn{background:var(--gris1);border:1px solid var(--borde);border-radius:var(--radius);padding:14px 12px;cursor:pointer;transition:border-color .15s,background .15s;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .eq-grupo-btn:active,.eq-grupo-btn.activo{border-color:var(--naranja);background:rgba(232,101,26,.08)}
+    .eq-grupo-nombre{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--texto);line-height:1.2}
+    .eq-grupo-pref{font-size:10px;color:var(--gris5);margin-top:2px;font-family:'Barlow Condensed',sans-serif;letter-spacing:.05em}
+    .eq-grupo-count{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--naranja);flex-shrink:0}
+    .eq-grupo-back{display:flex;align-items:center;gap:8px;padding:8px 0 12px;cursor:pointer;color:var(--naranja);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border:none;background:none}
+    /* heredar combo-input como alias */
     .combo-input{width:100%;background:var(--gris2);border:1px solid var(--borde);border-radius:var(--rsm);color:var(--texto);font-family:'Barlow',sans-serif;font-size:15px;padding:10px 12px;outline:none;-webkit-appearance:none;appearance:none;transition:border-color .2s}
     .combo-input:focus{border-color:var(--naranja)}
     .combo-input.error{border-color:#ef4444}
@@ -210,10 +233,9 @@
         <div class="f"><label>Fecha <span class="req">*</span></label><input type="date" id="cFecha"></div>
         <div class="f"><label>Cantidad (L) <span class="req">*</span></label><input type="number" id="cCantidad" placeholder="Ej: 80" inputmode="decimal"></div>
       </div>
-      <!-- EQUIPO: combo libre -->
       <div class="f">
         <label>Equipo <span class="req">*</span></label>
-        <input class="combo-input" id="cEquipo" list="dl-equipos" placeholder="Escribí o elegí un equipo" autocomplete="off">
+        <div class="ss-wrap" id="ss-cEquipo-wrap"></div>
         <datalist id="dl-equipos"></datalist>
       </div>
       <div class="f"><label>Odómetro / Horómetro</label><input type="number" id="cOdometro" placeholder="hs o km — Opcional" inputmode="numeric"></div>
@@ -225,10 +247,9 @@
         </div>
         <input type="hidden" id="cChulengo" value="CH7-Cesar">
       </div>
-      <!-- RESPONSABLE: combo libre, NO obligatorio -->
       <div class="f">
         <label>Responsable</label>
-        <input class="combo-input" id="cResponsable" list="dl-operarios" placeholder="Escribí o elegí un responsable" autocomplete="off">
+        <div class="ss-wrap" id="ss-cResponsable-wrap"></div>
         <datalist id="dl-operarios"></datalist>
       </div>
       <button class="btn btn-primary" id="btnCombGuardar" onclick="combGuardar()">Guardar carga</button>
@@ -341,7 +362,7 @@
       </div>
       <div class="f">
         <label>Equipo <span class="req">*</span></label>
-        <input class="combo-input" id="iEquipo" list="dl-equipos" placeholder="Escribí o elegí un equipo" autocomplete="off">
+        <div class="ss-wrap" id="ss-iEquipo-wrap"></div>
       </div>
       <div class="f">
         <label>Trabajo / Tipo</label>
@@ -406,17 +427,24 @@
 <!-- ══ EQUIPOS ══ -->
 <div class="page" id="page-equipos">
   <div class="stabs" style="--stab-cols:2">
-    <button class="stab active" onclick="switchStab('equipos','lista',this)">🚜 Equipos</button>
+    <button class="stab active" onclick="switchStab('equipos','grupos',this)">🚜 Equipos</button>
     <button class="stab"        onclick="switchStab('equipos','alertas',this)">⚠️ Alertas</button>
   </div>
-  <div class="stab-sec active" id="equipos-lista">
+  <!-- Vista grupos -->
+  <div class="stab-sec active" id="equipos-grupos">
+    <div class="eq-grupos" id="eqGruposGrid"></div>
+  </div>
+  <!-- Vista lista (dentro de un grupo) -->
+  <div class="stab-sec" id="equipos-lista">
+    <button class="eq-grupo-back" onclick="volverGrupos()">‹ Volver a grupos</button>
     <div class="eq-search-wrap">
       <span class="eq-search-icon">🔍</span>
-      <input class="eq-search" type="text" id="eqBuscar" placeholder="Buscar por código, marca, encargado..." oninput="equiposFiltrar()">
+      <input class="eq-search" type="text" id="eqBuscar" placeholder="Buscar..." oninput="equiposFiltrar()">
     </div>
     <div class="stats" id="eqStats"></div>
     <div id="eqLista"><div class="loading"><div class="spin"></div></div></div>
   </div>
+  <!-- Alertas -->
   <div class="stab-sec" id="equipos-alertas">
     <div id="eqAlertas"><div class="loading"><div class="spin"></div></div></div>
   </div>
@@ -442,7 +470,7 @@
       <div class="f"><label>Fecha</label><input type="date" id="ceFecha"></div>
       <div class="f"><label>Cantidad (L)</label><input type="number" id="ceCantidad" inputmode="decimal"></div>
     </div>
-    <div class="f"><label>Equipo</label><input class="combo-input" id="ceEquipo" list="dl-equipos" autocomplete="off"></div>
+    <div class="f"><label>Equipo</label><div class="ss-wrap" id="ss-ceEquipo-wrap"></div></div>
     <div class="f"><label>Odómetro</label><input type="number" id="ceOdometro" inputmode="numeric"></div>
     <div class="f">
       <label>Chulengo</label>
@@ -452,7 +480,7 @@
       </div>
       <input type="hidden" id="ceChulengo" value="CH7-Cesar">
     </div>
-    <div class="f"><label>Responsable</label><input class="combo-input" id="ceResponsable" list="dl-operarios" autocomplete="off"></div>
+    <div class="f"><label>Responsable</label><div class="ss-wrap" id="ss-ceResponsable-wrap"></div></div>
     <div class="btn-row" style="margin-top:14px">
       <button class="btn btn-cancel" onclick="cerrarModal('combModal')">Cancelar</button>
       <button class="btn btn-primary" id="btnCombActualizar" onclick="combActualizar()">Actualizar</button>
@@ -471,7 +499,7 @@
       <div class="f"><label>Fecha</label><input type="date" id="ieFecha"></div>
       <div class="f"><label>Odómetro</label><input type="number" id="ieOdometro" inputmode="numeric"></div>
     </div>
-    <div class="f"><label>Equipo</label><input class="combo-input" id="ieEquipo" list="dl-equipos" autocomplete="off"></div>
+    <div class="f"><label>Equipo</label><div class="ss-wrap" id="ss-ieEquipo-wrap"></div></div>
     <div class="f"><label>Trabajo</label><input type="text" id="ieTrabajo" list="listTrabajos" autocomplete="off" oninput="checkServicioEdit()"></div>
     <div class="f"><label>Taller</label><input type="text" id="ieTaller" list="listTalleres" autocomplete="off"></div>
     <div class="f"><label>Descripción</label><textarea id="ieDescripcion" rows="2"></textarea></div>
@@ -556,6 +584,201 @@ function setBtnLoading(id,txt){const b=document.getElementById(id);if(!b)return;
 function resetBtn(id,txt){const b=document.getElementById(id);if(!b)return;b.disabled=false;b.innerHTML=txt;}
 function parseNum(v){if(!v&&v!==0)return NaN;return parseFloat(String(v).replace(/\s/g,"").replace(",","."));}
 
+// ══ SEARCHABLE SELECT ══
+// Uso: crearSS(wrapId, fieldId, options, placeholder, allowNew)
+// Lee/escribe valor con ssGet(fieldId) / ssSet(fieldId, val)
+const SS_STATE = {}; // fieldId → { options, value }
+
+function crearSS(wrapId, fieldId, options, placeholder, allowNew) {
+  const wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+  SS_STATE[fieldId] = { options: options.slice(), value: "" };
+  wrap.innerHTML = `
+    <div class="ss-wrap" id="ss-${fieldId}-inner">
+      <input class="ss-input" id="ss-${fieldId}-display" readonly
+        placeholder="${placeholder||'— Seleccionar —'}"
+        value=""
+        onclick="ssToggle('${fieldId}')" autocomplete="off">
+      <span class="ss-arrow">▼</span>
+      <div class="ss-dropdown" id="ss-${fieldId}-drop">
+        <input class="ss-search" id="ss-${fieldId}-search" placeholder="Buscar..." oninput="ssFiltrar('${fieldId}','${allowNew?'1':''}')" autocomplete="off">
+        <div class="ss-list" id="ss-${fieldId}-list"></div>
+      </div>
+    </div>`;
+  ssBuildList(fieldId, "", allowNew);
+  // Cerrar al tocar fuera
+  document.addEventListener("click", function(e){
+    const drop = document.getElementById("ss-"+fieldId+"-drop");
+    const inner = document.getElementById("ss-"+fieldId+"-inner");
+    if (drop && inner && !inner.contains(e.target)) {
+      drop.classList.remove("open");
+    }
+  }, true);
+}
+
+function ssToggle(fieldId) {
+  const drop = document.getElementById("ss-"+fieldId+"-drop");
+  if (!drop) return;
+  const isOpen = drop.classList.contains("open");
+  // Cerrar todos los otros
+  document.querySelectorAll(".ss-dropdown.open").forEach(d => d.classList.remove("open"));
+  if (!isOpen) {
+    drop.classList.add("open");
+    const search = document.getElementById("ss-"+fieldId+"-search");
+    if (search) { search.value = ""; ssFiltrar(fieldId, "1"); setTimeout(()=>search.focus(), 50); }
+  }
+}
+
+function ssFiltrar(fieldId, allowNew) {
+  const q = (document.getElementById("ss-"+fieldId+"-search")?.value || "").toLowerCase().trim();
+  ssBuildList(fieldId, q, allowNew === "1");
+}
+
+function ssBuildList(fieldId, q, allowNew) {
+  const listEl = document.getElementById("ss-"+fieldId+"-list");
+  if (!listEl) return;
+  const state = SS_STATE[fieldId];
+  if (!state) return;
+  let opts = state.options;
+  if (q) opts = opts.filter(o => o.toLowerCase().includes(q));
+  let html = opts.map(o =>
+    `<div class="ss-opt" onclick="ssSelect('${fieldId}','${o.replace(/'/g,"\\'")}')">
+      ${o}${state.value===o?' ✓':''}
+    </div>`
+  ).join("");
+  if (!opts.length && q && allowNew) {
+    html = `<div class="ss-opt add-new" onclick="ssSelect('${fieldId}','${q.replace(/'/g,"\\'")}')">+ Agregar "${q}"</div>`;
+  } else if (!opts.length) {
+    html = `<div class="ss-empty">Sin resultados</div>`;
+  } else if (q && allowNew) {
+    html += `<div class="ss-opt add-new" onclick="ssSelect('${fieldId}','${q.replace(/'/g,"\\'")}')">+ Agregar "${q}"</div>`;
+  }
+  listEl.innerHTML = html;
+}
+
+function ssSelect(fieldId, val) {
+  const state = SS_STATE[fieldId];
+  if (!state) return;
+  state.value = val;
+  const disp = document.getElementById("ss-"+fieldId+"-display");
+  if (disp) { disp.value = val; disp.classList.remove("error"); }
+  const drop = document.getElementById("ss-"+fieldId+"-drop");
+  if (drop) drop.classList.remove("open");
+  // Si es nuevo, agregar a la lista
+  if (!state.options.includes(val)) state.options.push(val);
+}
+
+function ssGet(fieldId) {
+  return SS_STATE[fieldId]?.value || "";
+}
+function ssSet(fieldId, val) {
+  if (!SS_STATE[fieldId]) return;
+  SS_STATE[fieldId].value = val;
+  const disp = document.getElementById("ss-"+fieldId+"-display");
+  if (disp) disp.value = val;
+}
+function ssMarkErr(fieldId) {
+  const disp = document.getElementById("ss-"+fieldId+"-display");
+  if (disp) { disp.classList.add("error"); disp.addEventListener("click",()=>disp.classList.remove("error"),{once:true}); }
+}
+function ssUpdateOptions(fieldId, options) {
+  const state = SS_STATE[fieldId];
+  if (!state) return;
+  state.options = options.slice();
+  ssBuildList(fieldId, "", true);
+}
+
+// ══ GRUPOS DE EQUIPOS ══
+const EQ_GRUPOS = [
+  { nombre:"Minicargadoras",    prefijos:["B"],                            icon:"🟠" },
+  { nombre:"Aplanadoras",       prefijos:["S"],                            icon:"🔵" },
+  { nombre:"Motoniveladoras",   prefijos:["M"],                            icon:"🟡" },
+  { nombre:"Palas/Tractores",   prefijos:["T"],                            icon:"🟢" },
+  { nombre:"Camiones",          prefijos:["C"],                            icon:"🔴" },
+  { nombre:"Camionetas",        prefijos:["P"],                            icon:"⚪" },
+  { nombre:"Retroexcavadora",   prefijos:["R"],                            icon:"🟤" },
+  { nombre:"Terminadora",       prefijos:["L"],                            icon:"🟣" },
+  { nombre:"Chulengos",         prefijos:["CH"],                           icon:"⛽" },
+  { nombre:"Aserradoras",       prefijos:["AS","As"],                      icon:"🔧" },
+  { nombre:"Fusores",           prefijos:["F"],                            icon:"🔥" },
+  { nombre:"Aditamentos",       prefijos:["FR18","MH18","BR","BA","H1","Z1","RV1","ES1","BH1"], icon:"🔩" },
+  { nombre:"Compactadores",     prefijos:["HV"],                           icon:"⚙️" },
+  { nombre:"Pisones/Placas",    prefijos:["N"],                            icon:"🏗️" },
+  { nombre:"Carros/Casillas",   prefijos:["CR"],                           icon:"🏠" },
+  { nombre:"Martillos",         prefijos:["U"],                            icon:"🔨" },
+  { nombre:"Todos",             prefijos:["*"],                            icon:"📋" },
+];
+
+function getGrupoDeEquipo(codigo) {
+  if (!codigo) return null;
+  const c = codigo.trim().toUpperCase();
+  // Primero probar prefijos más largos
+  for (const g of EQ_GRUPOS) {
+    if (g.prefijos[0] === "*") continue;
+    const sorted = [...g.prefijos].sort((a,b)=>b.length-a.length);
+    for (const p of sorted) {
+      if (c.startsWith(p.toUpperCase())) return g.nombre;
+    }
+  }
+  return "Todos";
+}
+
+function equiposRenderGrupos() {
+  const grid = document.getElementById("eqGruposGrid");
+  if (!grid) return;
+  grid.innerHTML = EQ_GRUPOS.map(g => {
+    const count = g.prefijos[0] === "*"
+      ? S.equiposInfo.length
+      : S.equiposInfo.filter(e => getGrupoDeEquipo(e.codigo) === g.nombre).length;
+    if (count === 0 && g.prefijos[0] !== "*") return ""; // ocultar grupos sin equipos
+    return `<div class="eq-grupo-btn" onclick="abrirGrupo('${g.nombre}')">
+      <div>
+        <div class="eq-grupo-nombre">${g.icon} ${g.nombre}</div>
+        <div class="eq-grupo-pref">${g.prefijos[0]==="*"?"todos":g.prefijos.join(" · ")}</div>
+      </div>
+      <div class="eq-grupo-count">${count}</div>
+    </div>`;
+  }).join("");
+}
+
+let grupoActual = "";
+function abrirGrupo(nombre) {
+  grupoActual = nombre;
+  const lista = nombre === "Todos"
+    ? S.equiposInfo
+    : S.equiposInfo.filter(e => getGrupoDeEquipo(e.codigo) === nombre);
+  // cambiar a vista lista
+  document.getElementById("equipos-grupos").classList.remove("active");
+  document.getElementById("equipos-lista").classList.add("active");
+  document.querySelector('#page-equipos .stab').classList.remove("active");
+  // título
+  document.getElementById("eqBuscar").value = "";
+  document.getElementById("eqBuscar").placeholder = `Buscar en ${nombre}...`;
+  equiposRender(lista);
+}
+
+function volverGrupos() {
+  document.getElementById("equipos-lista").classList.remove("active");
+  document.getElementById("equipos-grupos").classList.add("active");
+  document.querySelector('#page-equipos .stab').classList.add("active");
+  grupoActual = "";
+}
+
+function equiposFiltrar() {
+  const q = (document.getElementById("eqBuscar")?.value || "").toLowerCase().trim();
+  const base = grupoActual && grupoActual !== "Todos"
+    ? S.equiposInfo.filter(e => getGrupoDeEquipo(e.codigo) === grupoActual)
+    : S.equiposInfo;
+  if (!q) { equiposRender(base); return; }
+  equiposRender(base.filter(eq =>
+    (eq.codigo||"").toLowerCase().includes(q)||
+    (eq.marca||"").toLowerCase().includes(q)||
+    (eq.modelo||"").toLowerCase().includes(q)||
+    (eq.encargado||"").toLowerCase().includes(q)||
+    (eq.ubicacion||"").toLowerCase().includes(q)
+  ));
+}
+
 // ── NAV ──
 function switchPage(name,idx,btn){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
@@ -616,6 +839,14 @@ async function init(){
   ["cFecha","iFecha","cgFecha"].forEach(id=>{const el=document.getElementById(id);if(el)el.value=todayStr();});
   const ind=document.getElementById("navIndicator");
   ind.style.left="0%";ind.style.width="20%";
+  // Crear SS vacíos de entrada (se actualizan luego con opciones)
+  crearSS("ss-cEquipo-wrap",     "cEquipo",      [], "— Seleccionar equipo —", true);
+  crearSS("ss-cResponsable-wrap","cResponsable", [], "— Seleccionar responsable —", true);
+  crearSS("ss-ceEquipo-wrap",    "ceEquipo",     [], "— Seleccionar equipo —", true);
+  crearSS("ss-ceResponsable-wrap","ceResponsable",[], "— Seleccionar responsable —", true);
+  crearSS("ss-iEquipo-wrap",     "iEquipo",      [], "— Seleccionar equipo —", true);
+  crearSS("ss-ieEquipo-wrap",    "ieEquipo",     [], "— Seleccionar equipo —", true);
+
   // Restaurar página
   try{
     const sp=sessionStorage.getItem("ap"),si=parseInt(sessionStorage.getItem("ai")||"0");
@@ -633,36 +864,38 @@ async function init(){
   if(rL.status==="fulfilled"&&rL.value?.ok){
     const d=rL.value;S.listas=d;
     equiposCodes=d.equipos||[];
-    fillDatalist("dl-operarios",d.operarios||[]);
+    const operarios=d.operarios||[];
+    // SS de responsable
+    ["cResponsable","ceResponsable"].forEach(fid=>ssUpdateOptions(fid,operarios));
     // Filtro operarios planillas
-    (d.operarios||[]).forEach(op=>{
+    operarios.forEach(op=>{
       const s=document.getElementById("hpOperario");if(!s)return;
       const o=document.createElement("option");o.value=o.textContent=op;s.appendChild(o);
     });
-    // Datalists trabajo/taller
     fillDatalist("listTrabajos",d.trabajos||[]);
   }
 
   // Maestro equipos
   if(rE.status==="fulfilled"&&rE.value?.ok){
     S.equiposInfo=(rE.value.equipos||[]).filter(e=>e.codigo&&e.codigo.trim()!=="");
-    equiposRender(S.equiposInfo);
+    equiposRenderGrupos();
     equiposRenderAlertas();
   }else{
     const msg=rE.value?.mensaje||"No se pudo cargar Maestro de Equipos";
-    const el=document.getElementById("eqLista");
-    if(el)el.innerHTML=`<div class="empty">⚠️ ${msg}</div>`;
+    const el=document.getElementById("eqGruposGrid");
+    if(el)el.innerHTML=`<div class="empty" style="grid-column:1/-1">⚠️ ${msg}</div>`;
     document.getElementById("eqAlertas").innerHTML='<div class="empty">—</div>';
   }
 
-  // Poblar datalist equipos (fusión de Equipos + Maestro)
+  // Poblar SS de equipos (fusión de Equipos + Maestro)
   const codesSet=new Set([
     ...equiposCodes,
     ...S.equiposInfo.map(e=>e.codigo)
   ]);
-  fillDatalist("dl-equipos",[...codesSet].sort());
-  // Filtros historial equipos
-  [...codesSet].sort().forEach(code=>{
+  const allCodes=[...codesSet].sort();
+  ["cEquipo","ceEquipo","iEquipo","ieEquipo"].forEach(fid=>ssUpdateOptions(fid,allCodes));
+  // Filtros historial
+  allCodes.forEach(code=>{
     ["hcEquipo","hiEquipo"].forEach(sid=>{
       const s=document.getElementById(sid);if(!s)return;
       const o=document.createElement("option");o.value=o.textContent=code;s.appendChild(o);
@@ -716,20 +949,19 @@ function combRenderHist(){
 }
 async function combGuardar(){
   let ok=true;
-  if(!g("cEquipo")){markErr("cEquipo");ok=false;}
+  if(!ssGet("cEquipo")){ssMarkErr("cEquipo");ok=false;}
   if(!g("cCantidad")){markErr("cCantidad");ok=false;}
   if(!ok){toast("Completá los campos obligatorios","err");return;}
   setBtnLoading("btnCombGuardar","Guardando...");
-  // Manda "codigo" que es lo que espera agregarCombObrador en el GS
-  const p={action:"agregarCombObrador",fecha:g("cFecha"),codigo:g("cEquipo"),
+  const p={action:"agregarCombObrador",fecha:g("cFecha"),codigo:ssGet("cEquipo"),
            cantidad:g("cCantidad"),odometro:g("cOdometro"),
-           chulengo:g("cChulengo"),responsable:g("cResponsable")};
+           chulengo:g("cChulengo"),responsable:ssGet("cResponsable")};
   try{
     const d=await jsonp(`${URL_}?${new URLSearchParams(p)}`);
     if(!d||!d.ok){toast(d?.mensaje||"Error al guardar","err");return;}
     toast("Carga guardada ✓");
-    ["cCantidad","cOdometro","cResponsable"].forEach(id=>document.getElementById(id).value="");
-    document.getElementById("cEquipo").value="";
+    ["cCantidad","cOdometro"].forEach(id=>document.getElementById(id).value="");
+    ssSet("cEquipo","");ssSet("cResponsable","");
     document.getElementById("cFecha").value=todayStr();
     document.getElementById("cChulengo").value="CH7-Cesar";
     document.getElementById("cpill-cesar").classList.add("selected");
@@ -744,8 +976,8 @@ function combAbrirEditar(id){
   document.getElementById("ceFecha").value=r.fecha||"";
   document.getElementById("ceCantidad").value=r.cantidad||"";
   document.getElementById("ceOdometro").value=r.odometro||"";
-  document.getElementById("ceEquipo").value=r.equipo||r.codigo||"";
-  document.getElementById("ceResponsable").value=r.responsable||"";
+  ssSet("ceEquipo",r.equipo||r.codigo||"");
+  ssSet("ceResponsable",r.responsable||"");
   const ch=r.chulengo||"CH7-Cesar";
   document.getElementById("ceChulengo").value=ch;
   document.getElementById("cepill-cesar").classList.toggle("selected",ch==="CH7-Cesar");
@@ -755,9 +987,9 @@ function combAbrirEditar(id){
 async function combActualizar(){
   const id=g("ceId");if(!id)return;
   setBtnLoading("btnCombActualizar","Actualizando...");
-  const p={action:"editarCombObrador",id,fecha:g("ceFecha"),codigo:g("ceEquipo"),
+  const p={action:"editarCombObrador",id,fecha:g("ceFecha"),codigo:ssGet("ceEquipo"),
            cantidad:g("ceCantidad"),odometro:g("ceOdometro"),
-           chulengo:g("ceChulengo"),responsable:g("ceResponsable")};
+           chulengo:g("ceChulengo"),responsable:ssGet("ceResponsable")};
   try{
     const d=await jsonp(`${URL_}?${new URLSearchParams(p)}`);
     if(!d||!d.ok){toast(d?.mensaje||"Error","err");return;}
@@ -1017,18 +1249,18 @@ async function subirFoto(file){
   });
 }
 async function intervGuardar(){
-  if(!g("iEquipo")){markErr("iEquipo");toast("Seleccioná el equipo","err");return;}
+  if(!ssGet("iEquipo")){ssMarkErr("iEquipo");toast("Seleccioná el equipo","err");return;}
   setBtnLoading("btnIntervGuardar","Guardando...");
   let fotoPath="";
   if(fotoFiles["i"]){setBtnLoading("btnIntervGuardar","Subiendo foto...");fotoPath=(await subirFoto(fotoFiles["i"]))||"";setBtnLoading("btnIntervGuardar","Guardando...");}
   const filtros=getFiltros("iFiltrosWrap");
-  const p={action:"agregarIntervencion",fecha:g("iFecha"),equipo:g("iEquipo"),odometro:g("iOdometro"),trabajo:g("iTrabajo"),taller:g("iTaller"),descripcion:g("iDescripcion"),servis:filtros||"no",aceite:filtros.includes("Aceite")?"si":"no",aviso:g("iAviso"),foto:fotoPath};
+  const p={action:"agregarIntervencion",fecha:g("iFecha"),equipo:ssGet("iEquipo"),odometro:g("iOdometro"),trabajo:g("iTrabajo"),taller:g("iTaller"),descripcion:g("iDescripcion"),servis:filtros||"no",aceite:filtros.includes("Aceite")?"si":"no",aviso:g("iAviso"),foto:fotoPath};
   try{
     const d=await jsonp(`${URL_}?${new URLSearchParams(p)}`);
     if(!d||!d.ok){toast(d?.mensaje||"Error","err");return;}
     toast("Intervención guardada ✓");
     ["iOdometro","iTaller","iDescripcion"].forEach(id=>document.getElementById(id).value="");
-    document.getElementById("iEquipo").value="";document.getElementById("iTrabajo").value="";document.getElementById("iFecha").value=todayStr();
+    ssSet("iEquipo","");document.getElementById("iTrabajo").value="";document.getElementById("iFecha").value=todayStr();
     resetFiltros("iFiltrosWrap");selAviso("",document.getElementById("ipill-aviso-ninguno"));quitarFoto("i");
     await intervCargar();
   }catch(e){toast("Error de conexión","err");}
@@ -1037,7 +1269,7 @@ async function intervGuardar(){
 function intervAbrirEditar(id){
   const r=S.intervRegistros.find(x=>x.id===id);if(!r)return;
   document.getElementById("ieId").value=id;document.getElementById("ieFecha").value=r.fecha||"";
-  document.getElementById("ieEquipo").value=r.equipo||"";document.getElementById("ieOdometro").value=r.odometro||"";
+  ssSet("ieEquipo",r.equipo||"");document.getElementById("ieOdometro").value=r.odometro||"";
   document.getElementById("ieTrabajo").value=r.trabajo||"";document.getElementById("ieTaller").value=r.taller||"";
   document.getElementById("ieDescripcion").value=r.descripcion||"";
   resetFiltros("ieFiltrosWrap");restoreFiltros("ieFiltrosWrap",r.servis||"");checkServicioEdit();
@@ -1049,7 +1281,7 @@ async function intervActualizar(){
   const id=g("ieId");if(!id)return;
   setBtnLoading("btnIntervActualizar","Actualizando...");
   const fe=getFiltros("ieFiltrosWrap");
-  const p={action:"editarIntervencion",id,fecha:g("ieFecha"),equipo:g("ieEquipo"),odometro:g("ieOdometro"),trabajo:g("ieTrabajo"),taller:g("ieTaller"),descripcion:g("ieDescripcion"),servis:fe||"no",aceite:fe.includes("Aceite")?"si":"no",aviso:g("ieAviso")};
+  const p={action:"editarIntervencion",id,fecha:g("ieFecha"),equipo:ssGet("ieEquipo"),odometro:g("ieOdometro"),trabajo:g("ieTrabajo"),taller:g("ieTaller"),descripcion:g("ieDescripcion"),servis:fe||"no",aceite:fe.includes("Aceite")?"si":"no",aviso:g("ieAviso")};
   try{
     const d=await jsonp(`${URL_}?${new URLSearchParams(p)}`);
     if(!d||!d.ok){toast(d?.mensaje||"Error","err");return;}
@@ -1176,11 +1408,6 @@ function equiposRender(lista){
   if(statsEl)statsEl.innerHTML=`<strong>${lista.length}</strong> equipos`;
   if(!lista.length){listaEl.innerHTML='<div class="empty">Sin resultados</div>';return;}
   listaEl.innerHTML=lista.map(eq=>equipoCardHTML(eq,S.equiposInfo.indexOf(eq))).join("");
-}
-function equiposFiltrar(){
-  const q=(document.getElementById("eqBuscar")?.value||"").toLowerCase().trim();
-  if(!q){equiposRender(S.equiposInfo);return;}
-  equiposRender(S.equiposInfo.filter(eq=>(eq.codigo||"").toLowerCase().includes(q)||(eq.marca||"").toLowerCase().includes(q)||(eq.modelo||"").toLowerCase().includes(q)||(eq.encargado||"").toLowerCase().includes(q)||(eq.ubicacion||"").toLowerCase().includes(q)));
 }
 function equiposRenderAlertas(){
   const el=document.getElementById("eqAlertas");if(!el)return;

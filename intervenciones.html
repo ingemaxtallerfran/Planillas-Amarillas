@@ -947,7 +947,7 @@ async function init(){
     ...S.equiposInfo.map(e=>e.codigo)
   ]);
   const allCodes=[...codesSet].sort();
-  ["cEquipo","ceEquipo","iEquipo","ieEquipo","consEquipo"].forEach(fid=>ssUpdateOptions(fid,allCodes));
+  ["cEquipo","ceEquipo","iEquipo","ieEquipo"].forEach(fid=>ssUpdateOptions(fid,allCodes));
   // Filtros historial
   allCodes.forEach(code=>{
     ["hcEquipo","hiEquipo"].forEach(sid=>{
@@ -970,6 +970,11 @@ async function combCargar(){
       const ops=[...new Set(S.combRegistros.map(r=>r.responsable).filter(Boolean))].sort();
       fillDatalist("dl-operarios",ops);
     }
+    // Poblar selector de consumos: solo códigos normalizados con registros, sin duplicados
+    const codsConRegistros=[...new Set(
+      S.combRegistros.map(r=>normalizarCodigo(r.equipo||r.codigo)).filter(Boolean)
+    )].sort();
+    ssUpdateOptions("consEquipo",codsConRegistros);
     combCalcStats();combRenderHist();
   }catch(e){toast("Error cargando combustible","err");}
 }
@@ -1053,6 +1058,12 @@ async function combActualizar(){
 }
 
 // ══ CONSUMOS ══
+// Normaliza un código: "P-7 /PAD559DZ" → "P-7" (corta en espacio, / o coma)
+function normalizarCodigo(c){
+  if(!c)return"";
+  return String(c).trim().split(/[\s\/,]/)[0].trim().toUpperCase();
+}
+
 // Equipos P y C miden km → km/L. El resto mide horas → L/h.
 function esKilometros(codigo){
   if(!codigo)return false;
@@ -1063,9 +1074,10 @@ function esKilometros(codigo){
 }
 
 function consCalcular(codigo, desde, hasta){
-  // Tomar registros del equipo con odómetro válido, ordenados por fecha asc
+  // Tomar registros del equipo con odómetro válido (comparando código normalizado)
+  const codNorm=normalizarCodigo(codigo);
   let regs = S.combRegistros
-    .filter(r => (r.equipo===codigo||r.codigo===codigo) && r.odometro && !isNaN(parseFloat(r.odometro)))
+    .filter(r => normalizarCodigo(r.equipo||r.codigo)===codNorm && r.odometro && !isNaN(parseFloat(r.odometro)))
     .map(r => ({
       fecha: r.fecha,
       odometro: parseFloat(r.odometro),
@@ -1492,7 +1504,6 @@ function getUmbral(codigo){
 function eqStatusBadges(eq){
   const out=[];
   const dif=parseNum(eq.diferencia);
-  const difC=parseNum(eq.difCubiertas);
   const umbral=getUmbral(eq.codigo);
   if(!isNaN(dif)){
     if(dif>=umbral){
@@ -1502,10 +1513,6 @@ function eqStatusBadges(eq){
     } else {
       out.push(`<span class="tag badge-ok">✓ Service OK (${dif.toLocaleString("es-AR")} hs/km)</span>`);
     }
-  }
-  if(!isNaN(difC)&&difC>0){
-    if(difC>8000)out.push(`<span class="tag badge-danger">🔴 Cubiertas vencidas</span>`);
-    else if(difC>6000)out.push(`<span class="tag badge-warn">🟡 Cubiertas próximas</span>`);
   }
   return out.join("");
 }
@@ -1527,7 +1534,8 @@ function equipoCardHTML(eq,idx){
     eq.placa?`<div><div class="eq-det-label">Placa / Patente</div><div class="eq-det-val">${eq.placa}</div></div>`:"",
     eq.ultimoService?`<div><div class="eq-det-label">Último service</div><div class="eq-det-val">${eq.ultimoService}</div></div>`:"",
     eq.diferencia?`<div><div class="eq-det-label">Diferencia service</div><div class="eq-det-val ${difClass}">${eq.diferencia} (umbral ${umbral})</div></div>`:"",
-    eq.cubiertas?`<div><div class="eq-det-label">Cubiertas (km)</div><div class="eq-det-val">${eq.cubiertas}</div></div>`:"",
+    eq.cubiertas?`<div><div class="eq-det-label">Cubiertas (hs/km cambio)</div><div class="eq-det-val">${eq.cubiertas}</div></div>`:"",
+    eq.difCubiertas?`<div><div class="eq-det-label">Hs/km desde cambio cubiertas</div><div class="eq-det-val">${eq.difCubiertas}</div></div>`:"",
     eq.bateria?`<div><div class="eq-det-label">Batería</div><div class="eq-det-val">${eq.bateria}</div></div>`:"",
     eq.fechaBateria?`<div><div class="eq-det-label">Fecha batería</div><div class="eq-det-val">${fmtFechaAny(eq.fechaBateria)}</div></div>`:"",
     eq.encargado?`<div><div class="eq-det-label">Operario</div><div class="eq-det-val">${eq.encargado}</div></div>`:"",

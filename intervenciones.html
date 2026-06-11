@@ -699,7 +699,7 @@ const EQ_GRUPOS = [
   { nombre:"Retroexcavadora",   prefijos:["R"],                            icon:"🟤" },
   { nombre:"Terminadora",       prefijos:["L"],                            icon:"🟣" },
   { nombre:"Chulengos",         prefijos:["CH"],                           icon:"⛽" },
-  { nombre:"Aserradoras",       prefijos:["AS","As"],                      icon:"🔧" },
+  { nombre:"Aserradoras",       prefijos:["AS"],                           icon:"🔧" },
   { nombre:"Fusores",           prefijos:["F"],                            icon:"🔥" },
   { nombre:"Aditamentos",       prefijos:["FR18","MH18","BR","BA","H1","Z1","RV1","ES1","BH1"], icon:"🔩" },
   { nombre:"Compactadores",     prefijos:["HV"],                           icon:"⚙️" },
@@ -709,17 +709,49 @@ const EQ_GRUPOS = [
   { nombre:"Todos",             prefijos:["*"],                            icon:"📋" },
 ];
 
+// Prefijos de aditamentos — se chequean ANTES que los de letra única
+// para que BR1 no matchee con B (Minicargadoras)
+const ADIT_PREFIJOS = ["FR18","MH18","BR","BA","BH","RV","ES","HV","CR","CH","AS","HV"];
+
 function getGrupoDeEquipo(codigo) {
   if (!codigo) return null;
   const c = codigo.trim().toUpperCase();
-  // Primero probar prefijos más largos
-  for (const g of EQ_GRUPOS) {
-    if (g.prefijos[0] === "*") continue;
-    const sorted = [...g.prefijos].sort((a,b)=>b.length-a.length);
-    for (const p of sorted) {
-      if (c.startsWith(p.toUpperCase())) return g.nombre;
-    }
+
+  // 1) Chequear Aditamentos primero (prefijos multi-char que colisionan con otros grupos)
+  const aditPrefijos = ["FR18","MH18","BR","BA","BH1","RV1","ES1","H1","Z1","BH","RV","ES"];
+  for (const p of aditPrefijos) {
+    if (c.startsWith(p.toUpperCase())) return "Aditamentos";
   }
+
+  // 2) Prefijos que deben chequearse antes que los de 1 letra
+  const multiChar = [
+    { p:"CH",  nombre:"Chulengos" },
+    { p:"HV",  nombre:"Compactadores" },
+    { p:"CR",  nombre:"Carros/Casillas" },
+    { p:"AS",  nombre:"Aserradoras" },
+  ];
+  for (const mc of multiChar) {
+    if (c.startsWith(mc.p)) return mc.nombre;
+  }
+
+  // 3) Prefijos de 1 letra
+  const unaLetra = [
+    { p:"B", nombre:"Minicargadoras" },
+    { p:"S", nombre:"Aplanadoras" },
+    { p:"M", nombre:"Motoniveladoras" },
+    { p:"T", nombre:"Palas/Tractores" },
+    { p:"C", nombre:"Camiones" },
+    { p:"P", nombre:"Camionetas" },
+    { p:"R", nombre:"Retroexcavadora" },
+    { p:"L", nombre:"Terminadora" },
+    { p:"F", nombre:"Fusores" },
+    { p:"N", nombre:"Pisones/Placas" },
+    { p:"U", nombre:"Martillos" },
+  ];
+  for (const ul of unaLetra) {
+    if (c.startsWith(ul.p)) return ul.nombre;
+  }
+
   return "Todos";
 }
 

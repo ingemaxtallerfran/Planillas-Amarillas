@@ -1064,6 +1064,13 @@ function normalizarCodigo(c){
   return String(c).trim().split(/[\s\/,]/)[0].trim().toUpperCase();
 }
 
+// Días entre dos fechas yyyy-MM-dd
+function diasEntre(f1,f2){
+  if(!f1||!f2)return 0;
+  const d1=new Date(f1+"T00:00:00"),d2=new Date(f2+"T00:00:00");
+  return Math.abs((d2-d1)/(1000*60*60*24));
+}
+
 // Equipos P y C miden km → km/L. El resto mide horas → L/h.
 function esKilometros(codigo){
   if(!codigo)return false;
@@ -1076,6 +1083,7 @@ function esKilometros(codigo){
 function consCalcular(codigo, desde, hasta){
   // Tomar registros del equipo con odómetro válido (comparando código normalizado)
   const codNorm=normalizarCodigo(codigo);
+  const esKm=esKilometros(codigo);
   let regs = S.combRegistros
     .filter(r => normalizarCodigo(r.equipo||r.codigo)===codNorm && r.odometro && !isNaN(parseFloat(r.odometro)))
     .map(r => ({
@@ -1100,8 +1108,19 @@ function consCalcular(codigo, desde, hasta){
       tramo.error="Odómetro retrocede o igual — posible carga errónea";
     } else if(act.litros<=0){
       tramo.error="Sin litros registrados";
+    } else if(diasEntre(ant.fecha,act.fecha)>30){
+      // Más de un mes entre cargas: hay cargas sin registrar en el medio, el tramo no es representativo
+      tramo.error="Más de 30 días entre cargas — tramo no representativo";
+      tramo.consumo=act.litros/delta; // se muestra pero NO promedia
     } else {
-      tramo.consumo=act.litros/delta; // L por hora o L por km
+      const c=act.litros/delta; // L por hora o L por km
+      // Consumo irrealmente bajo en equipos de horas (<1 L/h) = odómetro mal cargado
+      if(!esKm && c<1){
+        tramo.error="Consumo irreal (<1 L/h) — posible carga errónea de odómetro";
+        tramo.consumo=c; // se muestra pero NO promedia
+      } else {
+        tramo.consumo=c;
+      }
     }
     tramos.push(tramo);
   }
@@ -1115,7 +1134,8 @@ function consCalcular(codigo, desde, hasta){
 }
 
 function consPromedio(tramos){
-  const validos=tramos.filter(t=>t.consumo!==null&&t.consumo>0);
+  // Solo tramos válidos: con consumo y SIN error (excluye los <1 L/h marcados)
+  const validos=tramos.filter(t=>t.consumo!==null&&t.consumo>0&&!t.error);
   if(!validos.length)return null;
   // Promedio ponderado: total litros / total delta (más representativo que promedio simple)
   const totLitros=validos.reduce((s,t)=>s+t.litros,0);

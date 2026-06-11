@@ -303,7 +303,7 @@
         <div class="f"><label>Fecha <span class="req">*</span></label><input type="date" id="cgFecha"></div>
         <div class="f"><label>Cantidad (L) <span class="req">*</span></label><input type="number" id="cgCantidad" placeholder="Ej: 5000" inputmode="decimal"></div>
       </div>
-      <div class="f"><label>Vehículo / Destino</label><input type="text" id="cgVehiculo" placeholder="Ej: CH4-DOCTA — Opcional"></div>
+      <div class="f"><label>Vehículo / Destino</label><input class="combo-input" id="cgVehiculo" list="dl-destinos" placeholder="Escribí o elegí destino" autocomplete="off"><datalist id="dl-destinos"></datalist></div>
       <div class="row2">
         <div class="f"><label>Odómetro</label><input type="number" id="cgOdometro" placeholder="Opcional" inputmode="numeric"></div>
         <div class="f" id="cgPrecioWrap"><label>Precio/L</label><input type="number" id="cgPrecio" placeholder="Solo en Carga" inputmode="decimal"></div>
@@ -768,7 +768,14 @@ async function combActualizar(){
 
 // ══ STOCK CISTERNA GRANDE ══
 const CAP_CISTERNA=10000;
-async function stockCargar(){await Promise.all([cgCargarStock(),cgCargarMovs()]);}
+async function stockCargar(){await Promise.all([cgCargarStock(),cgCargarMovs(),cgCargarDestinos()]);}
+async function cgCargarDestinos(){
+  try{
+    const d=await jsonp(`${URL_}?action=getDestinosCisterna`);
+    if(!d||!d.ok)return;
+    fillDatalist("dl-destinos",d.vehiculos||[]);
+  }catch(e){}
+}
 async function cgCargarStock(){
   try{
     const d=await jsonp(`${URL_}?action=getStockCisterna`);

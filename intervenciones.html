@@ -218,9 +218,10 @@
 
 <!-- ══ COMBUSTIBLE ══ -->
 <div class="page active" id="page-combustible">
-  <div class="stabs">
+  <div class="stabs" style="--stab-cols:3">
     <button class="stab active" onclick="switchStab('combustible','cargar',this)">⛽ Cargar</button>
     <button class="stab"        onclick="switchStab('combustible','historial',this)">📋 Historial</button>
+    <button class="stab"        onclick="switchStab('combustible','consumos',this)">📊 Consumos</button>
   </div>
   <div class="stab-sec active" id="combustible-cargar">
     <div class="stat-row">
@@ -262,6 +263,20 @@
     </div>
     <div class="stats" id="combHistStats"></div>
     <div id="combListaHist"><div class="loading"><div class="spin"></div></div></div>
+  </div>
+
+  <!-- CONSUMOS -->
+  <div class="stab-sec" id="combustible-consumos">
+    <div class="f" style="margin-bottom:10px">
+      <label>Equipo</label>
+      <div class="ss-wrap" id="ss-consEquipo-wrap"></div>
+    </div>
+    <div class="toolbar">
+      <input type="date" id="consDesde" onchange="consRender()">
+      <input type="date" id="consHasta" onchange="consRender()">
+    </div>
+    <div id="consStats"></div>
+    <div id="consLista"><div class="empty">Seleccioná un equipo para ver sus consumos</div></div>
   </div>
 </div>
 
@@ -878,6 +893,13 @@ async function init(){
   crearSS("ss-ceResponsable-wrap","ceResponsable",[], "— Seleccionar responsable —", true);
   crearSS("ss-iEquipo-wrap",     "iEquipo",      [], "— Seleccionar equipo —", true);
   crearSS("ss-ieEquipo-wrap",    "ieEquipo",     [], "— Seleccionar equipo —", true);
+  crearSS("ss-consEquipo-wrap",  "consEquipo",   [], "— Elegir equipo —", false);
+  // Al elegir equipo en consumos, renderizar
+  const _ssSelectOrig = ssSelect;
+  ssSelect = function(fieldId, val) {
+    _ssSelectOrig(fieldId, val);
+    if (fieldId === "consEquipo") consRender();
+  };
 
   // Restaurar página
   try{
@@ -925,7 +947,7 @@ async function init(){
     ...S.equiposInfo.map(e=>e.codigo)
   ]);
   const allCodes=[...codesSet].sort();
-  ["cEquipo","ceEquipo","iEquipo","ieEquipo"].forEach(fid=>ssUpdateOptions(fid,allCodes));
+  ["cEquipo","ceEquipo","iEquipo","ieEquipo","consEquipo"].forEach(fid=>ssUpdateOptions(fid,allCodes));
   // Filtros historial
   allCodes.forEach(code=>{
     ["hcEquipo","hiEquipo"].forEach(sid=>{
@@ -1028,6 +1050,134 @@ async function combActualizar(){
     toast("Actualizado ✓");cerrarModal("combModal");await combCargar();
   }catch(e){toast("Error de conexión","err");}
   finally{resetBtn("btnCombActualizar","Actualizar");}
+}
+
+// ══ CONSUMOS ══
+// Equipos P y C miden km → km/L. El resto mide horas → L/h.
+function esKilometros(codigo){
+  if(!codigo)return false;
+  const c=codigo.trim().toUpperCase();
+  // P (camionetas) y C (camiones), pero NO CH (chulengos) ni CR (carros)
+  if(c.startsWith("CH")||c.startsWith("CR"))return false;
+  return c.startsWith("P")||c.startsWith("C");
+}
+
+function consCalcular(codigo, desde, hasta){
+  // Tomar registros del equipo con odómetro válido, ordenados por fecha asc
+  let regs = S.combRegistros
+    .filter(r => (r.equipo===codigo||r.codigo===codigo) && r.odometro && !isNaN(parseFloat(r.odometro)))
+    .map(r => ({
+      fecha: r.fecha,
+      odometro: parseFloat(r.odometro),
+      litros: parseFloat(r.cantidad)||0
+    }))
+    .sort((a,b)=>(a.fecha||"").localeCompare(b.fecha||"") || a.odometro-b.odometro);
+
+  // Construir tramos entre registros consecutivos
+  const tramos=[];
+  for(let i=1;i<regs.length;i++){
+    const ant=regs[i-1], act=regs[i];
+    const delta=act.odometro-ant.odometro;
+    const tramo={
+      fechaIni:ant.fecha, fechaFin:act.fecha,
+      odoIni:ant.odometro, odoFin:act.odometro,
+      delta, litros:act.litros,
+      consumo:null, error:null
+    };
+    if(delta<=0){
+      tramo.error="Odómetro retrocede o igual — posible carga errónea";
+    } else if(act.litros<=0){
+      tramo.error="Sin litros registrados";
+    } else {
+      tramo.consumo=act.litros/delta; // L por hora o L por km
+    }
+    tramos.push(tramo);
+  }
+
+  // Filtro por fechas (sobre fechaFin del tramo)
+  let filtrados=tramos;
+  if(desde)filtrados=filtrados.filter(t=>t.fechaFin>=desde);
+  if(hasta)filtrados=filtrados.filter(t=>t.fechaFin<=hasta);
+
+  return {todos:tramos, filtrados};
+}
+
+function consPromedio(tramos){
+  const validos=tramos.filter(t=>t.consumo!==null&&t.consumo>0);
+  if(!validos.length)return null;
+  // Promedio ponderado: total litros / total delta (más representativo que promedio simple)
+  const totLitros=validos.reduce((s,t)=>s+t.litros,0);
+  const totDelta=validos.reduce((s,t)=>s+t.delta,0);
+  return totDelta>0?totLitros/totDelta:null;
+}
+
+function consRender(){
+  const codigo=ssGet("consEquipo");
+  const statsEl=document.getElementById("consStats");
+  const listaEl=document.getElementById("consLista");
+  if(!codigo){listaEl.innerHTML='<div class="empty">Seleccioná un equipo para ver sus consumos</div>';statsEl.innerHTML="";return;}
+
+  const desde=g("consDesde"), hasta=g("consHasta");
+  const {todos,filtrados}=consCalcular(codigo,desde,hasta);
+  const esKm=esKilometros(codigo);
+
+  if(!todos.length){
+    statsEl.innerHTML="";
+    listaEl.innerHTML='<div class="empty">No hay suficientes registros con odómetro para calcular consumos de este equipo.<br><small style="color:var(--gris5)">Se necesitan al menos 2 cargas con odómetro.</small></div>';
+    return;
+  }
+
+  const promHist=consPromedio(todos);
+  const promFilt=consPromedio(filtrados);
+  const ultimo=[...todos].reverse().find(t=>t.consumo!==null);
+
+  // Formatear según unidad
+  function fmtCons(c){
+    if(c===null||c===undefined)return"—";
+    if(esKm){
+      // km/L para vehículos
+      return (1/c).toFixed(1)+" km/L";
+    }
+    return c.toFixed(2)+" L/h";
+  }
+
+  statsEl.innerHTML=`
+    <div class="stat-row" style="margin-bottom:10px">
+      <div class="stat-card accent">
+        <div class="stat-label">Promedio histórico</div>
+        <div class="stat-val naranja" style="font-size:22px">${fmtCons(promHist)}</div>
+      </div>
+      <div class="stat-card verde">
+        <div class="stat-label">${desde||hasta?"Promedio filtrado":"Último tramo"}</div>
+        <div class="stat-val verde" style="font-size:22px">${desde||hasta?fmtCons(promFilt):fmtCons(ultimo?.consumo)}</div>
+      </div>
+    </div>`;
+
+  // Lista de tramos (más recientes primero) con alertas
+  const lista=[...filtrados].reverse();
+  if(!lista.length){listaEl.innerHTML='<div class="empty">Sin tramos en el rango de fechas</div>';return;}
+
+  listaEl.innerHTML=lista.map(t=>{
+    // Alerta de consumo anómalo: >50% sobre el promedio histórico
+    let alerta="";
+    if(t.error){
+      alerta=`<span class="tag badge-danger" style="margin-top:4px">⚠️ ${t.error}</span>`;
+    } else if(promHist&&t.consumo>promHist*1.5){
+      alerta=`<span class="tag badge-warn" style="margin-top:4px">🟡 Consumo alto vs promedio — revisar odómetro o pérdida</span>`;
+    }
+    return `<div class="list-item" style="cursor:default">
+      <div class="item-top">
+        <div class="item-title" style="color:${t.error?'#f87171':'var(--texto)'}">${fmtCons(t.consumo)}</div>
+        <div class="item-date">${fmtFecha(t.fechaIni)} → ${fmtFecha(t.fechaFin)}</div>
+      </div>
+      <div class="item-body">
+        <span class="tag tag-orange">⛽ ${t.litros} L</span>
+        <span class="tag tag-gray">⏱ ${t.odoIni.toLocaleString("es-AR")} → ${t.odoFin.toLocaleString("es-AR")}</span>
+        <span class="tag tag-gray">Δ ${t.delta.toLocaleString("es-AR")} ${esKm?"km":"hs"}</span>
+      </div>
+      ${alerta}
+    </div>`;
+  }).join("");
 }
 
 // ══ STOCK CISTERNA GRANDE ══

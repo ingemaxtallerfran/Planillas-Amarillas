@@ -1607,13 +1607,27 @@ function equipoCardHTML(eq,idx){
       <div class="eq-detail-grid">${detItems}</div>
       ${fotoFull}
       <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--borde)">
-        <div style="font-size:11px;font-weight:700;color:var(--texto2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Cambiar ubicación</div>
-        <div style="display:flex;gap:8px">
-          <input type="text" id="nuevaUbic-${idx}" value="${eq.ubicacion||""}" placeholder="Ej: Obra norte..."
-            style="flex:1;background:var(--gris2);border:1px solid var(--borde);color:var(--texto);border-radius:var(--rsm);padding:8px 10px;font-size:14px;font-family:inherit;outline:none">
-          <button onclick="cambiarUbicacion('${eq.codigo}','nuevaUbic-${idx}',this)"
-            style="background:var(--naranja);color:#fff;border:none;border-radius:var(--rsm);padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer">Guardar</button>
+        <div style="font-size:11px;font-weight:700;color:var(--naranja);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">✏️ Edición rápida</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div>
+            <div style="font-size:10px;color:var(--gris5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Odómetro (hs/km)</div>
+            <input type="number" id="erOdo-${idx}" placeholder="${eq.odometro||'—'}" inputmode="decimal"
+              style="width:100%;background:var(--gris2);border:1px solid var(--borde);color:var(--texto);border-radius:var(--rsm);padding:8px 10px;font-size:14px;font-family:inherit;outline:none">
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--gris5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Operario</div>
+            <input type="text" id="erOp-${idx}" placeholder="${eq.encargado||'—'}"
+              style="width:100%;background:var(--gris2);border:1px solid var(--borde);color:var(--texto);border-radius:var(--rsm);padding:8px 10px;font-size:14px;font-family:inherit;outline:none">
+          </div>
         </div>
+        <div style="margin-bottom:8px">
+          <div style="font-size:10px;color:var(--gris5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Ubicación / Obra</div>
+          <input type="text" id="erUbic-${idx}" placeholder="${eq.ubicacion||'—'}"
+            style="width:100%;background:var(--gris2);border:1px solid var(--borde);color:var(--texto);border-radius:var(--rsm);padding:8px 10px;font-size:14px;font-family:inherit;outline:none">
+        </div>
+        <button onclick="editarEquipoRapido('${eq.codigo}',${idx},this)"
+          style="width:100%;background:var(--naranja);color:#fff;border:none;border-radius:var(--rsm);padding:10px;font-weight:800;font-size:14px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:.04em">GUARDAR CAMBIOS</button>
+        <div style="font-size:10px;color:var(--gris5);margin-top:6px;text-align:center">Solo se actualizan los campos que completes. Queda registrado como "App Taller".</div>
       </div>
     </div>
   </div>`;
@@ -1622,15 +1636,28 @@ function toggleEquipoDetail(detId,arrId){
   const det=document.getElementById(detId),arr=document.getElementById(arrId);
   if(!det)return;const isOpen=det.style.display!=="none";det.style.display=isOpen?"none":"block";if(arr)arr.classList.toggle("open",!isOpen);
 }
-async function cambiarUbicacion(codigo,inputId,btn){
-  const nuevaUbic=(document.getElementById(inputId)?.value||"").trim();
-  if(!nuevaUbic){toast("Escribí la nueva ubicación","err");return;}
-  const txt=btn.textContent;btn.textContent="...";btn.disabled=true;
+async function editarEquipoRapido(codigo,idx,btn){
+  const odo  =(document.getElementById("erOdo-"+idx)?.value||"").trim();
+  const op   =(document.getElementById("erOp-"+idx)?.value||"").trim();
+  const ubic =(document.getElementById("erUbic-"+idx)?.value||"").trim();
+  if(!odo&&!op&&!ubic){toast("Completá al menos un campo","err");return;}
+  const txt=btn.textContent;btn.textContent="GUARDANDO...";btn.disabled=true;
+  const p={action:"editarEquipoRapido",codigo,odometro:odo,operario:op,ubicacion:ubic};
   try{
-    const d=await jsonp(`${URL_}?action=actualizarUbicacion&codigo=${encodeURIComponent(codigo)}&ubicacion=${encodeURIComponent(nuevaUbic)}`);
+    const d=await jsonp(`${URL_}?${new URLSearchParams(p)}`);
     if(!d||!d.ok){toast(d?.mensaje||"Error","err");return;}
-    toast("Ubicación actualizada ✓");
-    const eq=S.equiposInfo.find(e=>e.codigo===codigo);if(eq)eq.ubicacion=nuevaUbic;
+    toast("Equipo actualizado ✓ ("+(d.cambios||[]).join(", ")+")");
+    // Actualizar en memoria sin recargar todo
+    const eq=S.equiposInfo.find(e=>normalizarCodigo(e.codigo)===normalizarCodigo(codigo));
+    if(eq){
+      if(odo)eq.odometro=odo;
+      if(op)eq.encargado=op;
+      if(ubic)eq.ubicacion=ubic;
+      eq.fechaOdometro=todayStr();
+      eq.fuente="App Taller";
+    }
+    // Re-render de la vista actual
+    if(grupoActual)abrirGrupo(grupoActual);else equiposRenderGrupos();
   }catch(e){toast("Error de conexión","err");}
   finally{btn.textContent=txt;btn.disabled=false;}
 }

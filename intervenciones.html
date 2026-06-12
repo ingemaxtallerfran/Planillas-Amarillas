@@ -941,11 +941,12 @@ async function init(){
     document.getElementById("eqAlertas").innerHTML='<div class="empty">—</div>';
   }
 
-  // Poblar SS de equipos (fusión de Equipos + Maestro)
+  // Poblar SS de equipos (fusión de Equipos + Maestro), códigos normalizados sin duplicados
   const codesSet=new Set([
-    ...equiposCodes,
-    ...S.equiposInfo.map(e=>e.codigo)
+    ...equiposCodes.map(c=>normalizarCodigo(c)),
+    ...S.equiposInfo.map(e=>normalizarCodigo(e.codigo))
   ]);
+  codesSet.delete("");
   const allCodes=[...codesSet].sort();
   ["cEquipo","ceEquipo","iEquipo","ieEquipo"].forEach(fid=>ssUpdateOptions(fid,allCodes));
   // Filtros historial
@@ -988,7 +989,7 @@ function combCalcStats(){
 function combRenderHist(){
   const eq=g("hcEquipo"),fe=g("hcFecha");
   let lista=[...S.combRegistros];
-  if(eq)lista=lista.filter(r=>r.equipo===eq||r.codigo===eq);
+  if(eq)lista=lista.filter(r=>normalizarCodigo(r.equipo||r.codigo)===normalizarCodigo(eq));
   if(fe)lista=lista.filter(r=>r.fecha===fe);
   lista.sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||""));
   const total=lista.reduce((s,r)=>s+(parseFloat(r.cantidad)||0),0);
@@ -1087,6 +1088,7 @@ function consCalcular(codigo, desde, hasta){
   let regs = S.combRegistros
     .filter(r => normalizarCodigo(r.equipo||r.codigo)===codNorm && r.odometro && !isNaN(parseFloat(r.odometro)))
     .map(r => ({
+      id: r.id,
       fecha: r.fecha,
       odometro: parseFloat(r.odometro),
       litros: parseFloat(r.cantidad)||0
@@ -1099,6 +1101,7 @@ function consCalcular(codigo, desde, hasta){
     const ant=regs[i-1], act=regs[i];
     const delta=act.odometro-ant.odometro;
     const tramo={
+      regId:act.id, // id del registro que cierra el tramo (para editar)
       fechaIni:ant.fecha, fechaFin:act.fecha,
       odoIni:ant.odometro, odoFin:act.odometro,
       delta, litros:act.litros,
@@ -1123,6 +1126,24 @@ function consCalcular(codigo, desde, hasta){
       }
     }
     tramos.push(tramo);
+  }
+
+  // ── Detección de outliers usando MEDIANA (inmune a valores extremos) ──
+  // La mediana de los consumos por tramo refleja el consumo "típico" real
+  const consumosValidos=tramos.filter(t=>!t.error&&t.consumo>0).map(t=>t.consumo).sort((a,b)=>a-b);
+  const mediana=consumosValidos.length?consumosValidos[Math.floor(consumosValidos.length/2)]:null;
+  if(mediana){
+    tramos.forEach(t=>{
+      if(t.error||t.consumo===null)return;
+      const ratio=t.consumo/mediana;
+      if(ratio>2.5||ratio<0.4){
+        // Muy lejos del consumo típico: dato erróneo, NO promedia
+        t.error="Muy desviado del consumo habitual — posible carga errónea";
+      } else if(ratio>1.5||ratio<0.66){
+        // Desviado pero posible: promedia, pero avisa
+        t.warn="Consumo desviado del habitual — revisar";
+      }
+    });
   }
 
   // Filtro por fechas (sobre fechaFin del tramo)
@@ -1190,13 +1211,13 @@ function consRender(){
   if(!lista.length){listaEl.innerHTML='<div class="empty">Sin tramos en el rango de fechas</div>';return;}
 
   listaEl.innerHTML=lista.map(t=>{
-    // Alerta de consumo anómalo: >50% sobre el promedio histórico
     let alerta="";
     if(t.error){
       alerta=`<span class="tag badge-danger" style="margin-top:4px">⚠️ ${t.error}</span>`;
-    } else if(promHist&&t.consumo>promHist*1.5){
-      alerta=`<span class="tag badge-warn" style="margin-top:4px">🟡 Consumo alto vs promedio — revisar odómetro o pérdida</span>`;
+    } else if(t.warn){
+      alerta=`<span class="tag badge-warn" style="margin-top:4px">🟡 ${t.warn}</span>`;
     }
+    const btnEdit=t.regId?`<button onclick="event.stopPropagation();combAbrirEditar('${t.regId}')" style="background:var(--gris2);border:1px solid var(--borde);color:var(--naranja);border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Barlow Condensed',sans-serif;margin-left:auto">✏️ Editar carga</button>`:"";
     return `<div class="list-item" style="cursor:default">
       <div class="item-top">
         <div class="item-title" style="color:${t.error?'#f87171':'var(--texto)'}">${fmtCons(t.consumo)}</div>
@@ -1206,6 +1227,7 @@ function consRender(){
         <span class="tag tag-orange">⛽ ${t.litros} L</span>
         <span class="tag tag-gray">⏱ ${t.odoIni.toLocaleString("es-AR")} → ${t.odoFin.toLocaleString("es-AR")}</span>
         <span class="tag tag-gray">Δ ${t.delta.toLocaleString("es-AR")} ${esKm?"km":"hs"}</span>
+        ${t.error?btnEdit:""}
       </div>
       ${alerta}
     </div>`;
@@ -1414,7 +1436,7 @@ async function intervCargar(){
 function intervRenderHist(){
   const eq=g("hiEquipo"),av=g("hiAviso"),q=(document.getElementById("hiBuscar")?.value||"").toLowerCase().trim();
   let lista=[...S.intervRegistros];
-  if(eq)lista=lista.filter(r=>r.equipo===eq||r.normalizado===eq);
+  if(eq)lista=lista.filter(r=>normalizarCodigo(r.equipo)===normalizarCodigo(eq)||normalizarCodigo(r.normalizado)===normalizarCodigo(eq));
   if(av)lista=lista.filter(r=>r.aviso===av);
   if(q)lista=lista.filter(r=>(r.equipo||"").toLowerCase().includes(q)||(r.trabajo||"").toLowerCase().includes(q)||(r.taller||"").toLowerCase().includes(q)||(r.descripcion||"").toLowerCase().includes(q));
   document.getElementById("intervHistStats").innerHTML=`<strong>${lista.length}</strong> intervenciones`;

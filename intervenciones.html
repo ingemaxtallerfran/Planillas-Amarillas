@@ -1550,7 +1550,12 @@ async function intervActualizar(){
 const IMG_BASE="https://ingemaxtallerfran.github.io/Planillas-Amarillas/";
 function driveImgUrl(url){
   if(!url||!url.trim())return null;const u=url.trim();
-  if(u.includes("drive.google.com")){const m=u.match(/\/d\/([a-zA-Z0-9_-]{10,})/);if(m)return`https://drive.google.com/thumbnail?id=${m[1]}&sz=w400`;}
+  // Cualquier link de Drive → formato directo lh3 (funciona en <img> sin login)
+  if(u.includes("drive.google.com")||u.includes("googleusercontent.com")){
+    if(u.includes("lh3.googleusercontent.com"))return u;
+    const m=u.match(/[-\w]{25,}/);
+    if(m)return`https://lh3.googleusercontent.com/d/${m[0]}=w600`;
+  }
   if(u.startsWith("http")||u.startsWith("//"))return u;
   return IMG_BASE+u;
 }

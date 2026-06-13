@@ -162,6 +162,26 @@
     .eq-search{width:100%;padding:10px 12px 10px 36px;background:var(--gris2);border:1px solid var(--borde);border-radius:var(--rsm);color:var(--texto);font-family:'Barlow',sans-serif;font-size:15px;outline:none;-webkit-appearance:none}
     .eq-search:focus{border-color:var(--naranja)}
     .eq-search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none}
+
+    /* ── VISTA DESKTOP: grilla de equipos ── */
+    @media (min-width: 900px) {
+      #page-equipos{max-width:1400px}
+      #page-equipos .stabs{margin:-16px -16px 16px}
+      #eqLista, #eqAlertas{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px;align-items:start}
+      #eqLista .stats, #eqAlertas .stats{grid-column:1/-1}
+      #eqLista .empty, #eqAlertas .empty{grid-column:1/-1}
+      .equipo-card{margin-bottom:0}
+      /* cards más compactas en desktop */
+      .eq-header{padding:10px 12px 8px;gap:10px}
+      .eq-thumb,.eq-no-foto{width:48px;height:48px;font-size:20px}
+      .eq-codigo{font-size:17px}
+      .eq-nombre{font-size:12px;margin:2px 0 4px}
+      .eq-odo-cel{padding:6px 10px}
+      .eq-odo-val{font-size:13px}
+      .eq-status-row{padding:6px 10px}
+      .eq-status-row .tag{font-size:10px;padding:2px 7px}
+      .eq-grupos{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+    }
     /* Modal */
     .overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:none;align-items:flex-end;justify-content:center}
     .overlay.open{display:flex}

@@ -461,11 +461,12 @@
 
 <!-- ══ EQUIPOS ══ -->
 <div class="page" id="page-equipos">
-  <div class="stabs" style="--stab-cols:2">
+  <div class="stabs" style="--stab-cols:3">
     <button class="stab active" onclick="switchStab('equipos','grupos',this)">🚜 Equipos</button>
+    <button class="stab"        onclick="switchStab('equipos','obras',this)">📍 Obras</button>
     <button class="stab"        onclick="switchStab('equipos','alertas',this)">⚠️ Alertas</button>
   </div>
-  <!-- Vista grupos -->
+  <!-- Vista grupos por tipo -->
   <div class="stab-sec active" id="equipos-grupos">
     <div class="eq-grupos" id="eqGruposGrid"></div>
   </div>
@@ -478,6 +479,20 @@
     </div>
     <div class="stats" id="eqStats"></div>
     <div id="eqLista"><div class="loading"><div class="spin"></div></div></div>
+  </div>
+  <!-- Vista grupos por OBRA -->
+  <div class="stab-sec" id="equipos-obras">
+    <div class="eq-grupos" id="eqObrasGrid"></div>
+  </div>
+  <!-- Vista lista (dentro de una obra) -->
+  <div class="stab-sec" id="equipos-listaObra">
+    <button class="eq-grupo-back" onclick="volverObras()">‹ Volver a obras</button>
+    <div class="eq-search-wrap">
+      <span class="eq-search-icon">🔍</span>
+      <input class="eq-search" type="text" id="eqBuscarObra" placeholder="Buscar..." oninput="equiposFiltrarObra()">
+    </div>
+    <div class="stats" id="eqStatsObra"></div>
+    <div id="eqListaObra"><div class="loading"><div class="spin"></div></div></div>
   </div>
   <!-- Alertas -->
   <div class="stab-sec" id="equipos-alertas">
@@ -846,6 +861,102 @@ function equiposFiltrar() {
   ));
 }
 
+// ══ AGRUPACIÓN POR OBRA / UBICACIÓN ══
+// Normaliza una ubicación: quita tildes, espacios extra, minúsculas
+// para que "Obrador", "obrador ", "OBRADOR" caigan en el mismo grupo
+function normalizarUbic(u){
+  if(!u)return"";
+  return String(u).trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"") // quita tildes
+    .replace(/\s+/g," ").trim();
+}
+// Para mostrar: devuelve la primera forma "linda" que encontró de esa ubicación
+function nombreUbicacion(equipos, claveNorm){
+  const match=equipos.find(e=>normalizarUbic(e.ubicacion)===claveNorm);
+  return match?String(match.ubicacion).trim():claveNorm;
+}
+
+function equiposRenderObras(){
+  const grid=document.getElementById("eqObrasGrid");
+  if(!grid)return;
+  // Agrupar por ubicación normalizada
+  const mapa={}; // claveNorm → {nombre, count}
+  let sinUbic=0;
+  S.equiposInfo.forEach(e=>{
+    const k=normalizarUbic(e.ubicacion);
+    if(!k){sinUbic++;return;}
+    if(!mapa[k])mapa[k]={nombre:String(e.ubicacion).trim(),count:0};
+    mapa[k].count++;
+  });
+  // Ordenar por cantidad desc
+  const grupos=Object.keys(mapa).map(k=>({clave:k,...mapa[k]})).sort((a,b)=>b.count-a.count);
+  let html=grupos.map(g=>`
+    <div class="eq-grupo-btn" onclick="abrirObra('${g.clave.replace(/'/g,"\\'")}')">
+      <div>
+        <div class="eq-grupo-nombre">📍 ${g.nombre}</div>
+        <div class="eq-grupo-pref">obra / ubicación</div>
+      </div>
+      <div class="eq-grupo-count">${g.count}</div>
+    </div>`).join("");
+  // Botón "Todos" y "Sin ubicación"
+  html=`<div class="eq-grupo-btn" onclick="abrirObra('*todos*')">
+      <div><div class="eq-grupo-nombre">📋 Todos</div><div class="eq-grupo-pref">todos los equipos</div></div>
+      <div class="eq-grupo-count">${S.equiposInfo.length}</div>
+    </div>`+html;
+  if(sinUbic>0){
+    html+=`<div class="eq-grupo-btn" onclick="abrirObra('*sin*')">
+      <div><div class="eq-grupo-nombre">❔ Sin ubicación</div><div class="eq-grupo-pref">sin obra asignada</div></div>
+      <div class="eq-grupo-count">${sinUbic}</div>
+    </div>`;
+  }
+  grid.innerHTML=html||'<div class="empty" style="grid-column:1/-1">Sin ubicaciones cargadas</div>';
+}
+
+let obraActual="";
+function abrirObra(clave){
+  obraActual=clave;
+  let lista, titulo;
+  if(clave==="*todos*"){lista=S.equiposInfo;titulo="Todos";}
+  else if(clave==="*sin*"){lista=S.equiposInfo.filter(e=>!normalizarUbic(e.ubicacion));titulo="Sin ubicación";}
+  else{lista=S.equiposInfo.filter(e=>normalizarUbic(e.ubicacion)===clave);titulo=nombreUbicacion(S.equiposInfo,clave);}
+  document.getElementById("equipos-obras").classList.remove("active");
+  document.getElementById("equipos-listaObra").classList.add("active");
+  // ocultar el resaltado del stab (queda en Obras)
+  const buscador=document.getElementById("eqBuscarObra");
+  buscador.value="";buscador.placeholder=`Buscar en ${titulo}...`;
+  equiposRenderListaObra(lista);
+}
+
+function volverObras(){
+  document.getElementById("equipos-listaObra").classList.remove("active");
+  document.getElementById("equipos-obras").classList.add("active");
+  obraActual="";
+}
+
+function equiposRenderListaObra(lista){
+  const statsEl=document.getElementById("eqStatsObra"),listaEl=document.getElementById("eqListaObra");
+  if(!listaEl)return;
+  if(statsEl)statsEl.innerHTML=`<strong>${lista.length}</strong> equipos`;
+  if(!lista.length){listaEl.innerHTML='<div class="empty">Sin equipos en esta obra</div>';return;}
+  listaEl.innerHTML=lista.map(eq=>equipoCardHTML(eq,S.equiposInfo.indexOf(eq)+5000)).join("");
+}
+
+function equiposFiltrarObra(){
+  const q=(document.getElementById("eqBuscarObra")?.value||"").toLowerCase().trim();
+  let base;
+  if(obraActual==="*todos*")base=S.equiposInfo;
+  else if(obraActual==="*sin*")base=S.equiposInfo.filter(e=>!normalizarUbic(e.ubicacion));
+  else base=S.equiposInfo.filter(e=>normalizarUbic(e.ubicacion)===obraActual);
+  if(!q){equiposRenderListaObra(base);return;}
+  equiposRenderListaObra(base.filter(eq=>
+    (eq.codigo||"").toLowerCase().includes(q)||
+    (eq.marca||"").toLowerCase().includes(q)||
+    (eq.modelo||"").toLowerCase().includes(q)||
+    (eq.encargado||"").toLowerCase().includes(q)||
+    (eq.ubicacion||"").toLowerCase().includes(q)
+  ));
+}
+
 // ── NAV ──
 function switchPage(name,idx,btn){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
@@ -863,6 +974,16 @@ function switchStab(mod,name,btn){
   btn.closest(".stabs").querySelectorAll(".stab").forEach(b=>b.classList.remove("active"));
   document.getElementById(prefix+name).classList.add("active");
   btn.classList.add("active");
+  // Al entrar a Obras, renderizar la grilla de obras (reset de vista interna)
+  if(mod==="equipos"&&name==="obras"){
+    obraActual="";
+    equiposRenderObras();
+  }
+  // Al entrar a Equipos (grupos), reset de vista interna
+  if(mod==="equipos"&&name==="grupos"){
+    grupoActual="";
+    equiposRenderGrupos();
+  }
 }
 
 // ── MODALES ──

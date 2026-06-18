@@ -1118,6 +1118,11 @@ async function combCargar(){
     )].sort();
     ssUpdateOptions("consEquipo",codsConRegistros);
     combCalcStats();combRenderHist();
+    // Re-renderizar equipos ahora que hay datos de consumo (si ya están cargados)
+    if(S.equiposInfo&&S.equiposInfo.length){
+      if(typeof grupoActual!=="undefined"&&grupoActual){abrirGrupo(grupoActual);}
+      else if(typeof obraActual!=="undefined"&&obraActual){abrirObra(obraActual);}
+    }
   }catch(e){toast("Error cargando combustible","err");}
 }
 function combCalcStats(){
@@ -1705,6 +1710,25 @@ function eqStatusBadges(eq){
   return out.join("");
 }
 
+// Devuelve {prom, ultimo} formateados para la card, o null si no hay datos
+function resumenConsumoEquipo(codigo){
+  if(!codigo)return null;
+  const {todos}=consCalcular(codigo,"","");
+  if(!todos.length)return null;
+  const prom=consPromedio(todos);
+  const ultimo=[...todos].reverse().find(t=>t.consumo!==null&&!t.error);
+  if(prom===null&&!ultimo)return null;
+  const esKm=esKilometros(codigo);
+  const fmt=c=>{
+    if(c===null||c===undefined)return"—";
+    return esKm?(1/c).toFixed(1)+" km/L":c.toFixed(1)+" L/h";
+  };
+  return {
+    prom: prom!==null?fmt(prom):"—",
+    ultimo: ultimo?fmt(ultimo.consumo):"—"
+  };
+}
+
 function equipoCardHTML(eq,idx){
   const fotoUrl=driveImgUrl(eq.foto);
   const fotoHtml=fotoUrl
@@ -1717,6 +1741,8 @@ function equipoCardHTML(eq,idx){
   const fuente=eq.fuente?String(eq.fuente).trim():"—";
   const dif=parseNum(eq.diferencia),umbral=getUmbral(eq.codigo);
   const difClass=isNaN(dif)?"":dif>=umbral?"danger":dif>=umbral*0.8?"":"ok";
+  // ── Resumen de consumo (promedio + último) ──
+  const cons=resumenConsumoEquipo(eq.codigo);
   const detItems=[
     eq.serie?`<div><div class="eq-det-label">N° Serie</div><div class="eq-det-val">${eq.serie}</div></div>`:"",
     eq.placa?`<div><div class="eq-det-label">Placa / Patente</div><div class="eq-det-val">${eq.placa}</div></div>`:"",
@@ -1748,6 +1774,10 @@ function equipoCardHTML(eq,idx){
       <div class="eq-odo-cel"><div class="eq-odo-label">Últ. actualización</div><div class="eq-odo-val">${fechaOdo}</div></div>
       <div class="eq-odo-cel"><div class="eq-odo-label">Fuente</div><div class="eq-odo-val" style="font-size:12px">${fuente}</div></div>
     </div>
+    ${cons?`<div class="eq-odo-row" style="border-top:1px solid var(--borde)">
+      <div class="eq-odo-cel"><div class="eq-odo-label">⛽ Consumo prom.</div><div class="eq-odo-val" style="color:var(--naranja)">${cons.prom}</div></div>
+      <div class="eq-odo-cel" style="grid-column:span 2"><div class="eq-odo-label">Último consumo</div><div class="eq-odo-val">${cons.ultimo}</div></div>
+    </div>`:""}
     ${badges?`<div class="eq-status-row">${badges}</div>`:""}
     <div class="eq-detail" id="eq-detail-${idx}" style="display:none">
       <div class="eq-detail-grid">${detItems}</div>

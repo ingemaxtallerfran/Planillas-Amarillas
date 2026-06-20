@@ -1753,7 +1753,9 @@ function driveImgUrl(url){
 function getUmbral(codigo){
   if(!codigo)return 250;
   const pref=(codigo.trim()[0]||"").toUpperCase();
-  return pref==="P"?10000:250;
+  if(pref==="P")return 10000;           // camionetas: km
+  if(pref==="T"||pref==="R"||pref==="M")return 350; // máquinas grandes: 350 hs
+  return 250;                            // resto: 250 hs
 }
 function eqStatusBadges(eq){
   const out=[];
@@ -1908,6 +1910,9 @@ function equiposRender(lista){
 function equiposRenderAlertas(){
   const el=document.getElementById("eqAlertas");if(!el)return;
   const alertas=S.equiposInfo.filter(eq=>{
+    // Los camiones (código C-) no aparecen en alertas aunque estén para service
+    const pref=(eq.codigo||"").trim()[0]?.toUpperCase();
+    if(pref==="C"&&!(eq.codigo||"").trim().toUpperCase().startsWith("CH")&&!(eq.codigo||"").trim().toUpperCase().startsWith("CR"))return false;
     const dif=parseNum(eq.diferencia);
     const umbral=getUmbral(eq.codigo);
     return!isNaN(dif)&&dif>=umbral*0.8; // muestra los que están al 80% o más del umbral

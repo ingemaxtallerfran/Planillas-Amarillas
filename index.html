@@ -46,11 +46,13 @@
     .f select.error,.f input.error{border-color:#E24B4A;background:#fff8f8;}
     .f textarea{resize:none;height:70px;}
 
-
+    .prefill-tag{display:inline-block;font-size:10px;font-weight:700;color:var(--naranja);background:#FEF0E7;padding:1px 6px;border-radius:20px;margin-left:6px;text-transform:none;letter-spacing:0;vertical-align:middle;}
 
     .btn{width:100%;padding:14px;background:var(--naranja);border:none;border-radius:var(--rsm);font-size:16px;font-weight:700;cursor:pointer;margin-top:4px;color:#fff;letter-spacing:.02em;}
     .btn:disabled{opacity:.5;cursor:not-allowed;}
     .btn:active{opacity:.85;}
+    .btn-ghost{width:100%;padding:11px;background:none;border:1.5px solid var(--bor);border-radius:var(--rsm);font-size:13px;font-weight:600;cursor:pointer;margin-top:8px;color:var(--gris2);}
+    .btn-ghost:active{background:#fafaf8;}
 
     .hint{font-size:12px;color:var(--gris2);margin-top:-8px;margin-bottom:10px;}
 
@@ -96,15 +98,15 @@
     <div class="ct"><span class="ct-bar"></span>Registro diario</div>
 
     <div class="f">
-      <label>Equipo <span class="req">*</span></label>
+      <label>Equipo <span class="req">*</span><span class="prefill-tag" id="tag-ue" style="display:none">ayer</span></label>
       <select id="ue"><option value="">— Cargando... —</option></select>
     </div>
     <div class="f">
-      <label>Operario <span class="req">*</span></label>
+      <label>Operario <span class="req">*</span><span class="prefill-tag" id="tag-uo" style="display:none">ayer</span></label>
       <select id="uo"><option value="">— Cargando... —</option></select>
     </div>
     <div class="f">
-      <label>Obra / Lugar</label>
+      <label>Obra / Lugar<span class="prefill-tag" id="tag-uw" style="display:none">ayer</span></label>
       <select id="uw"><option value="">— Cargando... —</option></select>
     </div>
     <div class="f">
@@ -132,6 +134,7 @@
 
     <p class="hint"><span class="req">*</span> Campos obligatorios</p>
     <button class="btn" id="bguardar" onclick="enviar()">Guardar</button>
+    <button class="btn-ghost" id="blimpiar" onclick="limpiarPrellenado()" style="display:none">Borrar datos precargados</button>
   </div>
 </div>
 
@@ -218,6 +221,7 @@
     if (cached) {
       const d = JSON.parse(cached);
       fill("ue", d.equipos); fill("uo", d.operarios); fill("uw", d.obras); fill("ut", d.trabajos);
+      aplicarPrellenado();
     }
     if (!navigator.onLine) return;
     try {
@@ -225,6 +229,7 @@
       if (!d || !d.ok) { if (!cached) toast("No se pudieron cargar listas", "err"); return; }
       localStorage.setItem("pam_listas", JSON.stringify(d));
       fill("ue", d.equipos); fill("uo", d.operarios); fill("uw", d.obras); fill("ut", d.trabajos);
+      aplicarPrellenado();
     } catch(err) {
       if (!cached) toast("Error conexión", "err");
     }
@@ -253,6 +258,55 @@
     el.classList.add("error");
     ["change","input"].forEach(ev => el.addEventListener(ev, () => el.classList.remove("error"), { once:true }));
   }
+
+  // ── Precarga: Equipo / Operario / Obra del último registro ──
+  function guardarPrellenado(data) {
+    const pre = { equipo: data.equipo || "", operario: data.operario || "", obra: data.obra || "" };
+    localStorage.setItem("pam_prefill", JSON.stringify(pre));
+  }
+
+  function aplicarPrellenado() {
+    const raw = localStorage.getItem("pam_prefill");
+    if (!raw) return;
+    let pre;
+    try { pre = JSON.parse(raw); } catch(e) { return; }
+
+    const mapa = { ue: "equipo", uo: "operario", uw: "obra" };
+    let aplicadoAlguno = false;
+
+    Object.keys(mapa).forEach(id => {
+      const val = pre[mapa[id]];
+      if (!val) return;
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      // Solo aplicar si la opción existe en la lista cargada
+      const existe = Array.from(sel.options).some(o => o.value === val);
+      if (existe) {
+        sel.value = val;
+        document.getElementById("tag-" + id).style.display = "inline";
+        aplicadoAlguno = true;
+      }
+    });
+
+    document.getElementById("blimpiar").style.display = aplicadoAlguno ? "block" : "none";
+  }
+
+  function limpiarPrellenado() {
+    localStorage.removeItem("pam_prefill");
+    ["ue","uo","uw"].forEach(id => {
+      document.getElementById(id).value = "";
+      document.getElementById("tag-" + id).style.display = "none";
+    });
+    document.getElementById("blimpiar").style.display = "none";
+    toast("Datos precargados borrados");
+  }
+
+  // Si el usuario toca a mano el select, ya no es "el de ayer": sacamos el tag
+  ["ue","uo","uw"].forEach(id => {
+    document.getElementById(id).addEventListener("change", () => {
+      document.getElementById("tag-" + id).style.display = "none";
+    });
+  });
 
   // ── Guardar (online u offline) ──
   async function enviar() {
@@ -283,6 +337,7 @@
       PENDING.push({ p, fecha: new Date().toISOString() });
       localStorage.setItem("pam_pending", JSON.stringify(PENDING));
       guardarHist(p, true);
+      guardarPrellenado(p);
       updatePendingBadge();
       toast("Sin conexión — guardado localmente ✓", "ok");
       limpiarForm();
@@ -296,12 +351,14 @@
       if (!d || !d.ok) { toast(d?.mensaje || "Error al guardar", "err"); return; }
       toast(p.litros ? "Uso y gasoil guardados ✓" : "Guardado ✓");
       guardarHist(p, false);
+      guardarPrellenado(p);
       limpiarForm();
     } catch(err) {
       // Fallback to offline
       PENDING.push({ p, fecha: new Date().toISOString() });
       localStorage.setItem("pam_pending", JSON.stringify(PENDING));
       guardarHist(p, true);
+      guardarPrellenado(p);
       updatePendingBadge();
       toast("Sin señal — guardado localmente ✓", "ok");
       limpiarForm();
@@ -334,7 +391,9 @@
   }
 
   function limpiarForm() {
-    ["ue","uo","uw","uhk","gl","ut","ua","uob"].forEach(id => {
+    // Mantenemos Equipo/Operario/Obra para el próximo registro del día;
+    // solo limpiamos el resto de los campos.
+    ["uhk","gl","ut","ua","uob"].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = "";
     });

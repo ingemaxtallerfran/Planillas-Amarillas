@@ -153,7 +153,10 @@ function costosRenderResumen(){
     </div>`;
   }
   if(S.costosHist&&S.costosHist.anios.length){
-    const tpa=S.costosHist.anios.map(anio=>({anio,suma:S.costosHist.equipos.reduce((s,e)=>{const a=e.anios.find(x=>x.anio===anio);return s+(a?a.monto:0);},0)}));
+    // Usar los totales oficiales de la fila 91 (no sumar equipo por equipo)
+    const tpa=(S.costosHist.totales&&S.costosHist.totales.length)
+      ? S.costosHist.totales.map(t=>({anio:t.anio,suma:t.monto}))
+      : S.costosHist.anios.map(anio=>({anio,suma:S.costosHist.equipos.reduce((s,e)=>{const a=e.anios.find(x=>x.anio===anio);return s+(a?a.monto:0);},0)}));
     const prom=tpa.reduce((s,t)=>s+t.suma,0)/tpa.length;
     html+=`<div class="card" style="cursor:pointer;border-left:4px solid var(--verde)" onclick="costosVerAnios()">
       <div class="stat-label">Promedio anual de inversión (ajustado)</div>
@@ -224,7 +227,9 @@ function costosVerMeses(){
 function costosVerAnios(){
   if(!S.costosHist)return;
   const cont=document.getElementById("costosResumen"),det=document.getElementById("costosDetalle"),body=document.getElementById("costosDetalleBody");
-  const tpa=S.costosHist.anios.map(anio=>({anio,suma:S.costosHist.equipos.reduce((s,e)=>{const a=e.anios.find(x=>x.anio===anio);return s+(a?a.monto:0);},0)}));
+  const tpa=(S.costosHist.totales&&S.costosHist.totales.length)
+    ? S.costosHist.totales.map(t=>({anio:t.anio,suma:t.monto}))
+    : S.costosHist.anios.map(anio=>({anio,suma:S.costosHist.equipos.reduce((s,e)=>{const a=e.anios.find(x=>x.anio===anio);return s+(a?a.monto:0);},0)}));
   const maxA=Math.max(...tpa.map(a=>a.suma),1);
   body.innerHTML=`<div class="card"><div class="card-title">Inversión año a año (ajustado a hoy)</div>${tpa.map(a=>{
     const barPct=Math.round(a.suma/maxA*100);

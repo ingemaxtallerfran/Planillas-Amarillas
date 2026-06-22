@@ -536,6 +536,18 @@
   </div>
 </div>
 
+<!-- ══ COSTOS ══ -->
+<div class="page" id="page-costos">
+  <div id="costosResumen">
+    <div class="loading"><div class="spin"></div></div>
+  </div>
+  <!-- Vista detalle (meses o años) -->
+  <div id="costosDetalle" style="display:none">
+    <button class="eq-grupo-back" onclick="costosVolver()">‹ Volver</button>
+    <div id="costosDetalleBody"></div>
+  </div>
+</div>
+
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav" id="bottomNav">
   <div class="nav-indicator" id="navIndicator"></div>
@@ -544,6 +556,7 @@
   <button class="nav-btn" onclick="switchPage('planillas',2,this)" data-page="planillas"><span class="nav-icon">📋</span>Planillas</button>
   <button class="nav-btn" onclick="switchPage('interv',3,this)" data-page="interv"><span class="nav-icon">🔧</span>Manto.</button>
   <button class="nav-btn" onclick="switchPage('equipos',4,this)" data-page="equipos"><span class="nav-icon">🚜</span>Equipos</button>
+  <button class="nav-btn" onclick="switchPage('costos',5,this)" data-page="costos"><span class="nav-icon">💲</span>Costos</button>
 </nav>
 
 <!-- MODAL EDITAR COMBUSTIBLE -->
@@ -1022,10 +1035,15 @@ function switchPage(name,idx,btn){
   document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
   document.getElementById("page-"+name).classList.add("active");
   btn.classList.add("active");
-  const w=100/5;
+  const w=100/6;
   const ind=document.getElementById("navIndicator");
   ind.style.left=(w*idx)+"%";ind.style.width=w+"%";
   try{sessionStorage.setItem("ap",name);sessionStorage.setItem("ai",String(idx));}catch(e){}
+  // Cargar costos la primera vez que se entra
+  if(name==="costos"){
+    if(!S.costosLoaded){costosCargar();}
+    else{costosVolver();}
+  }
 }
 function switchStab(mod,name,btn){
   const prefix=mod+"-";
@@ -1087,7 +1105,7 @@ async function init(){
   aplicarTema(document.documentElement.getAttribute("data-theme")==="light"?"light":"dark");
   ["cFecha","iFecha","cgFecha"].forEach(id=>{const el=document.getElementById(id);if(el)el.value=todayStr();});
   const ind=document.getElementById("navIndicator");
-  ind.style.left="0%";ind.style.width="20%";
+  ind.style.left="0%";ind.style.width="16.66%";
   // Crear SS vacíos de entrada (se actualizan luego con opciones)
   crearSS("ss-cEquipo-wrap",     "cEquipo",      [], "— Seleccionar equipo —", true);
   crearSS("ss-cResponsable-wrap","cResponsable", [], "— Seleccionar responsable —", true);
@@ -1646,6 +1664,8 @@ function intervRenderHist(){
   if(eq)lista=lista.filter(r=>normalizarCodigo(r.equipo)===normalizarCodigo(eq)||normalizarCodigo(r.normalizado)===normalizarCodigo(eq));
   if(av)lista=lista.filter(r=>r.aviso===av);
   if(q)lista=lista.filter(r=>(r.equipo||"").toLowerCase().includes(q)||(r.trabajo||"").toLowerCase().includes(q)||(r.taller||"").toLowerCase().includes(q)||(r.descripcion||"").toLowerCase().includes(q));
+  // Ordenar de más reciente a más vieja
+  lista.sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||""));
   document.getElementById("intervHistStats").innerHTML=`<strong>${lista.length}</strong> intervenciones`;
   const c=document.getElementById("intervListaHist");
   if(!lista.length){c.innerHTML='<div class="empty">Sin intervenciones</div>';return;}
@@ -1926,7 +1946,170 @@ function equiposRenderAlertas(){
     alertas.map(eq=>equipoCardHTML(eq,S.equiposInfo.indexOf(eq)+1000)).join("");
 }
 
+// ══ COSTOS ══
+function fmtPeso(n){
+  n=Number(n)||0;
+  return "$"+n.toLocaleString("es-AR",{maximumFractionDigits:0});
+}
+async function costosCargar(){
+  const cont=document.getElementById("costosResumen");
+  try{
+    const [r26,rH]=await Promise.allSettled([
+      jsonp(`${URL_}?action=getCostos2026`),
+      jsonp(`${URL_}?action=getCostosHistorico`)
+    ]);
+    S.costos2026 = (r26.status==="fulfilled"&&r26.value?.ok) ? r26.value : null;
+    S.costosHist = (rH.status==="fulfilled"&&rH.value?.ok) ? rH.value : null;
+    S.costosLoaded=true;
+    costosRenderResumen();
+  }catch(e){
+    cont.innerHTML='<div class="empty">Error cargando costos</div>';
+  }
+}
+
+function costosRenderResumen(){
+  const cont=document.getElementById("costosResumen");
+  document.getElementById("costosDetalle").style.display="none";
+  cont.style.display="block";
+
+  let html="";
+
+  // ── Card: Costo 2026 hasta ahora ──
+  if(S.costos2026){
+    const total2026=S.costos2026.equipos.reduce((s,e)=>s+(e.total||0),0);
+    const presupTotal=S.costos2026.equipos.reduce((s,e)=>s+(e.presupuesto||0),0);
+    const pct=presupTotal>0?Math.round(total2026/presupTotal*100):0;
+    html+=`<div class="card" style="cursor:pointer;border-left:4px solid var(--naranja)" onclick="costosVerMeses()">
+      <div class="stat-label">Gastado en ${new Date().getFullYear()} (hasta ahora)</div>
+      <div class="stat-val naranja" style="font-size:34px">${fmtPeso(total2026)}</div>
+      ${presupTotal>0?`<div style="font-size:12px;color:var(--texto2);margin-top:4px">${pct}% del presupuesto anual (${fmtPeso(presupTotal)})</div>`:""}
+      <div style="font-size:12px;color:var(--naranja);margin-top:8px;font-weight:600">Ver mes a mes ›</div>
+    </div>`;
+  }
+
+  // ── Card: Promedio anual histórico (ajustado) ──
+  if(S.costosHist&&S.costosHist.anios.length){
+    // Promedio por año = suma de todos los equipos ese año / cantidad de años
+    const totalesPorAnio=S.costosHist.anios.map(anio=>{
+      const suma=S.costosHist.equipos.reduce((s,e)=>{
+        const a=e.anios.find(x=>x.anio===anio);return s+(a?a.monto:0);
+      },0);
+      return {anio,suma};
+    });
+    const promAnual=totalesPorAnio.reduce((s,t)=>s+t.suma,0)/totalesPorAnio.length;
+    html+=`<div class="card" style="cursor:pointer;border-left:4px solid var(--verde)" onclick="costosVerAnios()">
+      <div class="stat-label">Promedio anual de inversión (ajustado)</div>
+      <div class="stat-val verde" style="font-size:30px">${fmtPeso(promAnual)}</div>
+      <div style="font-size:12px;color:var(--texto2);margin-top:4px">Promedio ${S.costosHist.anios[0]}–${S.costosHist.anios[S.costosHist.anios.length-1]}</div>
+      <div style="font-size:12px;color:var(--verde);margin-top:8px;font-weight:600">Ver año a año ›</div>
+    </div>`;
+  }
+
+  // ── Card: Costo por tipo de equipo (2026) ──
+  if(S.costos2026){
+    // Agrupar el total 2026 por tipo de equipo
+    const porTipo={};
+    S.costos2026.equipos.forEach(e=>{
+      const grupo=getGrupoDeEquipo(e.codigo)||"Otros";
+      if(!porTipo[grupo])porTipo[grupo]={total:0,count:0};
+      porTipo[grupo].total+=(e.total||0);
+      porTipo[grupo].count++;
+    });
+    const tipos=Object.keys(porTipo).map(t=>({
+      tipo:t,total:porTipo[t].total,count:porTipo[t].count,
+      prom:porTipo[t].total/porTipo[t].count
+    })).sort((a,b)=>b.total-a.total);
+    html+=`<div class="card">
+      <div class="card-title">Costo por tipo de equipo (${new Date().getFullYear()})</div>
+      ${tipos.map(t=>{
+        const maxTotal=tipos[0].total||1;
+        const barPct=Math.round(t.total/maxTotal*100);
+        return `<div style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px">${t.tipo}</span>
+            <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;color:var(--naranja)">${fmtPeso(t.total)}</span>
+          </div>
+          <div style="background:var(--gris2);border-radius:4px;height:8px;overflow:hidden">
+            <div style="background:var(--naranja);height:100%;width:${barPct}%;border-radius:4px"></div>
+          </div>
+          <div style="font-size:11px;color:var(--texto2);margin-top:3px">${t.count} equipo${t.count>1?"s":""} · promedio ${fmtPeso(t.prom)} c/u</div>
+        </div>`;
+      }).join("")}
+    </div>`;
+  }
+
+  if(!html)html='<div class="empty">No se pudieron cargar los datos de costos.<br><small>Verificá que las hojas existan en el sheet de costos.</small></div>';
+  cont.innerHTML=html;
+}
+
+// Detalle: gasto mes a mes 2026
+function costosVerMeses(){
+  if(!S.costos2026)return;
+  const cont=document.getElementById("costosResumen");
+  const det=document.getElementById("costosDetalle");
+  const body=document.getElementById("costosDetalleBody");
+  // Sumar por mes (todos los equipos)
+  const meses=S.costos2026.meses.map((mes,i)=>{
+    const suma=S.costos2026.equipos.reduce((s,e)=>{
+      const m=e.meses[i];return s+(m?m.monto:0);
+    },0);
+    return {mes,suma};
+  });
+  const maxMes=Math.max(...meses.map(m=>m.suma),1);
+  body.innerHTML=`<div class="card">
+    <div class="card-title">Gasto mes a mes ${new Date().getFullYear()}</div>
+    ${meses.map(m=>{
+      const barPct=Math.round(m.suma/maxMes*100);
+      return `<div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px">${m.mes}</span>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;color:var(--naranja)">${fmtPeso(m.suma)}</span>
+        </div>
+        <div style="background:var(--gris2);border-radius:4px;height:8px;overflow:hidden">
+          <div style="background:var(--naranja);height:100%;width:${barPct}%;border-radius:4px"></div>
+        </div>
+      </div>`;
+    }).join("")}
+  </div>`;
+  cont.style.display="none";det.style.display="block";
+}
+
+// Detalle: gasto año a año (histórico ajustado)
+function costosVerAnios(){
+  if(!S.costosHist)return;
+  const cont=document.getElementById("costosResumen");
+  const det=document.getElementById("costosDetalle");
+  const body=document.getElementById("costosDetalleBody");
+  const totalesPorAnio=S.costosHist.anios.map(anio=>{
+    const suma=S.costosHist.equipos.reduce((s,e)=>{
+      const a=e.anios.find(x=>x.anio===anio);return s+(a?a.monto:0);
+    },0);
+    return {anio,suma};
+  });
+  const maxAnio=Math.max(...totalesPorAnio.map(a=>a.suma),1);
+  body.innerHTML=`<div class="card">
+    <div class="card-title">Inversión año a año (ajustado a hoy)</div>
+    ${totalesPorAnio.map(a=>{
+      const barPct=Math.round(a.suma/maxAnio*100);
+      return `<div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px">${a.anio}</span>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;color:var(--verde)">${fmtPeso(a.suma)}</span>
+        </div>
+        <div style="background:var(--gris2);border-radius:4px;height:8px;overflow:hidden">
+          <div style="background:var(--verde);height:100%;width:${barPct}%;border-radius:4px"></div>
+        </div>
+      </div>`;
+    }).join("")}
+  </div>`;
+  cont.style.display="none";det.style.display="block";
+}
+
+function costosVolver(){
+  document.getElementById("costosDetalle").style.display="none";
+  document.getElementById("costosResumen").style.display="block";
+}
+
 init();
 </script>
-</body>
 </html>

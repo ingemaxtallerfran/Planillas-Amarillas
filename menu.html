@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Ingemax — Apps</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--naranja:#E8651A;--negro:#0f0f0f;--gris1:#1a1a1a;--gris2:#252525;--borde:#2e2e2e;--texto:#f0f0f0;--texto2:#aaa;--radius:14px}
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    body{font-family:'Barlow',sans-serif;background:var(--negro);color:var(--texto);min-height:100vh;display:flex;flex-direction:column}
+    .header{background:var(--gris1);border-bottom:2px solid var(--naranja);padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:64px}
+    .logo-box{background:#fff;border-radius:8px;padding:6px 12px;display:flex;align-items:center;height:46px}
+    .logo-img{height:32px;width:auto;display:block}
+    .logo-fallback{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:#111}
+    .logo-fallback span{color:var(--naranja)}
+    .header-sub{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:#888}
+    .wrap{flex:1;max-width:560px;width:100%;margin:0 auto;padding:24px 16px 40px}
+    .intro{text-align:center;margin-bottom:28px}
+    .intro h1{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;letter-spacing:.02em;margin-bottom:4px}
+    .intro p{color:var(--texto2);font-size:14px}
+    .apps{display:flex;flex-direction:column;gap:14px}
+    .app-card{display:flex;align-items:center;gap:16px;background:var(--gris1);border:1px solid var(--borde);border-radius:var(--radius);padding:20px;cursor:pointer;text-decoration:none;color:inherit;transition:border-color .15s,transform .12s;position:relative;overflow:hidden}
+    .app-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--naranja);opacity:0;transition:opacity .15s}
+    .app-card:active{transform:scale(.98)}
+    .app-card:hover{border-color:var(--naranja)}
+    .app-card:hover::before{opacity:1}
+    .app-icon{font-size:38px;line-height:1;flex-shrink:0;width:58px;height:58px;display:flex;align-items:center;justify-content:center;background:var(--gris2);border-radius:12px}
+    .app-info{flex:1;min-width:0}
+    .app-name{font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:700;letter-spacing:.02em;line-height:1.1}
+    .app-desc{font-size:13px;color:var(--texto2);margin-top:3px}
+    .app-arrow{color:var(--naranja);font-size:22px;flex-shrink:0}
+    .footer{text-align:center;padding:16px;color:#555;font-size:11px;letter-spacing:.05em}
+    .disabled{opacity:.5;cursor:not-allowed}
+    .disabled:hover{border-color:var(--borde)}
+    .disabled:hover::before{opacity:0}
+    .soon{font-size:10px;background:var(--gris2);color:var(--texto2);border:1px solid var(--borde);padding:2px 8px;border-radius:20px;font-weight:600;letter-spacing:.05em}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo-box">
+      <img src="logo-ingemax.jpg" alt="INGEMAX" class="logo-img" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+      <div class="logo-fallback" style="display:none">INGEMA<span>X</span></div>
+    </div>
+    <div class="header-sub">Aplicaciones</div>
+  </div>
+
+  <div class="wrap">
+    <div class="intro">
+      <h1>Centro de Aplicaciones</h1>
+      <p>Elegí la herramienta que querés usar</p>
+    </div>
+
+    <div class="apps">
+      <a class="app-card" href="intervenciones">
+        <div class="app-icon">🚜</div>
+        <div class="app-info">
+          <div class="app-name">Gestión de Equipos</div>
+          <div class="app-desc">Combustible, stock, mantenimiento y equipos</div>
+        </div>
+        <div class="app-arrow">›</div>
+      </a>
+
+      <a class="app-card" href="index.html">
+        <div class="app-icon">📋</div>
+        <div class="app-info">
+          <div class="app-name">Planillas Amarillas</div>
+          <div class="app-desc">Carga diaria de operarios</div>
+        </div>
+        <div class="app-arrow">›</div>
+      </a>
+
+      <a class="app-card" href="costos">
+        <div class="app-icon">💲</div>
+        <div class="app-info">
+          <div class="app-name">Costos</div>
+          <div class="app-desc">Inversión por equipo, tipo y año</div>
+        </div>
+        <div class="app-arrow">›</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="footer">INGEMAX S.A. · Gestión interna</div>
+</body>
+</html>

@@ -1974,22 +1974,18 @@ function costosRenderResumen(){
 
   let html="";
 
-  // ── Card: Costo 2026 hasta ahora ──
+  // ── Resumen general: gasto total este año ──
   if(S.costos2026){
     const total2026=S.costos2026.equipos.reduce((s,e)=>s+(e.total||0),0);
-    const presupTotal=S.costos2026.equipos.reduce((s,e)=>s+(e.presupuesto||0),0);
-    const pct=presupTotal>0?Math.round(total2026/presupTotal*100):0;
     html+=`<div class="card" style="cursor:pointer;border-left:4px solid var(--naranja)" onclick="costosVerMeses()">
-      <div class="stat-label">Gastado en ${new Date().getFullYear()} (hasta ahora)</div>
-      <div class="stat-val naranja" style="font-size:34px">${fmtPeso(total2026)}</div>
-      ${presupTotal>0?`<div style="font-size:12px;color:var(--texto2);margin-top:4px">${pct}% del presupuesto anual (${fmtPeso(presupTotal)})</div>`:""}
+      <div class="stat-label">Gastado en ${new Date().getFullYear()} — todos los equipos</div>
+      <div class="stat-val naranja" style="font-size:32px">${fmtPeso(total2026)}</div>
       <div style="font-size:12px;color:var(--naranja);margin-top:8px;font-weight:600">Ver mes a mes ›</div>
     </div>`;
   }
 
-  // ── Card: Promedio anual histórico (ajustado) ──
+  // ── Resumen general: promedio anual histórico (ajustado) ──
   if(S.costosHist&&S.costosHist.anios.length){
-    // Promedio por año = suma de todos los equipos ese año / cantidad de años
     const totalesPorAnio=S.costosHist.anios.map(anio=>{
       const suma=S.costosHist.equipos.reduce((s,e)=>{
         const a=e.anios.find(x=>x.anio===anio);return s+(a?a.monto:0);
@@ -1999,25 +1995,17 @@ function costosRenderResumen(){
     const promAnual=totalesPorAnio.reduce((s,t)=>s+t.suma,0)/totalesPorAnio.length;
     html+=`<div class="card" style="cursor:pointer;border-left:4px solid var(--verde)" onclick="costosVerAnios()">
       <div class="stat-label">Promedio anual de inversión (ajustado)</div>
-      <div class="stat-val verde" style="font-size:30px">${fmtPeso(promAnual)}</div>
+      <div class="stat-val verde" style="font-size:28px">${fmtPeso(promAnual)}</div>
       <div style="font-size:12px;color:var(--texto2);margin-top:4px">Promedio ${S.costosHist.anios[0]}–${S.costosHist.anios[S.costosHist.anios.length-1]}</div>
       <div style="font-size:12px;color:var(--verde);margin-top:8px;font-weight:600">Ver año a año ›</div>
     </div>`;
   }
 
-  // ── Card: Costo por tipo de equipo (2026) ──
+  // ── Costo por tipo de equipo (2026) ──
   if(S.costos2026){
-    // Agrupar el total 2026 por tipo de equipo
-    const porTipo={};
-    S.costos2026.equipos.forEach(e=>{
-      const grupo=getGrupoDeEquipo(e.codigo)||"Otros";
-      if(!porTipo[grupo])porTipo[grupo]={total:0,count:0};
-      porTipo[grupo].total+=(e.total||0);
-      porTipo[grupo].count++;
-    });
+    const porTipo=costosPorTipo();
     const tipos=Object.keys(porTipo).map(t=>({
-      tipo:t,total:porTipo[t].total,count:porTipo[t].count,
-      prom:porTipo[t].total/porTipo[t].count
+      tipo:t,total:porTipo[t].total,count:porTipo[t].count,prom:porTipo[t].prom
     })).sort((a,b)=>b.total-a.total);
     html+=`<div class="card">
       <div class="card-title">Costo por tipo de equipo (${new Date().getFullYear()})</div>
@@ -2038,8 +2026,117 @@ function costosRenderResumen(){
     </div>`;
   }
 
-  if(!html)html='<div class="empty">No se pudieron cargar los datos de costos.<br><small>Verificá que las hojas existan en el sheet de costos.</small></div>';
+  // ── Cards por equipo ──
+  if(S.costos2026){
+    html+=`<div class="card-title" style="margin:18px 0 12px">Detalle por equipo</div>`;
+    // ordenar por gasto 2026 desc
+    const eqs=[...S.costos2026.equipos].sort((a,b)=>(b.total||0)-(a.total||0));
+    const porTipo=costosPorTipo();
+    html+=eqs.map(e=>{
+      const grupo=getGrupoDeEquipo(e.codigo)||"Otros";
+      const promTipo=porTipo[grupo]?porTipo[grupo].prom:0;
+      // promedio anual histórico de este equipo
+      const hist=S.costosHist?S.costosHist.equipos.find(h=>normalizarCodigo(h.codigo)===normalizarCodigo(e.codigo)):null;
+      let promAnualEq=null;
+      if(hist&&hist.anios.length){
+        promAnualEq=hist.anios.reduce((s,a)=>s+(a.monto||0),0)/hist.anios.length;
+      }
+      // comparación contra el tipo
+      const difTipo=promTipo>0?(e.total-promTipo):0;
+      const comparaColor=e.total>promTipo?"#f87171":"var(--verde)";
+      const comparaTxt=e.total>promTipo?"por encima":"por debajo";
+      return `<div class="list-item" style="cursor:pointer" onclick="costosVerEquipo('${e.codigo.replace(/'/g,"\\'")}')">
+        <div class="item-top">
+          <div class="item-title">${e.codigo} <span style="font-size:11px;color:var(--gris5);font-weight:400">${grupo}</span></div>
+          <div class="item-date" style="color:var(--naranja);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800">${fmtPeso(e.total)}</div>
+        </div>
+        <div class="item-body" style="margin-top:6px">
+          ${promAnualEq!==null?`<span class="tag tag-gray">Prom. anual: ${fmtPeso(promAnualEq)}</span>`:""}
+          ${promTipo>0?`<span class="tag tag-gray">Prom. ${grupo}: ${fmtPeso(promTipo)}</span>`:""}
+        </div>
+        ${promTipo>0?`<div style="font-size:11px;margin-top:5px;color:${comparaColor};font-weight:600">
+          ${e.total>promTipo?"▲":"▼"} ${fmtPeso(Math.abs(difTipo))} ${comparaTxt} del promedio de su tipo
+        </div>`:""}
+      </div>`;
+    }).join("");
+  }
+
+  if(!html)html='<div class="empty">No se pudieron cargar los datos de costos.</div>';
   cont.innerHTML=html;
+}
+
+// Helper: costo 2026 agrupado por tipo
+function costosPorTipo(){
+  const porTipo={};
+  if(!S.costos2026)return porTipo;
+  S.costos2026.equipos.forEach(e=>{
+    const grupo=getGrupoDeEquipo(e.codigo)||"Otros";
+    if(!porTipo[grupo])porTipo[grupo]={total:0,count:0,prom:0};
+    porTipo[grupo].total+=(e.total||0);
+    porTipo[grupo].count++;
+  });
+  Object.keys(porTipo).forEach(t=>{
+    porTipo[t].prom=porTipo[t].count>0?porTipo[t].total/porTipo[t].count:0;
+  });
+  return porTipo;
+}
+
+// Detalle de UN equipo: año a año + mes a mes 2026
+function costosVerEquipo(codigo){
+  const cont=document.getElementById("costosResumen");
+  const det=document.getElementById("costosDetalle");
+  const body=document.getElementById("costosDetalleBody");
+  const e2026=S.costos2026?S.costos2026.equipos.find(e=>e.codigo===codigo):null;
+  const hist=S.costosHist?S.costosHist.equipos.find(h=>normalizarCodigo(h.codigo)===normalizarCodigo(codigo)):null;
+  const grupo=getGrupoDeEquipo(codigo)||"Otros";
+
+  let html=`<div class="card"><div class="card-title">${codigo} — ${grupo}</div>`;
+
+  // Año a año (histórico + 2026)
+  const barras=[];
+  if(hist)hist.anios.forEach(a=>barras.push({label:a.anio,monto:a.monto||0}));
+  if(e2026)barras.push({label:String(new Date().getFullYear()),monto:e2026.total||0});
+  if(barras.length){
+    const maxB=Math.max(...barras.map(b=>b.monto),1);
+    html+=`<div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--gris5);margin-bottom:10px">Inversión año a año</div>`;
+    html+=barras.map(b=>{
+      const barPct=Math.round(b.monto/maxB*100);
+      const esActual=b.label===String(new Date().getFullYear());
+      const col=esActual?"var(--naranja)":"var(--verde)";
+      return `<div style="margin-bottom:11px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px">${b.label}${esActual?" (hasta ahora)":""}</span>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;color:${col}">${fmtPeso(b.monto)}</span>
+        </div>
+        <div style="background:var(--gris2);border-radius:4px;height:7px;overflow:hidden">
+          <div style="background:${col};height:100%;width:${barPct}%;border-radius:4px"></div>
+        </div>
+      </div>`;
+    }).join("");
+  }
+  html+=`</div>`;
+
+  // Mes a mes 2026 de este equipo
+  if(e2026&&e2026.meses&&e2026.meses.length){
+    const maxM=Math.max(...e2026.meses.map(m=>m.monto),1);
+    html+=`<div class="card"><div class="card-title">Mes a mes ${new Date().getFullYear()}</div>`;
+    html+=e2026.meses.map(m=>{
+      const barPct=maxM>0?Math.round(m.monto/maxM*100):0;
+      return `<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px">${m.mes}</span>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;color:var(--naranja)">${fmtPeso(m.monto)}</span>
+        </div>
+        <div style="background:var(--gris2);border-radius:4px;height:7px;overflow:hidden">
+          <div style="background:var(--naranja);height:100%;width:${barPct}%;border-radius:4px"></div>
+        </div>
+      </div>`;
+    }).join("");
+    html+=`</div>`;
+  }
+
+  body.innerHTML=html;
+  cont.style.display="none";det.style.display="block";
 }
 
 // Detalle: gasto mes a mes 2026

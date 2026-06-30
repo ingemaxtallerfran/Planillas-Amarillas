@@ -512,7 +512,10 @@
   </div>
   <!-- Vista lista (dentro de un grupo) -->
   <div class="stab-sec" id="equipos-lista">
-    <button class="eq-grupo-back" onclick="volverGrupos()">‹ Volver a grupos</button>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+      <button class="eq-grupo-back" onclick="volverGrupos()" style="margin:0">‹ Volver a grupos</button>
+      <button onclick="abrirInforme()" style="margin-left:auto;background:var(--gris2);border:1px solid var(--naranja);color:var(--naranja);border-radius:var(--rsm);padding:8px 14px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:.03em">📧 Generar informe</button>
+    </div>
     <div class="eq-search-wrap">
       <span class="eq-search-icon">🔍</span>
       <input class="eq-search" type="text" id="eqBuscar" placeholder="Buscar..." oninput="equiposFiltrar()">
@@ -633,6 +636,17 @@
   </div>
 </div>
 <div class="toast hidden" id="toast"></div>
+
+<!-- MODAL GENERAR INFORME -->
+<div class="overlay" id="informeModal" onclick="handleOverlay(event,'informeModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title"><span>📧 Generar informe</span><button class="modal-close" onclick="cerrarModal('informeModal')">✕</button></div>
+    <p style="font-size:13px;color:var(--texto2);margin-bottom:16px">Elegí qué datos incluir en el informe de <strong id="informeGrupoNombre" style="color:var(--naranja)">—</strong>. Se enviará a tu correo listo para copiar a WhatsApp.</p>
+    <div id="informeCampos" style="display:flex;flex-direction:column;gap:2px;margin-bottom:18px"></div>
+    <button class="btn btn-primary" id="btnEnviarInforme" onclick="enviarInforme()">Enviar informe al mail</button>
+  </div>
+</div>
 
 <script>
 const URL_ = "https://script.google.com/macros/s/AKfycbwh9fSHZ0Tt6nGQFcWFJg7P5L4jUVoRdhs1QhulVECMqmn7ACv58VUUprOhMQviszKSew/exec";
@@ -907,6 +921,100 @@ function volverGrupos() {
   document.getElementById("equipos-grupos").classList.add("active");
   document.querySelector('#page-equipos .stab').classList.add("active");
   grupoActual = "";
+}
+
+// ══ INFORME POR MAIL ══
+// Campos disponibles para el informe (los que se ven en las cards)
+const INFORME_CAMPOS = [
+  {key:"ubicacion",   label:"Ubicación / Obra",      def:true},
+  {key:"operario",    label:"Operario",              def:true},
+  {key:"odometro",    label:"Horómetro / Km",        def:true},
+  {key:"fechaOdo",    label:"Última actualización",  def:false},
+  {key:"fuente",      label:"Fuente del dato",       def:false},
+  {key:"consumoProm", label:"Consumo promedio",      def:true},
+  {key:"consumoUlt",  label:"Último consumo",        def:false},
+  {key:"service",     label:"Estado de service",     def:true},
+];
+
+function abrirInforme(){
+  if(!grupoActual){toast("Entrá a un grupo primero","err");return;}
+  document.getElementById("informeGrupoNombre").textContent=grupoActual;
+  // Construir checkboxes
+  const cont=document.getElementById("informeCampos");
+  cont.innerHTML=INFORME_CAMPOS.map(c=>`
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--gris2);border:1px solid var(--borde);border-radius:var(--rsm);cursor:pointer">
+      <input type="checkbox" data-campo="${c.key}" ${c.def?"checked":""} style="width:18px;height:18px;accent-color:var(--naranja)">
+      <span style="font-size:14px">${c.label}</span>
+    </label>`).join("");
+  document.getElementById("informeModal").classList.add("open");
+}
+
+function equiposDelGrupoActual(){
+  if(grupoActual==="Todos")return S.equiposInfo;
+  return S.equiposInfo.filter(e=>getGrupoDeEquipo(e.codigo)===grupoActual);
+}
+
+function armarTextoInforme(campos){
+  const lista=equiposDelGrupoActual();
+  const hoy=new Date().toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"numeric"});
+  let txt=`*INFORME — ${grupoActual.toUpperCase()}*\n${hoy}\n`;
+  txt+=`${lista.length} equipo${lista.length!==1?"s":""}\n\n`;
+
+  lista.forEach(eq=>{
+    txt+=`*${eq.codigo}*`;
+    // ubicación y operario en la misma línea del código si están
+    const linea1=[];
+    if(campos.includes("ubicacion")&&eq.ubicacion)linea1.push(eq.ubicacion);
+    if(campos.includes("operario")&&eq.encargado)linea1.push(eq.encargado);
+    if(linea1.length)txt+=` | ${linea1.join(" | ")}`;
+    txt+=`\n`;
+
+    // datos numéricos
+    const datos=[];
+    if(campos.includes("odometro")&&eq.odometro)datos.push(`Horóm/Km: ${eq.odometro}`);
+    if(campos.includes("consumoProm")||campos.includes("consumoUlt")){
+      const cons=resumenConsumoEquipo(eq.codigo);
+      if(cons){
+        if(campos.includes("consumoProm")&&cons.prom!=="—")datos.push(`Consumo: ${cons.prom}`);
+        if(campos.includes("consumoUlt")&&cons.ultimo!=="—")datos.push(`Últ: ${cons.ultimo}`);
+      }
+    }
+    if(campos.includes("fechaOdo")&&eq.fechaOdometro)datos.push(`Act: ${fmtFechaAny(eq.fechaOdometro)}`);
+    if(campos.includes("fuente")&&eq.fuente)datos.push(`Fuente: ${eq.fuente}`);
+    if(datos.length)txt+=`  ${datos.join(" · ")}\n`;
+
+    // service
+    if(campos.includes("service")){
+      const dif=parseNum(eq.diferencia),umbral=getUmbral(eq.codigo);
+      if(!isNaN(dif)){
+        if(dif>=umbral)txt+=`  ⚠️ Service vencido (${dif.toLocaleString("es-AR")} hs/km)\n`;
+        else if(dif>=umbral*0.8)txt+=`  🟡 Service próximo (${dif.toLocaleString("es-AR")} hs/km)\n`;
+        else txt+=`  ✓ Service OK\n`;
+      }
+    }
+    txt+=`\n`;
+  });
+  return txt.trim();
+}
+
+async function enviarInforme(){
+  const checks=document.querySelectorAll("#informeCampos input[type=checkbox]:checked");
+  const campos=Array.from(checks).map(c=>c.dataset.campo);
+  if(!campos.length){toast("Elegí al menos un dato","err");return;}
+  const texto=armarTextoInforme(campos);
+  if(texto.length>7000){
+    toast("Informe muy largo, elegí menos datos o un grupo más chico","err");
+    return;
+  }
+  setBtnLoading("btnEnviarInforme","Enviando...");
+  const p={action:"enviarInforme",grupo:grupoActual,texto:texto};
+  try{
+    const d=await jsonp(`${URL_}?${new URLSearchParams(p)}`);
+    if(!d||!d.ok){toast(d?.mensaje||"Error al enviar","err");return;}
+    toast("Informe enviado a tu mail ✓");
+    cerrarModal("informeModal");
+  }catch(e){toast("Error de conexión","err");}
+  finally{resetBtn("btnEnviarInforme","Enviar informe al mail");}
 }
 
 function equiposFiltrar() {

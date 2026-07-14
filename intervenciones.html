@@ -261,6 +261,35 @@
     .combo-input{width:100%;background:var(--gris2);border:1px solid var(--borde);border-radius:var(--rsm);color:var(--texto);font-family:'Barlow',sans-serif;font-size:15px;padding:10px 12px;outline:none;-webkit-appearance:none;appearance:none;transition:border-color .2s}
     .combo-input:focus{border-color:var(--naranja)}
     .combo-input.error{border-color:#ef4444}
+
+    /* ══ HERRAMENTAL MENOR ══ */
+    .h-card{background:var(--gris1);border:1px solid var(--borde);border-radius:var(--radius);overflow:hidden;margin-bottom:10px}
+    [data-theme="light"] .h-card{box-shadow:0 1px 3px rgba(0,0,0,.06)}
+    .h-header{display:flex;gap:12px;padding:12px;align-items:flex-start;cursor:pointer}
+    .h-thumb{width:56px;height:56px;object-fit:cover;border-radius:8px;flex-shrink:0;background:var(--gris2)}
+    .h-nofoto{width:56px;height:56px;border-radius:8px;background:var(--gris2);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;color:var(--gris4)}
+    .h-main{flex:1;min-width:0}
+    .h-cod{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--naranja);line-height:1.1}
+    .h-tipo{font-size:13px;font-weight:600;margin:2px 0 5px}
+    .h-meta{display:flex;flex-wrap:wrap;gap:4px}
+    .h-arrow{color:var(--gris4);font-size:18px;align-self:center;transition:transform .2s}
+    .h-arrow.open{transform:rotate(90deg)}
+    .h-detail{padding:14px;border-top:1px solid var(--borde);background:var(--gris2)}
+    .h-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+    .h-lab{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--gris5);margin-bottom:2px}
+    .h-val{font-size:14px;font-weight:600}
+    .h-foto-full{width:100%;border-radius:8px;margin-bottom:12px;object-fit:cover;max-height:200px}
+    .h-sec-title{font-size:11px;font-weight:700;color:var(--naranja);text-transform:uppercase;letter-spacing:.05em;margin:12px 0 8px;padding-top:10px;border-top:1px solid var(--borde)}
+    .mini-input{width:100%;background:var(--gris1);border:1px solid var(--borde);color:var(--texto);border-radius:var(--rsm);padding:8px 10px;font-size:14px;font-family:inherit;outline:none}
+    .mini-btn{width:100%;background:var(--naranja);color:#fff;border:none;border-radius:var(--rsm);padding:9px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:.04em;margin-top:8px}
+    .mini-btn.sec{background:var(--gris1);border:1px solid var(--borde);color:var(--texto2)}
+    .mov-item{padding:10px 0;border-bottom:1px solid var(--borde);font-size:13px}
+    .mov-item:last-child{border-bottom:none}
+    .mov-ruta{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px}
+    .mov-fecha{font-size:11px;color:var(--gris5)}
+    .foto-label{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px;border:1.5px dashed var(--borde);border-radius:var(--rsm);background:var(--gris1);color:var(--texto2);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer}
+    .foto-prev{width:100%;max-height:180px;object-fit:cover;border-radius:var(--rsm);display:block}
+    @media(min-width:900px){#hLista{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px;align-items:start}#hLista .h-card{margin-bottom:0}}
   </style>
 </head>
 <body>
@@ -543,6 +572,64 @@
   </div>
 </div>
 
+
+<!-- ══ HERRAMENTAL MENOR ══ -->
+<div class="page" id="page-herr">
+  <div class="stabs" style="--stab-cols:3">
+    <button class="stab active" onclick="switchStab('herr','tipos',this)">🔧 Por tipo</button>
+    <button class="stab"        onclick="switchStab('herr','ubic',this)">📍 Por lugar</button>
+    <button class="stab"        onclick="switchStab('herr','nueva',this)">+ Nueva</button>
+  </div>
+  <!-- Grupos por tipo -->
+  <div class="stab-sec active" id="herr-tipos">
+    <div id="hGruposGrid" class="eq-grupos"><div class="loading"><div class="spin"></div></div></div>
+  </div>
+  <!-- Grupos por ubicación -->
+  <div class="stab-sec" id="herr-ubic">
+    <div id="hUbicGrid" class="eq-grupos"></div>
+  </div>
+  <!-- Lista (dentro de grupo/ubicación) -->
+  <div class="stab-sec" id="herr-lista">
+    <button class="eq-grupo-back" onclick="hVolver()">‹ Volver</button>
+    <div class="eq-search-wrap">
+      <span class="eq-search-icon">🔍</span>
+      <input class="eq-search" id="hBuscar" placeholder="Buscar..." oninput="hRenderLista()">
+    </div>
+    <div class="stats" id="hStats"></div>
+    <div id="hLista"></div>
+  </div>
+  <!-- Nueva herramienta -->
+  <div class="stab-sec" id="herr-nueva">
+    <div class="card">
+      <div class="card-title">Nueva herramienta</div>
+      <div class="row2">
+        <div class="f"><label>Código <span class="req">*</span></label><input id="nhCodigo" placeholder="Ej: HA-7" autocomplete="off"></div>
+        <div class="f"><label>Tipo <span class="req">*</span></label><input id="nhTipo" list="dl-htipos" placeholder="Ej: Amoladora 7´" autocomplete="off"><datalist id="dl-htipos"></datalist></div>
+      </div>
+      <div class="row2">
+        <div class="f"><label>Marca</label><input id="nhMarca" list="dl-hmarcas" autocomplete="off"><datalist id="dl-hmarcas"></datalist></div>
+        <div class="f"><label>Modelo</label><input id="nhModelo" autocomplete="off"></div>
+      </div>
+      <div class="f"><label>N° Serie</label><input id="nhSerial" autocomplete="off"></div>
+      <div class="row2">
+        <div class="f"><label>Ubicación</label><input id="nhUbic" list="dl-hubics" autocomplete="off"><datalist id="dl-hubics"></datalist></div>
+        <div class="f"><label>Responsable</label><input id="nhResp" list="dl-hresps" autocomplete="off"><datalist id="dl-hresps"></datalist></div>
+      </div>
+      <div class="row2">
+        <div class="f"><label>Fecha compra</label><input type="date" id="nhFecha"></div>
+        <div class="f"><label>Estado</label>
+          <select id="nhEstado">
+            <option value="Operativa">Operativa</option>
+            <option value="En reparación">En reparación</option>
+            <option value="Baja">Baja</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="btnNuevaHerr" onclick="hAgregar()">Agregar herramienta</button>
+    </div>
+  </div>
+</div>
+
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav" id="bottomNav">
   <div class="nav-indicator" id="navIndicator"></div>
@@ -551,6 +638,7 @@
   <button class="nav-btn" onclick="switchPage('planillas',2,this)" data-page="planillas"><span class="nav-icon">📋</span>Planillas</button>
   <button class="nav-btn" onclick="switchPage('interv',3,this)" data-page="interv"><span class="nav-icon">🔧</span>Manto.</button>
   <button class="nav-btn" onclick="switchPage('equipos',4,this)" data-page="equipos"><span class="nav-icon">🚜</span>Equipos</button>
+  <button class="nav-btn" onclick="switchPage('herr',5,this)" data-page="herr"><span class="nav-icon">🔧</span>Herram.</button>
 </nav>
 
 <!-- MODAL EDITAR COMBUSTIBLE -->
@@ -1134,10 +1222,12 @@ function switchPage(name,idx,btn){
   document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
   document.getElementById("page-"+name).classList.add("active");
   btn.classList.add("active");
-  const w=100/5;
+  const w=100/6;
   const ind=document.getElementById("navIndicator");
   ind.style.left=(w*idx)+"%";ind.style.width=w+"%";
   try{sessionStorage.setItem("ap",name);sessionStorage.setItem("ai",String(idx));}catch(e){}
+  // CARGA PEREZOSA: el herramental se carga solo al entrar por primera vez
+  if(name==="herr"&&!S.herrLoaded){hCargar();}
 }
 function switchStab(mod,name,btn){
   const prefix=mod+"-";
@@ -1155,6 +1245,9 @@ function switchStab(mod,name,btn){
     grupoActual="";
     equiposRenderGrupos();
   }
+  // Herramental: renderizar la vista correspondiente al entrar
+  if(mod==="herr"&&name==="tipos"){hFiltro="";hRenderGrupos();}
+  if(mod==="herr"&&name==="ubic"){hFiltro="";hRenderUbics();}
 }
 
 // ── MODALES ──
@@ -1199,7 +1292,7 @@ async function init(){
   aplicarTema(document.documentElement.getAttribute("data-theme")==="light"?"light":"dark");
   ["cFecha","iFecha","cgFecha"].forEach(id=>{const el=document.getElementById(id);if(el)el.value=todayStr();});
   const ind=document.getElementById("navIndicator");
-  ind.style.left="0%";ind.style.width="20%";
+  ind.style.left="0%";ind.style.width="16.66%";
   // Crear SS vacíos de entrada (se actualizan luego con opciones)
   crearSS("ss-cEquipo-wrap",     "cEquipo",      [], "— Seleccionar equipo —", true);
   crearSS("ss-cResponsable-wrap","cResponsable", [], "— Seleccionar responsable —", true);
@@ -2119,6 +2212,288 @@ function equiposRenderAlertas(){
   if(!alertas.length){el.innerHTML='<div class="empty">✅ Todos los equipos al día</div>';return;}
   el.innerHTML=`<div class="stats" style="margin-bottom:10px"><strong>${alertas.length}</strong> equipo${alertas.length>1?"s":""} requieren atención</div>`+
     alertas.map(eq=>equipoCardHTML(eq,S.equiposInfo.indexOf(eq)+1000)).join("");
+}
+
+
+// ══════════════ HERRAMENTAL MENOR ══════════════
+// Carga perezosa: no se pide nada hasta que el usuario entra a la pestaña
+const H = {herr:[], movs:[], ubics:[], resps:[]};
+let hVista="", hFiltro="";
+const hFotoFiles={};
+
+const H_GRUPOS={
+  HA:"Amoladoras", HB:"Bombas de agua", HM:"Rotomartillos", HMP:"Martillos percutores",
+  VH:"Vibradores", HSO:"Soldadoras", HCO:"Compresores", HE:"Grupos electrógenos",
+  HC:"Canguros", HH:"Hormigoneras", HMS:"Motosierras", HP:"Pisones",
+  HS:"Sensitivas", HSC:"Sierras circulares", HT:"Taladros", HAS:"Mochilas antisol"
+};
+function hGetGrupo(cod){
+  if(!cod)return"Otros";
+  const p=String(cod).trim().toUpperCase().split("-")[0];
+  return H_GRUPOS[p]||"Otros";
+}
+
+async function hCargar(){
+  try{
+    const [rH,rM,rL]=await Promise.allSettled([
+      jsonp(`${URL_}?action=getHerramental`),
+      jsonp(`${URL_}?action=getMovimientosHM`),
+      jsonp(`${URL_}?action=getListasHM`)
+    ]);
+    if(rH.status==="fulfilled"&&rH.value?.ok)H.herr=rH.value.herramientas||[];
+    if(rM.status==="fulfilled"&&rM.value?.ok)H.movs=rM.value.movimientos||[];
+    if(rL.status==="fulfilled"&&rL.value?.ok){H.ubics=rL.value.ubicaciones||[];H.resps=rL.value.responsables||[];}
+    S.herrLoaded=true;
+    fillDatalist("dl-hubics",H.ubics);
+    fillDatalist("dl-hresps",H.resps);
+    fillDatalist("dl-htipos",[...new Set(H.herr.map(h=>h.tipo).filter(Boolean))].sort());
+    fillDatalist("dl-hmarcas",[...new Set(H.herr.map(h=>h.marca).filter(Boolean))].sort());
+    hRenderGrupos();
+  }catch(e){
+    const el=document.getElementById("hGruposGrid");
+    if(el)el.innerHTML='<div class="empty" style="grid-column:1/-1">Error cargando herramental</div>';
+  }
+}
+
+function hRenderGrupos(){
+  const grid=document.getElementById("hGruposGrid");
+  if(!grid)return;
+  const conteo={};
+  H.herr.forEach(h=>{const g=hGetGrupo(h.codigo);conteo[g]=(conteo[g]||0)+1;});
+  const lista=Object.keys(conteo).map(g=>({g,c:conteo[g]})).sort((a,b)=>b.c-a.c);
+  let html=`<div class="eq-grupo-btn" onclick="hAbrir('tipo','*todas*')">
+    <div><div class="eq-grupo-nombre">📦 Todas</div><div class="eq-grupo-pref">todo el herramental</div></div>
+    <div class="eq-grupo-count">${H.herr.length}</div></div>`;
+  html+=lista.map(x=>`<div class="eq-grupo-btn" onclick="hAbrir('tipo','${x.g.replace(/'/g,"\\'")}')">
+    <div><div class="eq-grupo-nombre">${x.g}</div><div class="eq-grupo-pref">herramientas</div></div>
+    <div class="eq-grupo-count">${x.c}</div></div>`).join("");
+  grid.innerHTML=html||'<div class="empty" style="grid-column:1/-1">Sin herramientas</div>';
+}
+
+function hRenderUbics(){
+  const grid=document.getElementById("hUbicGrid");
+  if(!grid)return;
+  const mapa={};
+  H.herr.forEach(h=>{
+    const k=normalizarUbic(h.ubicacion);
+    if(!k)return;
+    if(!mapa[k])mapa[k]={nombre:String(h.ubicacion).trim(),c:0};
+    mapa[k].c++;
+  });
+  const sinU=H.herr.filter(h=>!normalizarUbic(h.ubicacion)).length;
+  const lista=Object.keys(mapa).map(k=>({k,...mapa[k]})).sort((a,b)=>b.c-a.c);
+  let html=`<div class="eq-grupo-btn" onclick="hAbrir('ubic','*todas*')">
+    <div><div class="eq-grupo-nombre">📦 Todas</div><div class="eq-grupo-pref">todo el herramental</div></div>
+    <div class="eq-grupo-count">${H.herr.length}</div></div>`;
+  html+=lista.map(x=>`<div class="eq-grupo-btn" onclick="hAbrir('ubic','${x.k.replace(/'/g,"\\'")}')">
+    <div><div class="eq-grupo-nombre">📍 ${x.nombre}</div><div class="eq-grupo-pref">ubicación</div></div>
+    <div class="eq-grupo-count">${x.c}</div></div>`).join("");
+  if(sinU)html+=`<div class="eq-grupo-btn" onclick="hAbrir('ubic','*sin*')">
+    <div><div class="eq-grupo-nombre">❔ Sin ubicación</div><div class="eq-grupo-pref">sin asignar</div></div>
+    <div class="eq-grupo-count">${sinU}</div></div>`;
+  grid.innerHTML=html;
+}
+
+function hAbrir(tipoVista,filtro){
+  hVista=tipoVista;hFiltro=filtro;
+  document.querySelectorAll('[id^="herr-"]').forEach(s=>s.classList.remove("active"));
+  document.getElementById("herr-lista").classList.add("active");
+  document.getElementById("hBuscar").value="";
+  hRenderLista();
+}
+function hVolver(){
+  document.getElementById("herr-lista").classList.remove("active");
+  const target=hVista==="ubic"?"herr-ubic":"herr-tipos";
+  document.getElementById(target).classList.add("active");
+  hFiltro="";
+}
+
+function hFiltradas(){
+  let base;
+  if(hFiltro==="*todas*")base=H.herr;
+  else if(hFiltro==="*sin*")base=H.herr.filter(h=>!normalizarUbic(h.ubicacion));
+  else if(hVista==="ubic")base=H.herr.filter(h=>normalizarUbic(h.ubicacion)===hFiltro);
+  else base=H.herr.filter(h=>hGetGrupo(h.codigo)===hFiltro);
+  const q=(document.getElementById("hBuscar")?.value||"").toLowerCase().trim();
+  if(!q)return base;
+  return base.filter(h=>[h.codigo,h.tipo,h.marca,h.modelo,h.serial,h.ubicacion,h.responsable]
+    .some(v=>String(v||"").toLowerCase().includes(q)));
+}
+
+function hRenderLista(){
+  const lista=hFiltradas();
+  const st=document.getElementById("hStats");
+  if(st)st.innerHTML=`<strong>${lista.length}</strong> herramienta${lista.length!==1?"s":""}`;
+  const cont=document.getElementById("hLista");
+  if(!cont)return;
+  if(!lista.length){cont.innerHTML='<div class="empty">Sin resultados</div>';return;}
+  cont.innerHTML=lista.map(h=>hCardHTML(h,H.herr.indexOf(h))).join("");
+}
+
+function hEstadoTag(e){
+  const s=String(e||"").toLowerCase();
+  if(s.includes("baja"))return`<span class="tag badge-danger">Baja</span>`;
+  if(s.includes("repar"))return`<span class="tag badge-warn">En reparación</span>`;
+  return`<span class="tag badge-ok">Operativa</span>`;
+}
+
+function hCardHTML(h,i){
+  const foto=driveImgUrl(h.foto);
+  const thumb=foto
+    ?`<img class="h-thumb" src="${foto}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="h-nofoto" style="display:none">🔧</div>`
+    :`<div class="h-nofoto">🔧</div>`;
+  const movs=H.movs.filter(m=>String(m.codigo).toUpperCase()===String(h.codigo).toUpperCase()).slice(0,5);
+  return`<div class="h-card">
+    <div class="h-header" onclick="hToggle(${i})">
+      ${thumb}
+      <div class="h-main">
+        <div class="h-cod">${h.codigo}</div>
+        <div class="h-tipo">${h.tipo||"—"}${h.marca?` · ${h.marca}`:""}</div>
+        <div class="h-meta">
+          ${h.ubicacion?`<span class="tag tag-blue">📍 ${h.ubicacion}</span>`:""}
+          ${h.responsable?`<span class="tag tag-gray">👤 ${h.responsable}</span>`:""}
+          ${hEstadoTag(h.estado)}
+        </div>
+      </div>
+      <span class="h-arrow" id="harr-${i}">›</span>
+    </div>
+    <div class="h-detail" id="hdet-${i}" style="display:none">
+      ${foto?`<img class="h-foto-full" src="${foto}" loading="lazy">`:""}
+      <div class="h-grid">
+        ${h.modelo?`<div><div class="h-lab">Modelo</div><div class="h-val">${h.modelo}</div></div>`:""}
+        ${h.serial?`<div><div class="h-lab">N° Serie</div><div class="h-val">${h.serial}</div></div>`:""}
+        ${h.fechaCompra?`<div><div class="h-lab">Fecha compra</div><div class="h-val">${h.fechaCompra}</div></div>`:""}
+        <div><div class="h-lab">Estado</div><div class="h-val">${h.estado}</div></div>
+      </div>
+
+      <div class="h-sec-title">🔄 Mover herramienta</div>
+      <div class="row2" style="gap:8px">
+        <input class="mini-input" id="hmvDest-${i}" list="dl-hubics" placeholder="Destino" autocomplete="off">
+        <input class="mini-input" id="hmvResp-${i}" list="dl-hresps" placeholder="Responsable" autocomplete="off">
+      </div>
+      <button class="mini-btn" onclick="hMover('${h.codigo}',${i},this)">REGISTRAR MOVIMIENTO</button>
+
+      <div class="h-sec-title">✏️ Editar</div>
+      <div class="row2" style="gap:8px;margin-bottom:8px">
+        <input class="mini-input" id="hedUbic-${i}" list="dl-hubics" placeholder="${h.ubicacion||'Ubicación'}" autocomplete="off">
+        <input class="mini-input" id="hedResp-${i}" list="dl-hresps" placeholder="${h.responsable||'Responsable'}" autocomplete="off">
+      </div>
+      <select class="mini-input" id="hedEstado-${i}">
+        <option value="">— Estado (sin cambio) —</option>
+        <option value="Operativa">Operativa</option>
+        <option value="En reparación">En reparación</option>
+        <option value="Baja">Baja</option>
+      </select>
+      <button class="mini-btn sec" onclick="hEditar('${h.codigo}',${i},this)">GUARDAR CAMBIOS</button>
+
+      <div class="h-sec-title">📷 ${foto?"Cambiar foto":"Agregar foto"}</div>
+      <div id="hfpWrap-${i}" style="display:none;position:relative;margin-bottom:8px">
+        <img id="hfp-${i}" class="foto-prev">
+        <button onclick="hQuitarFoto(${i})" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);border:none;color:#fff;border-radius:50%;width:26px;height:26px;cursor:pointer">✕</button>
+      </div>
+      <label class="foto-label" for="hfi-${i}" id="hfl-${i}">📷 Elegir foto</label>
+      <input type="file" id="hfi-${i}" accept="image/*" style="display:none" onchange="hOnFoto(this,${i})">
+      <button class="mini-btn" id="hfbtn-${i}" style="display:none" onclick="hSubirFoto('${h.codigo}',${i},this)">GUARDAR FOTO</button>
+
+      ${movs.length?`<div class="h-sec-title">📋 Últimos movimientos</div>
+      ${movs.map(m=>`<div class="mov-item">
+        <div class="mov-ruta">${m.origen||"—"} → ${m.destino||"—"}</div>
+        <div class="mov-fecha">${m.fecha}${m.responsable?` · ${m.responsable}`:""}</div>
+      </div>`).join("")}`:""}
+    </div>
+  </div>`;
+}
+
+function hToggle(i){
+  const d=document.getElementById("hdet-"+i),a=document.getElementById("harr-"+i);
+  if(!d)return;const open=d.style.display!=="none";
+  d.style.display=open?"none":"block";
+  if(a)a.classList.toggle("open",!open);
+}
+
+async function hMover(codigo,i,btn){
+  const dest=g("hmvDest-"+i),resp=g("hmvResp-"+i);
+  if(!dest){toast("Poné el destino","err");return;}
+  const t=btn.textContent;btn.textContent="REGISTRANDO...";btn.disabled=true;
+  try{
+    const d=await jsonp(`${URL_}?${new URLSearchParams({action:"moverHerramienta",codigo,destino:dest,responsable:resp})}`);
+    if(!d||!d.ok){toast(d?.mensaje||"Error","err");return;}
+    toast(`Movida: ${d.origen||"—"} → ${dest} ✓`);
+    await hCargar();
+    if(hFiltro)hRenderLista();
+  }catch(e){toast("Error de conexión","err");}
+  finally{btn.textContent=t;btn.disabled=false;}
+}
+
+async function hEditar(codigo,i,btn){
+  const ubic=g("hedUbic-"+i),resp=g("hedResp-"+i),est=g("hedEstado-"+i);
+  if(!ubic&&!resp&&!est){toast("Completá algún campo","err");return;}
+  const t=btn.textContent;btn.textContent="GUARDANDO...";btn.disabled=true;
+  const p={action:"editarHerramienta",codigo};
+  if(ubic)p.ubicacion=ubic;
+  if(resp)p.responsable=resp;
+  if(est)p.estado=est;
+  try{
+    const d=await jsonp(`${URL_}?${new URLSearchParams(p)}`);
+    if(!d||!d.ok){toast(d?.mensaje||"Error","err");return;}
+    toast("Actualizado ✓");
+    await hCargar();hRenderLista();
+  }catch(e){toast("Error de conexión","err");}
+  finally{btn.textContent=t;btn.disabled=false;}
+}
+
+function hOnFoto(input,i){
+  const f=input.files[0];if(!f)return;hFotoFiles[i]=f;
+  const r=new FileReader();
+  r.onload=e=>{
+    document.getElementById("hfp-"+i).src=e.target.result;
+    document.getElementById("hfpWrap-"+i).style.display="block";
+    document.getElementById("hfl-"+i).style.display="none";
+    document.getElementById("hfbtn-"+i).style.display="block";
+  };r.readAsDataURL(f);
+}
+function hQuitarFoto(i){
+  hFotoFiles[i]=null;
+  document.getElementById("hfi-"+i).value="";
+  document.getElementById("hfpWrap-"+i).style.display="none";
+  document.getElementById("hfl-"+i).style.display="flex";
+  document.getElementById("hfbtn-"+i).style.display="none";
+}
+async function hSubirFoto(codigo,i,btn){
+  const f=hFotoFiles[i];if(!f){toast("Elegí una foto","err");return;}
+  const t=btn.textContent;btn.textContent="SUBIENDO...";btn.disabled=true;
+  try{
+    const b64=await new Promise((res,rej)=>{const r=new FileReader();
+      r.onload=e=>res(e.target.result.split(",")[1]);r.onerror=()=>rej();r.readAsDataURL(f);});
+    const resp=await fetch(URL_,{method:"POST",redirect:"follow",
+      body:JSON.stringify({action:"subirFotoHerramienta",codigo,imagen:b64})});
+    const d=await resp.json();
+    if(!d||!d.ok){toast(d?.error||"Error al subir","err");return;}
+    toast("Foto actualizada ✓");
+    const h=H.herr.find(x=>x.codigo===codigo);if(h)h.foto=d.url;
+    hFotoFiles[i]=null;hRenderLista();
+  }catch(e){toast("Error de conexión","err");}
+  finally{btn.textContent=t;btn.disabled=false;}
+}
+
+async function hAgregar(){
+  const cod=g("nhCodigo"),tipo=g("nhTipo");
+  if(!cod||!tipo){toast("Código y tipo son obligatorios","err");return;}
+  setBtnLoading("btnNuevaHerr","Agregando...");
+  const p={action:"agregarHerramienta",codigo:cod,tipo,
+    marca:g("nhMarca"),modelo:g("nhModelo"),serial:g("nhSerial"),
+    ubicacion:g("nhUbic"),responsable:g("nhResp"),
+    fechaCompra:g("nhFecha"),estado:g("nhEstado")};
+  try{
+    const d=await jsonp(`${URL_}?${new URLSearchParams(p)}`);
+    if(!d||!d.ok){toast(d?.mensaje||"Error","err");return;}
+    toast("Herramienta agregada ✓");
+    ["nhCodigo","nhTipo","nhMarca","nhModelo","nhSerial","nhUbic","nhResp","nhFecha"].forEach(id=>{
+      const el=document.getElementById(id);if(el)el.value="";
+    });
+    await hCargar();
+  }catch(e){toast("Error de conexión","err");}
+  finally{resetBtn("btnNuevaHerr","Agregar herramienta");}
 }
 
 init();

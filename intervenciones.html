@@ -453,7 +453,7 @@
           <button type="button" class="foto-preview-quit" onclick="quitarFoto('i')">✕</button>
         </div>
         <label class="foto-btn-label" for="iFotoInput" id="iFotoBtnLabel">📷 Sacar / elegir foto</label>
-        <input type="file" id="iFotoInput" accept="image/*" capture="environment" style="display:none" onchange="onFotoSelected(this,'i')">
+        <input type="file" id="iFotoInput" accept="image/*" style="display:none" onchange="onFotoSelected(this,'i')">
       </div>
       <div id="iFiltrosWrap" class="filtro-wrap" style="display:none">
         <div class="section-divider">Filtros cambiados</div>
@@ -1970,7 +1970,7 @@ function equipoCardHTML(eq,idx){
           style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;border:1.5px dashed var(--borde);border-radius:var(--rsm);background:var(--gris2);color:var(--texto2);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer">
           📷 ${fotoUrl?"Elegir otra foto":"Sacar / elegir foto"}
         </label>
-        <input type="file" id="fotoInput-${idx}" accept="image/*" capture="environment" style="display:none"
+        <input type="file" id="fotoInput-${idx}" accept="image/*" style="display:none"
           onchange="onFotoEqSelected(this,${idx})">
         <button id="btnSubirFoto-${idx}" onclick="subirFotoEquipo('${eq.codigo}',${idx},this)" style="display:none;width:100%;margin-top:8px;background:var(--naranja);color:#fff;border:none;border-radius:var(--rsm);padding:10px;font-weight:800;font-size:14px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:.04em">GUARDAR FOTO</button>
       </div>

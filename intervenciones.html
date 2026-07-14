@@ -1959,6 +1959,21 @@ function equipoCardHTML(eq,idx){
     <div class="eq-detail" id="eq-detail-${idx}" style="display:none">
       <div class="eq-detail-grid">${detItems}</div>
       ${fotoFull}
+      <!-- ── FOTO DEL EQUIPO ── -->
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--borde)">
+        <div style="font-size:11px;font-weight:700;color:var(--naranja);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">📷 ${fotoUrl?"Cambiar foto":"Agregar foto"}</div>
+        <div id="fotoPrevWrap-${idx}" style="display:none;position:relative;margin-bottom:8px">
+          <img id="fotoPrev-${idx}" style="width:100%;max-height:180px;object-fit:cover;border-radius:var(--rsm);display:block">
+          <button onclick="quitarFotoEq(${idx})" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);border:none;color:#fff;border-radius:50%;width:28px;height:28px;font-size:15px;cursor:pointer">✕</button>
+        </div>
+        <label for="fotoInput-${idx}" id="fotoLabel-${idx}"
+          style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;border:1.5px dashed var(--borde);border-radius:var(--rsm);background:var(--gris2);color:var(--texto2);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer">
+          📷 ${fotoUrl?"Elegir otra foto":"Sacar / elegir foto"}
+        </label>
+        <input type="file" id="fotoInput-${idx}" accept="image/*" capture="environment" style="display:none"
+          onchange="onFotoEqSelected(this,${idx})">
+        <button id="btnSubirFoto-${idx}" onclick="subirFotoEquipo('${eq.codigo}',${idx},this)" style="display:none;width:100%;margin-top:8px;background:var(--naranja);color:#fff;border:none;border-radius:var(--rsm);padding:10px;font-weight:800;font-size:14px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:.04em">GUARDAR FOTO</button>
+      </div>
       <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--borde)">
         <div style="font-size:11px;font-weight:700;color:var(--naranja);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">✏️ Edición rápida</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
@@ -1989,6 +2004,72 @@ function toggleEquipoDetail(detId,arrId){
   const det=document.getElementById(detId),arr=document.getElementById(arrId);
   if(!det)return;const isOpen=det.style.display!=="none";det.style.display=isOpen?"none":"block";if(arr)arr.classList.toggle("open",!isOpen);
 }
+// ══ FOTO DE EQUIPO ══
+const fotoEqFiles={}; // idx → File
+
+function onFotoEqSelected(input,idx){
+  const file=input.files[0];if(!file)return;
+  fotoEqFiles[idx]=file;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const prev=document.getElementById("fotoPrev-"+idx);
+    const wrap=document.getElementById("fotoPrevWrap-"+idx);
+    const lbl=document.getElementById("fotoLabel-"+idx);
+    const btn=document.getElementById("btnSubirFoto-"+idx);
+    if(prev)prev.src=e.target.result;
+    if(wrap)wrap.style.display="block";
+    if(lbl)lbl.style.display="none";
+    if(btn)btn.style.display="block";
+  };
+  reader.readAsDataURL(file);
+}
+
+function quitarFotoEq(idx){
+  fotoEqFiles[idx]=null;
+  const input=document.getElementById("fotoInput-"+idx);
+  const prev=document.getElementById("fotoPrev-"+idx);
+  const wrap=document.getElementById("fotoPrevWrap-"+idx);
+  const lbl=document.getElementById("fotoLabel-"+idx);
+  const btn=document.getElementById("btnSubirFoto-"+idx);
+  if(input)input.value="";
+  if(prev)prev.src="";
+  if(wrap)wrap.style.display="none";
+  if(lbl)lbl.style.display="flex";
+  if(btn)btn.style.display="none";
+}
+
+async function subirFotoEquipo(codigo,idx,btn){
+  const file=fotoEqFiles[idx];
+  if(!file){toast("Elegí una foto primero","err");return;}
+  const txt=btn.textContent;
+  btn.textContent="SUBIENDO...";btn.disabled=true;
+  try{
+    const base64=await new Promise((res,rej)=>{
+      const r=new FileReader();
+      r.onload=e=>res(e.target.result.split(",")[1]);
+      r.onerror=()=>rej(new Error("read"));
+      r.readAsDataURL(file);
+    });
+    const resp=await fetch(URL_,{
+      method:"POST",redirect:"follow",
+      body:JSON.stringify({action:"subirFotoEquipo",codigo:codigo,imagen:base64})
+    });
+    const d=await resp.json();
+    if(!d||!d.ok){toast(d?.error||"Error al subir","err");return;}
+    toast("Foto actualizada ✓");
+    // Actualizar en memoria y re-renderizar
+    const eq=S.equiposInfo.find(e=>normalizarCodigo(e.codigo)===normalizarCodigo(codigo));
+    if(eq)eq.foto=d.url;
+    fotoEqFiles[idx]=null;
+    if(grupoActual)abrirGrupo(grupoActual);
+    else if(obraActual)abrirObra(obraActual);
+  }catch(e){
+    toast("Error de conexión","err");
+  }finally{
+    btn.textContent=txt;btn.disabled=false;
+  }
+}
+
 async function editarEquipoRapido(codigo,idx,btn){
   const odo  =(document.getElementById("erOdo-"+idx)?.value||"").trim();
   const op   =(document.getElementById("erOp-"+idx)?.value||"").trim();

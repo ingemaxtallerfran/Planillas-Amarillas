@@ -1,6 +1,6 @@
 // Subí el número de versión cada vez que actualices archivos.
 // Eso fuerza a los navegadores a descartar el cache viejo.
-const CACHE = "ingemax-v2";
+const CACHE = "ingemax-v3";
 
 // Recursos que sí conviene cachear de entrada (los estáticos)
 const ASSETS = [

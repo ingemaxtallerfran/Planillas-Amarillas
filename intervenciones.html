@@ -371,10 +371,11 @@
 
 <!-- ══ STOCK ══ -->
 <div class="page" id="page-stock">
-  <div class="stabs" style="--stab-cols:3">
+  <div class="stabs" style="--stab-cols:4">
     <button class="stab active" onclick="switchStab('stock','resumen',this)">🛢️ Stock</button>
-    <button class="stab"        onclick="switchStab('stock','calendario',this)">📅 Calendario</button>
+    <button class="stab"        onclick="switchStab('stock','calendario',this)">📅 Calend.</button>
     <button class="stab"        onclick="switchStab('stock','nuevo',this)">+ Nuevo</button>
+    <button class="stab"        onclick="switchStab('stock','planilla',this)">📷 Planilla</button>
   </div>
   <div class="stab-sec active" id="stock-resumen">
     <div class="cist-grande-card">
@@ -434,6 +435,52 @@
         <div class="f" id="cgPrecioWrap"><label>Precio/L</label><input type="number" id="cgPrecio" placeholder="Solo en Carga" inputmode="decimal"></div>
       </div>
       <button class="btn btn-primary" id="btnCgGuardar" onclick="cgGuardar()">Registrar</button>
+    </div>
+  </div>
+
+  <!-- CARGAR DESDE PLANILLA (foto + IA) -->
+  <div class="stab-sec" id="stock-planilla">
+    <div class="card" id="planillaPaso1">
+      <div class="card-title">Cargar desde foto de planilla</div>
+      <p style="font-size:13px;color:var(--texto2);margin-bottom:14px">Sacá o subí una foto de la planilla de combustible. La IA la va a leer y vas a poder revisar los datos antes de guardar.</p>
+      <div id="planillaPrevWrap" style="display:none;position:relative;margin-bottom:10px">
+        <img id="planillaPrev" style="width:100%;max-height:280px;object-fit:contain;border-radius:var(--rsm);background:var(--gris2);display:block">
+        <button onclick="planillaQuitar()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);border:none;color:#fff;border-radius:50%;width:30px;height:30px;font-size:16px;cursor:pointer">✕</button>
+      </div>
+      <label class="foto-btn-label" for="planillaInput" id="planillaLabel">📷 Elegir foto de la planilla</label>
+      <input type="file" id="planillaInput" accept="image/*" style="display:none" onchange="planillaSelected(this)">
+      <button class="btn btn-primary" id="btnLeerPlanilla" onclick="leerPlanilla()" style="display:none;margin-top:10px">🔍 Leer planilla con IA</button>
+      <div id="planillaLoading" style="display:none;text-align:center;padding:24px">
+        <div class="spin"></div>
+        <div style="font-size:13px;color:var(--texto2);margin-top:12px">Leyendo la planilla... esto puede tardar unos segundos</div>
+      </div>
+    </div>
+
+    <!-- Verificación -->
+    <div id="planillaVerif" style="display:none">
+      <div class="stats" style="margin-bottom:12px">✏️ Revisá y corregí los datos antes de guardar. Podés editar cualquier celda.</div>
+
+      <div class="card">
+        <div class="card-title">📥 Descargas a chulengo (van a Cisterna)</div>
+        <div id="verifChulengo"></div>
+        <button class="mini-btn sec" onclick="verifAgregarFila('chulengo')" style="margin-top:8px">+ Agregar fila</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">⛽ Descargas a equipos (van a Combustible)</div>
+        <div id="verifEquipos"></div>
+        <button class="mini-btn sec" onclick="verifAgregarFila('equipos')" style="margin-top:8px">+ Agregar fila</button>
+      </div>
+
+      <div class="card" id="cuadreCard" style="display:none">
+        <div class="card-title">✅ Cuadre por descarga</div>
+        <div id="cuadreBody"></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-cancel" onclick="planillaReset()">Cancelar</button>
+        <button class="btn btn-primary" id="btnGuardarPlanilla" onclick="guardarPlanilla()">Guardar todo</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2494,6 +2541,175 @@ async function hAgregar(){
     await hCargar();
   }catch(e){toast("Error de conexión","err");}
   finally{resetBtn("btnNuevaHerr","Agregar herramienta");}
+}
+
+// ══════════════ CARGAR PLANILLA POR FOTO (IA) ══════════════
+let planillaFile=null;
+let verifData={chulengo:[],equipos:[]};
+
+function planillaSelected(input){
+  const f=input.files[0];if(!f)return;
+  planillaFile=f;
+  const r=new FileReader();
+  r.onload=e=>{
+    document.getElementById("planillaPrev").src=e.target.result;
+    document.getElementById("planillaPrevWrap").style.display="block";
+    document.getElementById("planillaLabel").style.display="none";
+    document.getElementById("btnLeerPlanilla").style.display="block";
+  };
+  r.readAsDataURL(f);
+}
+function planillaQuitar(){
+  planillaFile=null;
+  document.getElementById("planillaInput").value="";
+  document.getElementById("planillaPrev").src="";
+  document.getElementById("planillaPrevWrap").style.display="none";
+  document.getElementById("planillaLabel").style.display="flex";
+  document.getElementById("btnLeerPlanilla").style.display="none";
+}
+function planillaReset(){
+  planillaQuitar();
+  verifData={chulengo:[],equipos:[]};
+  document.getElementById("planillaVerif").style.display="none";
+  document.getElementById("planillaPaso1").style.display="block";
+}
+
+async function leerPlanilla(){
+  if(!planillaFile){toast("Elegí una foto primero","err");return;}
+  document.getElementById("btnLeerPlanilla").style.display="none";
+  document.getElementById("planillaLoading").style.display="block";
+  try{
+    const b64=await new Promise((res,rej)=>{
+      const r=new FileReader();
+      r.onload=e=>res(e.target.result.split(",")[1]);
+      r.onerror=()=>rej();r.readAsDataURL(planillaFile);
+    });
+    const resp=await fetch(URL_,{method:"POST",redirect:"follow",
+      body:JSON.stringify({action:"leerPlanilla",imagen:b64})});
+    const d=await resp.json();
+    document.getElementById("planillaLoading").style.display="none";
+    if(!d||!d.ok){
+      toast(d?.error||"Error al leer","err");
+      document.getElementById("btnLeerPlanilla").style.display="block";
+      return;
+    }
+    verifData={chulengo:d.chulengo||[],equipos:d.equipos||[]};
+    document.getElementById("planillaPaso1").style.display="none";
+    document.getElementById("planillaVerif").style.display="block";
+    renderVerif();
+  }catch(e){
+    document.getElementById("planillaLoading").style.display="none";
+    document.getElementById("btnLeerPlanilla").style.display="block";
+    toast("Error de conexión","err");
+  }
+}
+
+function inp(val,onch,ph){
+  return `<input value="${(val||"").toString().replace(/"/g,"&quot;")}" oninput="${onch}" placeholder="${ph||""}"
+    style="width:100%;background:var(--gris1);border:1px solid var(--borde);color:var(--texto);border-radius:5px;padding:6px 8px;font-size:13px;font-family:inherit;outline:none">`;
+}
+
+function renderVerif(){
+  // Chulengo
+  const ch=document.getElementById("verifChulengo");
+  ch.innerHTML=verifData.chulengo.map((r,i)=>`
+    <div style="border:1px solid var(--borde);border-radius:var(--rsm);padding:10px;margin-bottom:8px;background:var(--gris2)">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:11px;color:var(--gris5);font-weight:700">DESCARGA #${r.numero||(i+1)}</span>
+        <button onclick="verifBorrar('chulengo',${i})" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:14px">🗑</button>
+      </div>
+      <div class="row2" style="gap:6px;margin-bottom:6px">
+        <div><div style="font-size:9px;color:var(--gris5);margin-bottom:2px">N°</div>${inp(r.numero,`verifSet('chulengo',${i},'numero',this.value)`)}</div>
+        <div><div style="font-size:9px;color:var(--gris5);margin-bottom:2px">Fecha</div>${inp(r.fecha,`verifSet('chulengo',${i},'fecha',this.value)`,"YYYY-MM-DD")}</div>
+      </div>
+      <div class="row2" style="gap:6px;margin-bottom:6px">
+        <div><div style="font-size:9px;color:var(--gris5);margin-bottom:2px">Cantidad (L)</div>${inp(r.cantidad,`verifSet('chulengo',${i},'cantidad',this.value)`)}</div>
+        <div><div style="font-size:9px;color:var(--gris5);margin-bottom:2px">Destino</div>${inp(r.destino,`verifSet('chulengo',${i},'destino',this.value)`)}</div>
+      </div>
+      <div class="row2" style="gap:6px">
+        <div><div style="font-size:9px;color:var(--gris5);margin-bottom:2px">Odo Cist. Blanca</div>${inp(r.odoBlanca,`verifSet('chulengo',${i},'odoBlanca',this.value)`)}</div>
+        <div><div style="font-size:9px;color:var(--gris5);margin-bottom:2px">Odo Cist. Destino</div>${inp(r.odoDestino,`verifSet('chulengo',${i},'odoDestino',this.value)`)}</div>
+      </div>
+    </div>`).join("")||'<div style="font-size:13px;color:var(--gris5)">Sin descargas a chulengo</div>';
+
+  // Equipos
+  const eq=document.getElementById("verifEquipos");
+  eq.innerHTML=verifData.equipos.map((r,i)=>`
+    <div style="border:1px solid var(--borde);border-radius:var(--rsm);padding:10px;margin-bottom:8px;background:var(--gris2)">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:11px;color:var(--gris5);font-weight:700">${r.equipo||"?"} · desc #${r.numero||"?"}</span>
+        <button onclick="verifBorrar('equipos',${i})" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:14px">🗑</button>
+      </div>
+      <div class="row2" style="gap:6px;margin-bottom:6px">
+        <div><div style="font-size:9px;color:var(--gris5);margin-bottom:2px">N° desc.</div>${inp(r.numero,`verifSet('equipos',${i},'numero',this.value)`)}</div>
+        <div><div style="font-size:9px;color:var(--gris5);margin-bottom:2px">Fecha</div>${inp(r.fecha,`verifSet('equipos',${i},'fecha',this.value)`,"YYYY-MM-DD")}</div>
+      </div>
+      <div class="row2" style="gap:6px;margin-bottom:6px">
+        <div><div style="font-size:9px;color:var(--gris5);margin-bottom:2px">Cantidad (L)</div>${inp(r.cantidad,`verifSet('equipos',${i},'cantidad',this.value)`)}</div>
+        <div><div style="font-size:9px;color:var(--gris5);margin-bottom:2px">Equipo</div>${inp(r.equipo,`verifSet('equipos',${i},'equipo',this.value)`)}</div>
+      </div>
+      <div class="row2" style="gap:6px">
+        <div><div style="font-size:9px;color:var(--gris5);margin-bottom:2px">Odómetro</div>${inp(r.odometro,`verifSet('equipos',${i},'odometro',this.value)`)}</div>
+        <div><div style="font-size:9px;color:var(--gris5);margin-bottom:2px">Responsable</div>${inp(r.responsable,`verifSet('equipos',${i},'responsable',this.value)`)}</div>
+      </div>
+    </div>`).join("")||'<div style="font-size:13px;color:var(--gris5)">Sin descargas a equipos</div>';
+
+  renderCuadre();
+}
+
+function verifSet(tabla,i,campo,val){verifData[tabla][i][campo]=val;if(campo==="cantidad"||campo==="numero")renderCuadre();}
+function verifBorrar(tabla,i){verifData[tabla].splice(i,1);renderVerif();}
+function verifAgregarFila(tabla){
+  if(tabla==="chulengo")verifData.chulengo.push({numero:"",fecha:todayStr(),cantidad:"",destino:"",odoBlanca:"",odoDestino:""});
+  else verifData.equipos.push({numero:"",fecha:todayStr(),cantidad:"",equipo:"",odometro:"",responsable:""});
+  renderVerif();
+}
+
+function renderCuadre(){
+  const card=document.getElementById("cuadreCard"),body=document.getElementById("cuadreBody");
+  if(!verifData.chulengo.length){card.style.display="none";return;}
+  card.style.display="block";
+  body.innerHTML=verifData.chulengo.map(desc=>{
+    const num=String(desc.numero||"").trim();
+    const entra=parseFloat(desc.cantidad)||0;
+    const sale=verifData.equipos.filter(e=>String(e.numero||"").trim()===num)
+      .reduce((s,e)=>s+(parseFloat(e.cantidad)||0),0);
+    const dif=entra-sale;
+    const ok=Math.abs(dif)<=entra*0.05; // 5% tolerancia
+    const col=ok?"var(--verde)":"#f87171";
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--borde)">
+      <div><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700">Descarga #${num||"?"}</span>
+        <div style="font-size:11px;color:var(--texto2)">Entró ${entra}L · Salió ${sale}L a equipos</div></div>
+      <div style="text-align:right;font-family:'Barlow Condensed',sans-serif;font-weight:800;color:${col}">
+        ${ok?"✓":"⚠"} ${dif>0?"+":""}${dif.toFixed(0)}L</div>
+    </div>`;
+  }).join("");
+}
+
+async function guardarPlanilla(){
+  const chulengo=verifData.chulengo.filter(r=>parseFloat(r.cantidad)>0);
+  const equipos=verifData.equipos.filter(r=>r.equipo&&parseFloat(r.cantidad)>0);
+  if(!chulengo.length&&!equipos.length){toast("No hay datos para guardar","err");return;}
+  setBtnLoading("btnGuardarPlanilla","Guardando...");
+  let okC=0,okE=0,errores=0;
+  try{
+    // Descargas a chulengo → Cisterna Grande Movimientos (tipo Descarga)
+    for(const d of chulengo){
+      const p={action:"agregarMovCisterna",tipo:"Descarga",fecha:d.fecha,cantidad:d.cantidad,vehiculo:d.destino||"",odometro:d.odoBlanca||"",precio:""};
+      const r=await jsonp(`${URL_}?${new URLSearchParams(p)}`);
+      if(r&&r.ok)okC++;else errores++;
+    }
+    // Descargas a equipos → CombustibleObrador
+    for(const e of equipos){
+      const p={action:"agregarCombObrador",fecha:e.fecha,codigo:(e.equipo||"").toUpperCase(),cantidad:e.cantidad,odometro:e.odometro||"",chulengo:e.destino||"CH7-Cesar",responsable:e.responsable||""};
+      const r=await jsonp(`${URL_}?${new URLSearchParams(p)}`);
+      if(r&&r.ok)okE++;else errores++;
+    }
+    toast(`Guardado: ${okC} a cisterna, ${okE} a equipos${errores?` (${errores} errores)`:""} ✓`);
+    planillaReset();
+    await Promise.all([combCargar(),stockCargar()]);
+  }catch(e){toast("Error de conexión","err");}
+  finally{resetBtn("btnGuardarPlanilla","Guardar todo");}
 }
 
 init();

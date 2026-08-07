@@ -2687,6 +2687,7 @@ async function leerPlanilla(){
     document.getElementById("planillaLoading").style.display="none";
     if(!d||!d.ok){
       toast(d?.error||"Error al leer","err");
+      if(d&&d.crudo){console.log("Respuesta cruda de la IA:",d.crudo);}
       document.getElementById("btnLeerPlanilla").style.display="block";
       return;
     }

@@ -2783,25 +2783,50 @@ async function guardarPlanilla(){
   const llegadas=verifData.llegadas.filter(r=>parseFloat(r.cantidad)>0);
   const equipos=verifData.equipos.filter(r=>r.equipo&&parseFloat(r.cantidad)>0);
   if(!llegadas.length&&!equipos.length){toast("No hay datos para guardar","err");return;}
+  // Aviso si hay cargas a equipos pero ninguna llegada de cisterna (posible olvido de cargar el de arriba)
+  if(equipos.length&&!llegadas.length){
+    if(!confirm("⚠️ No hay ninguna llegada/descarga de cisterna cargada arriba (la tabla de arriba está vacía).\\n\\nSe van a subir solo las cargas a equipos, pero NO se va a registrar el movimiento de la cisterna grande.\\n\\n¿Guardar igual?")){
+      return;
+    }
+  }
   setBtnLoading("btnGuardarPlanilla","Guardando...");
-  let okC=0,okE=0,errores=0;
+  let okC=0,okE=0,errC=0,errE=0;
+  const erroresDetalle=[];
   try{
     // Llegadas de cisterna → Cisterna Grande Movimientos (tipo Descarga)
     for(const d of llegadas){
-      const p={action:"agregarMovCisterna",tipo:"Descarga",fecha:d.fecha,cantidad:d.cantidad,vehiculo:d.destino||"",odometro:d.odoBlanca||"",precio:""};
-      const r=await jsonp(`${URL_}?${new URLSearchParams(p)}`);
-      if(r&&r.ok)okC++;else errores++;
+      const cant=parseFloat(d.cantidad)||0;
+      if(cant<=0)continue;
+      const p={
+        action:"agregarMovCisterna",
+        tipo:"Descarga",
+        fecha:(d.fecha||todayDMY()).trim(),
+        cantidad:String(cant),
+        vehiculo:(d.destino||"").trim(),
+        odometro:(d.odoBlanca||"").trim(),
+        precio:""
+      };
+      try{
+        const r=await jsonp(`${URL_}?${new URLSearchParams(p)}`);
+        if(r&&r.ok)okC++;
+        else{errC++;erroresDetalle.push("Cisterna "+(d.destino||"")+": "+(r?.mensaje||"sin respuesta"));}
+      }catch(ex){errC++;erroresDetalle.push("Cisterna "+(d.destino||"")+": error de red");}
     }
     // Cargas a equipos → según tipo
     for(const e of equipos){
+      const cant=parseFloat(e.cantidad)||0;
+      if(cant<=0||!e.equipo)continue;
       let p;
       if(planillaTipo==="docta"){
-        p={action:"agregarCombDocta",fecha:e.fecha,equipo:(e.equipo||"").toUpperCase(),cantidad:e.cantidad,odometro:e.odometro||"",chulengo:e.destino||"CH-3 /Docta",responsable:e.responsable||""};
+        p={action:"agregarCombDocta",fecha:(e.fecha||todayDMY()).trim(),equipo:(e.equipo||"").toUpperCase().trim(),cantidad:String(cant),odometro:(e.odometro||"").trim(),chulengo:(e.destino||"CH-3 /Docta").trim(),responsable:(e.responsable||"").trim()};
       }else{
-        p={action:"agregarCombObrador",fecha:e.fecha,codigo:(e.equipo||"").toUpperCase(),cantidad:e.cantidad,odometro:e.odometro||"",chulengo:e.destino||"CH7-Cesar",responsable:e.responsable||""};
+        p={action:"agregarCombObrador",fecha:(e.fecha||todayDMY()).trim(),codigo:(e.equipo||"").toUpperCase().trim(),cantidad:String(cant),odometro:(e.odometro||"").trim(),chulengo:(e.destino||"CH7-Cesar").trim(),responsable:(e.responsable||"").trim()};
       }
-      const r=await jsonp(`${URL_}?${new URLSearchParams(p)}`);
-      if(r&&r.ok)okE++;else errores++;
+      try{
+        const r=await jsonp(`${URL_}?${new URLSearchParams(p)}`);
+        if(r&&r.ok)okE++;
+        else{errE++;erroresDetalle.push("Equipo "+(e.equipo||"")+": "+(r?.mensaje||"sin respuesta"));}
+      }catch(ex){errE++;erroresDetalle.push("Equipo "+(e.equipo||"")+": error de red");}
     }
     // Guardar en el historial (foto + datos + cuadre)
     const cuadre=verifData.llegadas.map(desc=>{
@@ -2815,8 +2840,15 @@ async function guardarPlanilla(){
         body:JSON.stringify({action:"guardarPlanillaHist",tipo:planillaTipo,imagen:verifFotoB64,
           llegadas:verifData.llegadas,equipos:verifData.equipos,cuadre})});
     }catch(he){}
-    toast(`Guardado: ${okC} a cisterna, ${okE} a equipos${errores?` (${errores} err)`:""} ✓`);
-    planillaReset();
+    const totalErr=errC+errE;
+    if(totalErr>0){
+      // Hubo errores: mostrar detalle y NO cerrar, para que puedas reintentar
+      console.log("Errores al guardar planilla:",erroresDetalle);
+      toast(`⚠️ ${okC} cisterna + ${okE} equipos OK, pero ${totalErr} fallaron. Revisá la consola (F12).`,"err");
+    }else{
+      toast(`✓ Guardado: ${okC} a cisterna, ${okE} a equipos`);
+      planillaReset();
+    }
     await Promise.all([combCargar(),stockCargar()]);
   }catch(e){toast("Error de conexión","err");}
   finally{resetBtn("btnGuardarPlanilla","Guardar todo");}

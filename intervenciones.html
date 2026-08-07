@@ -320,6 +320,8 @@
     .vtable col.c-cant{width:10%}
     .vtable col.c-med{width:22%}
     .vtable col.c-odo{width:18%}
+    .tipo-plan-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:16px;background:var(--gris2);border:1px solid var(--borde);border-radius:var(--rsm);cursor:pointer;text-align:left;transition:border-color .15s}
+    .tipo-plan-btn:hover,.tipo-plan-btn:active{border-color:var(--naranja)}
   </style>
 </head>
 <body>
@@ -470,9 +472,30 @@
 
   <!-- CARGAR DESDE PLANILLA (foto + IA) -->
   <div class="stab-sec" id="stock-planilla">
-    <div class="card" id="planillaPaso1">
+    <!-- PASO 0: elegir tipo -->
+    <div class="card" id="planillaPaso0" style="max-width:580px;margin:0 auto">
       <div class="card-title">Cargar desde foto de planilla</div>
-      <p style="font-size:13px;color:var(--texto2);margin-bottom:14px">Sacá o subí una foto de la planilla de combustible. La IA la va a leer y vas a poder revisar los datos antes de guardar.</p>
+      <p style="font-size:13px;color:var(--texto2);margin-bottom:16px">¿Qué planilla vas a cargar?</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="tipo-plan-btn" onclick="elegirTipoPlanilla('obrador')">
+          <div><div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700">🏗️ Planilla Obrador</div>
+          <div style="font-size:12px;color:var(--texto2)">Descargas a chulengo + cargas a equipos</div></div>
+          <span style="color:var(--naranja);font-size:20px">›</span>
+        </button>
+        <button class="tipo-plan-btn" onclick="elegirTipoPlanilla('docta')">
+          <div><div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700">🛣️ Planilla Docta</div>
+          <div style="font-size:12px;color:var(--texto2)">Cargas a equipos + llegadas de cisterna al margen</div></div>
+          <span style="color:var(--naranja);font-size:20px">›</span>
+        </button>
+      </div>
+      <button class="mini-btn sec" onclick="verHistorialPlanillas()" style="margin-top:16px">📋 Ver historial de planillas subidas</button>
+    </div>
+
+    <!-- PASO 1: subir foto -->
+    <div class="card" id="planillaPaso1" style="display:none;max-width:580px;margin:0 auto">
+      <div class="card-title"><span id="planillaTipoLabel">Cargar planilla</span></div>
+      <button class="mini-btn sec" onclick="planillaVolverTipo()" style="max-width:150px;margin:0 0 14px">‹ Cambiar tipo</button>
+      <p style="font-size:13px;color:var(--texto2);margin-bottom:14px">Sacá o subí una foto de la planilla. La IA la va a leer y vas a poder revisar todo antes de guardar.</p>
       <div id="planillaPrevWrap" style="display:none;position:relative;margin-bottom:10px">
         <img id="planillaPrev" style="width:100%;max-height:280px;object-fit:contain;border-radius:var(--rsm);background:var(--gris2);display:block">
         <button onclick="planillaQuitar()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);border:none;color:#fff;border-radius:50%;width:30px;height:30px;font-size:16px;cursor:pointer">✕</button>
@@ -490,18 +513,17 @@
     <div id="planillaVerif" style="display:none">
       <div class="verif-wide">
         <div class="stats" style="margin-bottom:14px">✏️ Revisá contra la foto y corregí lo que haga falta. Tocá cualquier celda para editar.</div>
-        <!-- Foto arriba, centrada -->
         <div style="text-align:center;margin-bottom:20px">
           <img id="verifFotoImg" onclick="ampliarFoto()" title="Tocá para ampliar"
             style="max-width:420px;width:100%;border-radius:var(--rsm);background:var(--gris2);cursor:zoom-in;border:1px solid var(--borde)">
           <div style="font-size:11px;color:var(--gris5);margin-top:6px">📷 Tocá la foto para ampliar y comparar</div>
         </div>
 
-        <div class="verif-tabla-tit">📥 Descarga a chulengo</div>
-        <table class="vtable" id="vtChulengo"></table>
-        <button class="mini-btn sec" onclick="verifAgregarFila('chulengo')" style="max-width:200px;margin:0 0 24px">+ Agregar fila</button>
+        <div class="verif-tabla-tit" id="titLlegadas">📥 Descarga a chulengo</div>
+        <table class="vtable" id="vtLlegadas"></table>
+        <button class="mini-btn sec" onclick="verifAgregarFila('llegadas')" style="max-width:200px;margin:0 0 24px">+ Agregar fila</button>
 
-        <div class="verif-tabla-tit">⛽ Descarga a equipos</div>
+        <div class="verif-tabla-tit">⛽ Cargas a equipos</div>
         <table class="vtable" id="vtEquipos"></table>
         <button class="mini-btn sec" onclick="verifAgregarFila('equipos')" style="max-width:200px;margin:0">+ Agregar fila</button>
 
@@ -517,7 +539,23 @@
       </div>
     </div>
 
-    <!-- Overlay foto ampliada -->
+    <!-- Historial de planillas -->
+    <div id="planillaHistorial" style="display:none">
+      <div class="verif-wide">
+        <button class="mini-btn sec" onclick="planillaReset()" style="max-width:150px;margin:0 0 14px">‹ Volver</button>
+        <div class="verif-tabla-tit">📋 Planillas subidas</div>
+        <div id="histPlanillasList"><div class="loading"><div class="spin"></div></div></div>
+      </div>
+    </div>
+
+    <!-- Detalle de una planilla del historial -->
+    <div id="planillaDetalle" style="display:none">
+      <div class="verif-wide">
+        <button class="mini-btn sec" onclick="volverHistorial()" style="max-width:150px;margin:0 0 14px">‹ Volver al historial</button>
+        <div id="detallePlanillaBody"></div>
+      </div>
+    </div>
+
     <div id="fotoOverlay" onclick="cerrarFotoAmpliada()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:2000;align-items:center;justify-content:center;padding:20px">
       <img id="fotoOverlayImg" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px">
     </div>
@@ -2584,8 +2622,22 @@ async function hAgregar(){
 
 // ══════════════ CARGAR PLANILLA POR FOTO (IA) ══════════════
 let planillaFile=null;
-let verifData={chulengo:[],equipos:[]};
+let planillaTipo="obrador"; // obrador | docta
+let verifData={llegadas:[],equipos:[]};
 let verifFotoData=null;
+let verifFotoB64=null;
+
+function elegirTipoPlanilla(tipo){
+  planillaTipo=tipo;
+  document.getElementById("planillaPaso0").style.display="none";
+  document.getElementById("planillaPaso1").style.display="block";
+  document.getElementById("planillaTipoLabel").textContent=tipo==="docta"?"Planilla Docta":"Planilla Obrador";
+}
+function planillaVolverTipo(){
+  planillaQuitar();
+  document.getElementById("planillaPaso1").style.display="none";
+  document.getElementById("planillaPaso0").style.display="block";
+}
 
 function planillaSelected(input){
   const f=input.files[0];if(!f)return;
@@ -2601,7 +2653,7 @@ function planillaSelected(input){
 }
 function planillaQuitar(){
   planillaFile=null;
-  document.getElementById("planillaInput").value="";
+  const inp=document.getElementById("planillaInput");if(inp)inp.value="";
   document.getElementById("planillaPrev").src="";
   document.getElementById("planillaPrevWrap").style.display="none";
   document.getElementById("planillaLabel").style.display="flex";
@@ -2609,9 +2661,12 @@ function planillaQuitar(){
 }
 function planillaReset(){
   planillaQuitar();
-  verifData={chulengo:[],equipos:[]};
-  document.getElementById("planillaVerif").style.display="none";
-  document.getElementById("planillaPaso1").style.display="block";
+  verifData={llegadas:[],equipos:[]};
+  verifFotoData=null;verifFotoB64=null;
+  ["planillaVerif","planillaHistorial","planillaDetalle","planillaPaso1"].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.style.display="none";
+  });
+  document.getElementById("planillaPaso0").style.display="block";
 }
 
 async function leerPlanilla(){
@@ -2624,10 +2679,10 @@ async function leerPlanilla(){
       r.onload=e=>res(e.target.result.split(",")[1]);
       r.onerror=()=>rej();r.readAsDataURL(planillaFile);
     });
-    // Guardar la foto para mostrarla en la verificación
+    verifFotoB64=b64;
     verifFotoData="data:image/jpeg;base64,"+b64;
     const resp=await fetch(URL_,{method:"POST",redirect:"follow",
-      body:JSON.stringify({action:"leerPlanilla",imagen:b64})});
+      body:JSON.stringify({action:"leerPlanilla",tipo:planillaTipo,imagen:b64})});
     const d=await resp.json();
     document.getElementById("planillaLoading").style.display="none";
     if(!d||!d.ok){
@@ -2635,11 +2690,11 @@ async function leerPlanilla(){
       document.getElementById("btnLeerPlanilla").style.display="block";
       return;
     }
-    verifData={chulengo:d.chulengo||[],equipos:d.equipos||[]};
+    verifData={llegadas:d.llegadas||[],equipos:d.equipos||[]};
     document.getElementById("planillaPaso1").style.display="none";
     document.getElementById("planillaVerif").style.display="block";
-    const fimg=document.getElementById("verifFotoImg");
-    if(fimg)fimg.src=verifFotoData;
+    document.getElementById("titLlegadas").textContent=planillaTipo==="docta"?"🛢️ Llegadas de cisterna":"📥 Descarga a chulengo";
+    const fimg=document.getElementById("verifFotoImg");if(fimg)fimg.src=verifFotoData;
     renderVerif();
   }catch(e){
     document.getElementById("planillaLoading").style.display="none";
@@ -2661,34 +2716,31 @@ function vcell(tabla,i,campo){
 }
 
 function renderVerif(){
-  // Tabla chulengo
-  const tCh=document.getElementById("vtChulengo");
-  let hCh=`<colgroup><col class="c-num"><col class="c-fecha"><col class="c-cant"><col class="c-med"><col class="c-odo"><col class="c-odo"><col style="width:34px"></colgroup>`;
-  hCh+=`<tr><th>N°</th><th>Fecha</th><th>Cant.</th><th>Destino</th><th>Odo Blanca</th><th>Odo Dest.</th><th></th></tr>`;
-  hCh+=verifData.chulengo.map((r,i)=>`<tr>
-    ${vcell('chulengo',i,'numero')}
-    ${vcell('chulengo',i,'fecha')}
-    ${vcell('chulengo',i,'cantidad')}
-    ${vcell('chulengo',i,'destino')}
-    ${vcell('chulengo',i,'odoBlanca')}
-    ${vcell('chulengo',i,'odoDestino')}
-    <td class="actions"><button class="del-row" onclick="verifBorrar('chulengo',${i})">🗑</button></td>
-  </tr>`).join("");
-  tCh.innerHTML=hCh;
+  // Tabla llegadas (chulengo obrador / cisternas docta)
+  const tL=document.getElementById("vtLlegadas");
+  let hL;
+  if(planillaTipo==="docta"){
+    hL=`<colgroup><col class="c-num"><col class="c-fecha"><col class="c-cant"><col class="c-med"><col style="width:34px"></colgroup>`;
+    hL+=`<tr><th>N°</th><th>Fecha</th><th>Cant.</th><th>Destino cisterna</th><th></th></tr>`;
+    hL+=verifData.llegadas.map((r,i)=>`<tr>
+      ${vcell('llegadas',i,'numero')}${vcell('llegadas',i,'fecha')}${vcell('llegadas',i,'cantidad')}${vcell('llegadas',i,'destino')}
+      <td class="actions"><button class="del-row" onclick="verifBorrar('llegadas',${i})">🗑</button></td></tr>`).join("");
+  }else{
+    hL=`<colgroup><col class="c-num"><col class="c-fecha"><col class="c-cant"><col class="c-med"><col class="c-odo"><col class="c-odo"><col style="width:34px"></colgroup>`;
+    hL+=`<tr><th>N°</th><th>Fecha</th><th>Cant.</th><th>Destino</th><th>Odo Blanca</th><th>Odo Dest.</th><th></th></tr>`;
+    hL+=verifData.llegadas.map((r,i)=>`<tr>
+      ${vcell('llegadas',i,'numero')}${vcell('llegadas',i,'fecha')}${vcell('llegadas',i,'cantidad')}${vcell('llegadas',i,'destino')}${vcell('llegadas',i,'odoBlanca')}${vcell('llegadas',i,'odoDestino')}
+      <td class="actions"><button class="del-row" onclick="verifBorrar('llegadas',${i})">🗑</button></td></tr>`).join("");
+  }
+  tL.innerHTML=hL;
 
-  // Tabla equipos
+  // Tabla equipos (igual en ambos)
   const tEq=document.getElementById("vtEquipos");
   let hEq=`<colgroup><col class="c-num"><col class="c-fecha"><col class="c-cant"><col class="c-med"><col class="c-odo"><col class="c-med"><col style="width:34px"></colgroup>`;
   hEq+=`<tr><th>N°</th><th>Fecha</th><th>Cant.</th><th>Equipo</th><th>Odómetro</th><th>Responsable</th><th></th></tr>`;
   hEq+=verifData.equipos.map((r,i)=>`<tr>
-    ${vcell('equipos',i,'numero')}
-    ${vcell('equipos',i,'fecha')}
-    ${vcell('equipos',i,'cantidad')}
-    ${vcell('equipos',i,'equipo')}
-    ${vcell('equipos',i,'odometro')}
-    ${vcell('equipos',i,'responsable')}
-    <td class="actions"><button class="del-row" onclick="verifBorrar('equipos',${i})">🗑</button></td>
-  </tr>`).join("");
+    ${vcell('equipos',i,'numero')}${vcell('equipos',i,'fecha')}${vcell('equipos',i,'cantidad')}${vcell('equipos',i,'equipo')}${vcell('equipos',i,'odometro')}${vcell('equipos',i,'responsable')}
+    <td class="actions"><button class="del-row" onclick="verifBorrar('equipos',${i})">🗑</button></td></tr>`).join("");
   tEq.innerHTML=hEq;
 
   renderCuadre();
@@ -2698,25 +2750,27 @@ function verifSet(tabla,i,campo,val){verifData[tabla][i][campo]=val;if(campo==="
 function verifBorrar(tabla,i){verifData[tabla].splice(i,1);renderVerif();}
 function todayDMY(){const d=new Date();return String(d.getDate()).padStart(2,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+d.getFullYear();}
 function verifAgregarFila(tabla){
-  if(tabla==="chulengo")verifData.chulengo.push({numero:"",fecha:todayDMY(),cantidad:"",destino:"",odoBlanca:"",odoDestino:""});
-  else verifData.equipos.push({numero:"",fecha:todayDMY(),cantidad:"",equipo:"",odometro:"",responsable:""});
+  if(tabla==="llegadas"){
+    if(planillaTipo==="docta")verifData.llegadas.push({numero:"",fecha:todayDMY(),cantidad:"",destino:"CH-3"});
+    else verifData.llegadas.push({numero:"",fecha:todayDMY(),cantidad:"",destino:"",odoBlanca:"",odoDestino:""});
+  }else verifData.equipos.push({numero:"",fecha:todayDMY(),cantidad:"",equipo:"",odometro:"",responsable:""});
   renderVerif();
 }
 
 function renderCuadre(){
   const card=document.getElementById("cuadreCard"),body=document.getElementById("cuadreBody");
-  if(!verifData.chulengo.length){card.style.display="none";return;}
+  if(!verifData.llegadas.length){card.style.display="none";return;}
   card.style.display="block";
-  body.innerHTML=verifData.chulengo.map(desc=>{
+  body.innerHTML=verifData.llegadas.map(desc=>{
     const num=String(desc.numero||"").trim();
     const entra=parseFloat(desc.cantidad)||0;
     const sale=verifData.equipos.filter(e=>String(e.numero||"").trim()===num)
       .reduce((s,e)=>s+(parseFloat(e.cantidad)||0),0);
     const dif=entra-sale;
-    const ok=Math.abs(dif)<=entra*0.05; // 5% tolerancia
+    const ok=Math.abs(dif)<=entra*0.05;
     const col=ok?"var(--verde)":"#f87171";
     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--borde)">
-      <div><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700">Descarga #${num||"?"}</span>
+      <div><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700">Descarga #${num||"?"} ${desc.destino?`(${desc.destino})`:""}</span>
         <div style="font-size:11px;color:var(--texto2)">Entró ${entra}L · Salió ${sale}L a equipos</div></div>
       <div style="text-align:right;font-family:'Barlow Condensed',sans-serif;font-weight:800;color:${col}">
         ${ok?"✓":"⚠"} ${dif>0?"+":""}${dif.toFixed(0)}L</div>
@@ -2725,29 +2779,122 @@ function renderCuadre(){
 }
 
 async function guardarPlanilla(){
-  const chulengo=verifData.chulengo.filter(r=>parseFloat(r.cantidad)>0);
+  const llegadas=verifData.llegadas.filter(r=>parseFloat(r.cantidad)>0);
   const equipos=verifData.equipos.filter(r=>r.equipo&&parseFloat(r.cantidad)>0);
-  if(!chulengo.length&&!equipos.length){toast("No hay datos para guardar","err");return;}
+  if(!llegadas.length&&!equipos.length){toast("No hay datos para guardar","err");return;}
   setBtnLoading("btnGuardarPlanilla","Guardando...");
   let okC=0,okE=0,errores=0;
   try{
-    // Descargas a chulengo → Cisterna Grande Movimientos (tipo Descarga)
-    for(const d of chulengo){
+    // Llegadas de cisterna → Cisterna Grande Movimientos (tipo Descarga)
+    for(const d of llegadas){
       const p={action:"agregarMovCisterna",tipo:"Descarga",fecha:d.fecha,cantidad:d.cantidad,vehiculo:d.destino||"",odometro:d.odoBlanca||"",precio:""};
       const r=await jsonp(`${URL_}?${new URLSearchParams(p)}`);
       if(r&&r.ok)okC++;else errores++;
     }
-    // Descargas a equipos → CombustibleObrador
+    // Cargas a equipos → según tipo
     for(const e of equipos){
-      const p={action:"agregarCombObrador",fecha:e.fecha,codigo:(e.equipo||"").toUpperCase(),cantidad:e.cantidad,odometro:e.odometro||"",chulengo:e.destino||"CH7-Cesar",responsable:e.responsable||""};
+      let p;
+      if(planillaTipo==="docta"){
+        p={action:"agregarCombDocta",fecha:e.fecha,equipo:(e.equipo||"").toUpperCase(),cantidad:e.cantidad,odometro:e.odometro||"",chulengo:e.destino||"CH-3 /Docta",responsable:e.responsable||""};
+      }else{
+        p={action:"agregarCombObrador",fecha:e.fecha,codigo:(e.equipo||"").toUpperCase(),cantidad:e.cantidad,odometro:e.odometro||"",chulengo:e.destino||"CH7-Cesar",responsable:e.responsable||""};
+      }
       const r=await jsonp(`${URL_}?${new URLSearchParams(p)}`);
       if(r&&r.ok)okE++;else errores++;
     }
-    toast(`Guardado: ${okC} a cisterna, ${okE} a equipos${errores?` (${errores} errores)`:""} ✓`);
+    // Guardar en el historial (foto + datos + cuadre)
+    const cuadre=verifData.llegadas.map(desc=>{
+      const num=String(desc.numero||"").trim();
+      const entra=parseFloat(desc.cantidad)||0;
+      const sale=verifData.equipos.filter(e=>String(e.numero||"").trim()===num).reduce((s,e)=>s+(parseFloat(e.cantidad)||0),0);
+      return {numero:num,destino:desc.destino||"",entra,sale,dif:entra-sale};
+    });
+    try{
+      await fetch(URL_,{method:"POST",redirect:"follow",
+        body:JSON.stringify({action:"guardarPlanillaHist",tipo:planillaTipo,imagen:verifFotoB64,
+          llegadas:verifData.llegadas,equipos:verifData.equipos,cuadre})});
+    }catch(he){}
+    toast(`Guardado: ${okC} a cisterna, ${okE} a equipos${errores?` (${errores} err)`:""} ✓`);
     planillaReset();
     await Promise.all([combCargar(),stockCargar()]);
   }catch(e){toast("Error de conexión","err");}
   finally{resetBtn("btnGuardarPlanilla","Guardar todo");}
+}
+
+// ══ HISTORIAL DE PLANILLAS ══
+let histPlanillas=[];
+async function verHistorialPlanillas(){
+  document.getElementById("planillaPaso0").style.display="none";
+  document.getElementById("planillaHistorial").style.display="block";
+  const cont=document.getElementById("histPlanillasList");
+  cont.innerHTML='<div class="loading"><div class="spin"></div></div>';
+  try{
+    const d=await jsonp(`${URL_}?action=getPlanillasHistorial`);
+    if(!d||!d.ok){cont.innerHTML='<div class="empty">No se pudo cargar el historial</div>';return;}
+    histPlanillas=d.planillas||[];
+    if(!histPlanillas.length){cont.innerHTML='<div class="empty">Todavía no subiste planillas</div>';return;}
+    cont.innerHTML=histPlanillas.map((p,i)=>{
+      const nEq=(p.datos.equipos||[]).length, nLl=(p.datos.llegadas||[]).length;
+      const tipoTxt=p.tipo==="docta"?"🛣️ Docta":"🏗️ Obrador";
+      return `<div class="list-item" style="cursor:pointer" onclick="verDetallePlanilla(${i})">
+        <div class="item-top">
+          <div class="item-title">${tipoTxt}</div>
+          <div class="item-date">${p.fecha}</div>
+        </div>
+        <div class="item-body" style="margin-top:4px">
+          <span class="tag tag-gray">${nEq} cargas a equipos</span>
+          <span class="tag tag-gray">${nLl} ${p.tipo==="docta"?"llegadas":"descargas"}</span>
+        </div>
+      </div>`;
+    }).join("");
+  }catch(e){cont.innerHTML='<div class="empty">Error de conexión</div>';}
+}
+
+function verDetallePlanilla(i){
+  const p=histPlanillas[i];if(!p)return;
+  document.getElementById("planillaHistorial").style.display="none";
+  document.getElementById("planillaDetalle").style.display="block";
+  const body=document.getElementById("detallePlanillaBody");
+  const foto=driveImgUrl(p.foto);
+  const eqs=p.datos.equipos||[], lls=p.datos.llegadas||[];
+  const esDocta=p.tipo==="docta";
+  let html=`<div class="verif-tabla-tit">${esDocta?"🛣️":"🏗️"} Planilla ${esDocta?"Docta":"Obrador"} — ${p.fecha}</div>`;
+  if(foto){
+    html+=`<div style="text-align:center;margin-bottom:18px">
+      <img src="${foto}" onclick="document.getElementById('fotoOverlayImg').src='${foto}';document.getElementById('fotoOverlay').style.display='flex'"
+        style="max-width:420px;width:100%;border-radius:var(--rsm);background:var(--gris2);cursor:zoom-in;border:1px solid var(--borde)">
+      <div style="font-size:11px;color:var(--gris5);margin-top:6px">📷 Tocá para ampliar</div></div>`;
+  }
+  // Tabla llegadas
+  html+=`<div class="verif-tabla-tit">${esDocta?"🛢️ Llegadas de cisterna":"📥 Descarga a chulengo"}</div>`;
+  html+=`<table class="vtable"><tr><th>N°</th><th>Fecha</th><th>Cant.</th><th>Destino</th></tr>`;
+  html+=lls.map(r=>`<tr><td style="padding:7px;text-align:center">${r.numero||""}</td><td style="padding:7px;text-align:center">${r.fecha||""}</td><td style="padding:7px;text-align:center">${r.cantidad||""}</td><td style="padding:7px;text-align:center">${r.destino||""}</td></tr>`).join("")||`<tr><td colspan="4" style="padding:10px;text-align:center;color:var(--gris5)">—</td></tr>`;
+  html+=`</table>`;
+  // Tabla equipos
+  html+=`<div class="verif-tabla-tit" style="margin-top:18px">⛽ Cargas a equipos</div>`;
+  html+=`<table class="vtable"><tr><th>N°</th><th>Fecha</th><th>Cant.</th><th>Equipo</th><th>Odómetro</th><th>Responsable</th></tr>`;
+  html+=eqs.map(r=>`<tr><td style="padding:7px;text-align:center">${r.numero||""}</td><td style="padding:7px;text-align:center">${r.fecha||""}</td><td style="padding:7px;text-align:center">${r.cantidad||""}</td><td style="padding:7px;text-align:center">${r.equipo||""}</td><td style="padding:7px;text-align:center">${r.odometro||""}</td><td style="padding:7px;text-align:center">${r.responsable||""}</td></tr>`).join("")||`<tr><td colspan="6" style="padding:10px;text-align:center;color:var(--gris5)">—</td></tr>`;
+  html+=`</table>`;
+  // Cuadre
+  if(p.cuadre&&p.cuadre.length){
+    html+=`<div class="card" style="margin-top:18px"><div class="card-title">✅ Cuadre por descarga</div>`;
+    html+=p.cuadre.map(c=>{
+      const ok=Math.abs(c.dif)<=(c.entra*0.05);
+      const col=ok?"var(--verde)":"#f87171";
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--borde)">
+        <div><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700">Descarga #${c.numero||"?"} ${c.destino?`(${c.destino})`:""}</span>
+          <div style="font-size:11px;color:var(--texto2)">Entró ${c.entra}L · Salió ${c.sale}L</div></div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:${col}">${ok?"✓":"⚠"} ${c.dif>0?"+":""}${c.dif}L</div>
+      </div>`;
+    }).join("");
+    html+=`</div>`;
+  }
+  body.innerHTML=html;
+}
+
+function volverHistorial(){
+  document.getElementById("planillaDetalle").style.display="none";
+  document.getElementById("planillaHistorial").style.display="block";
 }
 
 init();

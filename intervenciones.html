@@ -55,6 +55,12 @@
     .nav-btn.active{color:var(--naranja)}
     .nav-btn .nav-icon{font-size:20px;line-height:1}
     .nav-indicator{position:absolute;top:0;height:2px;background:var(--naranja);transition:left .25s ease,width .25s ease;border-radius:0 0 2px 2px}
+    #page-stock{max-width:100%;padding-left:0;padding-right:0}
+    #page-stock>.stabs{max-width:100%}
+    /* las sub-secciones que NO son planilla se centran a ancho normal */
+    #stock-resumen,#stock-calendario,#stock-nuevo{max-width:580px;margin:0 auto;padding:0 16px}
+    #stock-planilla{padding:0 16px}
+    #planillaPaso1{max-width:580px;margin:0 auto}
     .page{display:none;padding:16px;max-width:580px;margin:0 auto;padding-bottom:90px}
     .page.active{display:block}
     .stabs{display:grid;grid-template-columns:repeat(var(--stab-cols,2),1fr);background:var(--gris1);border-bottom:1px solid var(--borde);margin:-16px -16px 16px}
@@ -291,20 +297,29 @@
     .foto-prev{width:100%;max-height:180px;object-fit:cover;border-radius:var(--rsm);display:block}
     @media(min-width:900px){#hLista{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px;align-items:start}#hLista .h-card{margin-bottom:0}}
     /* ══ VERIFICACIÓN PLANILLA ══ */
-    .verif-layout{display:flex;flex-direction:column;gap:16px}
-    @media(min-width:900px){.verif-layout{flex-direction:row;align-items:flex-start}
-      .verif-foto{flex:0 0 40%;position:sticky;top:120px}
-      .verif-tablas{flex:1;min-width:0}}
+    #page-stock #stock-planilla{max-width:100%}
+    .verif-wide{max-width:1500px;margin:0 auto}
+    .verif-layout{display:flex;flex-direction:column;gap:18px}
+    @media(min-width:1100px){
+      .verif-layout{flex-direction:row;align-items:flex-start}
+      .verif-foto{flex:0 0 360px;position:sticky;top:120px}
+      .verif-tablas{flex:1;min-width:0}
+    }
     .verif-foto img{width:100%;border-radius:var(--rsm);background:var(--gris2);cursor:zoom-in;border:1px solid var(--borde)}
-    .verif-tabla-tit{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--naranja);margin-bottom:8px}
-    .vtable{width:100%;border-collapse:collapse;font-size:13px}
-    .vtable th{background:var(--gris2);color:var(--texto2);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:6px 4px;border:1px solid var(--borde);white-space:nowrap}
+    .verif-tabla-tit{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--naranja);margin-bottom:8px}
+    .vtable{width:100%;border-collapse:collapse;font-size:14px;margin-bottom:6px}
+    .vtable th{background:var(--gris2);color:var(--texto2);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:8px 6px;border:1px solid var(--borde);white-space:nowrap}
     .vtable td{border:1px solid var(--borde);padding:0}
-    .vtable td.actions{border:none;padding:0 0 0 4px;width:26px}
-    .vtable input{width:100%;min-width:52px;background:var(--gris1);border:none;color:var(--texto);padding:7px 5px;font-size:13px;font-family:inherit;outline:none;text-align:center}
+    .vtable td.actions{border:none;padding:0 0 0 6px;width:30px;text-align:center}
+    .vtable input{width:100%;background:var(--gris1);border:none;color:var(--texto);padding:9px 8px;font-size:14px;font-family:inherit;outline:none;text-align:center}
     .vtable input:focus{background:var(--gris2);box-shadow:inset 0 0 0 2px var(--naranja)}
-    .vtable input.wide{min-width:70px}
-    .vtable .del-row{background:none;border:none;color:#f87171;cursor:pointer;font-size:14px;padding:2px}
+    .vtable .del-row{background:none;border:none;color:#f87171;cursor:pointer;font-size:15px;padding:2px}
+    /* anchos de columna proporcionales */
+    .vtable col.c-num{width:7%}
+    .vtable col.c-fecha{width:15%}
+    .vtable col.c-cant{width:10%}
+    .vtable col.c-med{width:22%}
+    .vtable col.c-odo{width:18%}
   </style>
 </head>
 <body>
@@ -473,37 +488,32 @@
 
     <!-- Verificación -->
     <div id="planillaVerif" style="display:none">
-      <div class="stats" style="margin-bottom:12px">✏️ Revisá contra la foto y corregí lo que haga falta. Tocá cualquier celda para editar.</div>
-      <div class="verif-layout">
-        <!-- Foto de referencia -->
-        <div class="verif-foto">
-          <img id="verifFotoImg" onclick="ampliarFoto()" title="Tocá para ampliar">
-          <div style="font-size:11px;color:var(--gris5);text-align:center;margin-top:6px">Tocá la foto para ampliar</div>
+      <div class="verif-wide">
+        <div class="stats" style="margin-bottom:14px">✏️ Revisá contra la foto y corregí lo que haga falta. Tocá cualquier celda para editar.</div>
+        <!-- Foto arriba, centrada -->
+        <div style="text-align:center;margin-bottom:20px">
+          <img id="verifFotoImg" onclick="ampliarFoto()" title="Tocá para ampliar"
+            style="max-width:420px;width:100%;border-radius:var(--rsm);background:var(--gris2);cursor:zoom-in;border:1px solid var(--borde)">
+          <div style="font-size:11px;color:var(--gris5);margin-top:6px">📷 Tocá la foto para ampliar y comparar</div>
         </div>
-        <!-- Tablas -->
-        <div class="verif-tablas">
-          <div class="verif-tabla-tit">📥 Descarga a chulengo</div>
-          <div style="overflow-x:auto">
-            <table class="vtable" id="vtChulengo"></table>
-          </div>
-          <button class="mini-btn sec" onclick="verifAgregarFila('chulengo')" style="margin:8px 0 18px">+ Agregar fila</button>
 
-          <div class="verif-tabla-tit">⛽ Descarga a equipos</div>
-          <div style="overflow-x:auto">
-            <table class="vtable" id="vtEquipos"></table>
-          </div>
-          <button class="mini-btn sec" onclick="verifAgregarFila('equipos')" style="margin-top:8px">+ Agregar fila</button>
+        <div class="verif-tabla-tit">📥 Descarga a chulengo</div>
+        <table class="vtable" id="vtChulengo"></table>
+        <button class="mini-btn sec" onclick="verifAgregarFila('chulengo')" style="max-width:200px;margin:0 0 24px">+ Agregar fila</button>
+
+        <div class="verif-tabla-tit">⛽ Descarga a equipos</div>
+        <table class="vtable" id="vtEquipos"></table>
+        <button class="mini-btn sec" onclick="verifAgregarFila('equipos')" style="max-width:200px;margin:0">+ Agregar fila</button>
+
+        <div class="card" id="cuadreCard" style="display:none;margin-top:18px">
+          <div class="card-title">✅ Cuadre por descarga</div>
+          <div id="cuadreBody"></div>
         </div>
-      </div>
 
-      <div class="card" id="cuadreCard" style="display:none;margin-top:14px">
-        <div class="card-title">✅ Cuadre por descarga</div>
-        <div id="cuadreBody"></div>
-      </div>
-
-      <div class="btn-row" style="margin-top:14px">
-        <button class="btn btn-cancel" onclick="planillaReset()">Cancelar</button>
-        <button class="btn btn-primary" id="btnGuardarPlanilla" onclick="guardarPlanilla()">Guardar todo</button>
+        <div class="btn-row" style="margin-top:16px;max-width:500px">
+          <button class="btn btn-cancel" onclick="planillaReset()">Cancelar</button>
+          <button class="btn btn-primary" id="btnGuardarPlanilla" onclick="guardarPlanilla()">Guardar todo</button>
+        </div>
       </div>
     </div>
 
@@ -2645,36 +2655,38 @@ function ampliarFoto(){
 }
 function cerrarFotoAmpliada(){document.getElementById("fotoOverlay").style.display="none";}
 
-function vcell(tabla,i,campo,wide){
+function vcell(tabla,i,campo){
   const val=(verifData[tabla][i][campo]||"").toString().replace(/"/g,"&quot;");
-  return `<td><input value="${val}" class="${wide?'wide':''}" oninput="verifSet('${tabla}',${i},'${campo}',this.value)"></td>`;
+  return `<td><input value="${val}" oninput="verifSet('${tabla}',${i},'${campo}',this.value)"></td>`;
 }
 
 function renderVerif(){
   // Tabla chulengo
   const tCh=document.getElementById("vtChulengo");
-  let hCh=`<tr><th>N°</th><th>Fecha</th><th>Cant.</th><th>Destino</th><th>Odo Blanca</th><th>Odo Dest.</th><th></th></tr>`;
+  let hCh=`<colgroup><col class="c-num"><col class="c-fecha"><col class="c-cant"><col class="c-med"><col class="c-odo"><col class="c-odo"><col style="width:34px"></colgroup>`;
+  hCh+=`<tr><th>N°</th><th>Fecha</th><th>Cant.</th><th>Destino</th><th>Odo Blanca</th><th>Odo Dest.</th><th></th></tr>`;
   hCh+=verifData.chulengo.map((r,i)=>`<tr>
     ${vcell('chulengo',i,'numero')}
-    ${vcell('chulengo',i,'fecha',true)}
+    ${vcell('chulengo',i,'fecha')}
     ${vcell('chulengo',i,'cantidad')}
-    ${vcell('chulengo',i,'destino',true)}
-    ${vcell('chulengo',i,'odoBlanca',true)}
-    ${vcell('chulengo',i,'odoDestino',true)}
+    ${vcell('chulengo',i,'destino')}
+    ${vcell('chulengo',i,'odoBlanca')}
+    ${vcell('chulengo',i,'odoDestino')}
     <td class="actions"><button class="del-row" onclick="verifBorrar('chulengo',${i})">🗑</button></td>
   </tr>`).join("");
   tCh.innerHTML=hCh;
 
   // Tabla equipos
   const tEq=document.getElementById("vtEquipos");
-  let hEq=`<tr><th>N°</th><th>Fecha</th><th>Cant.</th><th>Equipo</th><th>Odómetro</th><th>Responsable</th><th></th></tr>`;
+  let hEq=`<colgroup><col class="c-num"><col class="c-fecha"><col class="c-cant"><col class="c-med"><col class="c-odo"><col class="c-med"><col style="width:34px"></colgroup>`;
+  hEq+=`<tr><th>N°</th><th>Fecha</th><th>Cant.</th><th>Equipo</th><th>Odómetro</th><th>Responsable</th><th></th></tr>`;
   hEq+=verifData.equipos.map((r,i)=>`<tr>
     ${vcell('equipos',i,'numero')}
-    ${vcell('equipos',i,'fecha',true)}
+    ${vcell('equipos',i,'fecha')}
     ${vcell('equipos',i,'cantidad')}
-    ${vcell('equipos',i,'equipo',true)}
-    ${vcell('equipos',i,'odometro',true)}
-    ${vcell('equipos',i,'responsable',true)}
+    ${vcell('equipos',i,'equipo')}
+    ${vcell('equipos',i,'odometro')}
+    ${vcell('equipos',i,'responsable')}
     <td class="actions"><button class="del-row" onclick="verifBorrar('equipos',${i})">🗑</button></td>
   </tr>`).join("");
   tEq.innerHTML=hEq;

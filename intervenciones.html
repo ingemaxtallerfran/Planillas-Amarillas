@@ -849,6 +849,31 @@
 </div>
 <div class="toast hidden" id="toast"></div>
 
+<!-- MODAL EDITAR MOVIMIENTO CISTERNA -->
+<div class="overlay" id="editMovModal" onclick="handleOverlay(event,'editMovModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title"><span>✏️ Editar movimiento</span><button class="modal-close" onclick="cerrarModal('editMovModal')">✕</button></div>
+    <input type="hidden" id="emId">
+    <div class="f">
+      <label>Tipo</label>
+      <select id="emTipo" onchange="document.getElementById('emPrecioWrap').style.display=this.value==='Carga'?'block':'none'">
+        <option value="Descarga">Descarga</option>
+        <option value="Carga">Carga</option>
+      </select>
+    </div>
+    <div class="row2">
+      <div class="f"><label>Fecha</label><input type="date" id="emFecha"></div>
+      <div class="f"><label>Cantidad (L)</label><input type="number" id="emCantidad"></div>
+    </div>
+    <div class="f"><label>Destino / Vehículo</label><input id="emVehiculo" autocomplete="off"></div>
+    <div class="f"><label>Odómetro</label><input id="emOdometro" autocomplete="off"></div>
+    <div class="f" id="emPrecioWrap" style="display:none"><label>Precio por litro</label><input id="emPrecio" autocomplete="off"></div>
+    <button class="btn btn-primary" id="btnGuardarEditMov" onclick="guardarEditMov()">Guardar cambios</button>
+    <button class="btn btn-cancel" onclick="eliminarEditMov()" style="margin-top:8px;color:#f87171">🗑 Eliminar movimiento</button>
+  </div>
+</div>
+
 <!-- MODAL GENERAR INFORME -->
 <div class="overlay" id="informeModal" onclick="handleOverlay(event,'informeModal')">
   <div class="modal">
@@ -1816,13 +1841,59 @@ function cgCalcStats(){
 function cgRenderUltimos(){
   const lista=CG_MOVS.slice(0,8),c=document.getElementById("cgUltMov");
   if(!lista.length){c.innerHTML='<div class="empty">Sin movimientos</div>';return;}
-  c.innerHTML=lista.map(r=>{const ec=r.tipo==="Carga";return`<div class="list-item">
+  c.innerHTML=lista.map(r=>{const ec=r.tipo==="Carga";return`<div class="list-item" style="cursor:pointer" onclick="abrirEditMov('${r.id}')">
     <div class="item-top"><div class="item-title" style="color:${ec?'var(--verde)':'var(--naranja)'}">${ec?'📥':'📤'} ${r.tipo}</div><div class="item-date">${fmtFecha(r.fecha)}</div></div>
     <div class="item-body">
       <span class="tag ${ec?'tag-green':'tag-orange'}">${Number(r.cantidad).toLocaleString("es-AR")} L</span>
       ${r.vehiculo?`<span class="tag tag-gray">🚛 ${r.vehiculo}</span>`:""}
       ${r.precio?`<span class="tag tag-gray">$ ${r.precio}/L</span>`:""}
+      <span style="margin-left:auto;font-size:11px;color:var(--gris5)">✏️ tocá para editar</span>
     </div></div>`;}).join("");
+}
+
+function abrirEditMov(id){
+  const m=CG_MOVS.find(x=>x.id===id);
+  if(!m)return;
+  // dd-mm-yyyy para el input de fecha? Usamos date normal (yyyy-mm-dd)
+  document.getElementById("emId").value=m.id;
+  document.getElementById("emTipo").value=m.tipo;
+  document.getElementById("emFecha").value=m.fecha;
+  document.getElementById("emCantidad").value=m.cantidad;
+  document.getElementById("emVehiculo").value=m.vehiculo||"";
+  document.getElementById("emOdometro").value=m.odometro||"";
+  document.getElementById("emPrecio").value=m.precio||"";
+  document.getElementById("emPrecioWrap").style.display=m.tipo==="Carga"?"block":"none";
+  document.getElementById("editMovModal").classList.add("open");
+}
+async function guardarEditMov(){
+  const id=document.getElementById("emId").value;
+  const p={action:"editarMovCisterna",id,
+    tipo:document.getElementById("emTipo").value,
+    fecha:document.getElementById("emFecha").value,
+    cantidad:document.getElementById("emCantidad").value,
+    vehiculo:document.getElementById("emVehiculo").value,
+    odometro:document.getElementById("emOdometro").value,
+    precio:document.getElementById("emTipo").value==="Carga"?document.getElementById("emPrecio").value:""};
+  setBtnLoading("btnGuardarEditMov","Guardando...");
+  try{
+    const d=await jsonp(`${URL_}?${new URLSearchParams(p)}`);
+    if(!d||!d.ok){toast(d?.mensaje||"Error","err");return;}
+    toast("Movimiento actualizado ✓");
+    cerrarModal("editMovModal");
+    await stockCargar();
+  }catch(e){toast("Error de conexión","err");}
+  finally{resetBtn("btnGuardarEditMov","Guardar cambios");}
+}
+async function eliminarEditMov(){
+  const id=document.getElementById("emId").value;
+  if(!confirm("¿Eliminar este movimiento de cisterna?"))return;
+  try{
+    const d=await jsonp(`${URL_}?action=eliminarMovCisterna&id=${encodeURIComponent(id)}`);
+    if(!d||!d.ok){toast(d?.mensaje||"Error","err");return;}
+    toast("Eliminado ✓");
+    cerrarModal("editMovModal");
+    await stockCargar();
+  }catch(e){toast("Error de conexión","err");}
 }
 async function cgGuardar(){
   if(!g("cgCantidad")){markErr("cgCantidad");toast("Ingresá la cantidad","err");return;}

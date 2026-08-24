@@ -661,6 +661,7 @@
   </div>
   <!-- Vista grupos por tipo -->
   <div class="stab-sec active" id="equipos-grupos">
+    <button onclick="abrirMoverVarios()" style="width:100%;margin-bottom:12px;background:var(--gris2);border:1px solid var(--naranja);color:var(--naranja);border-radius:var(--rsm);padding:11px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;letter-spacing:.03em">🔄 Mover varios equipos de obra</button>
     <div class="eq-grupos" id="eqGruposGrid"></div>
   </div>
   <!-- Vista lista (dentro de un grupo) -->
@@ -848,6 +849,26 @@
   </div>
 </div>
 <div class="toast hidden" id="toast"></div>
+
+<!-- MODAL MOVER VARIOS EQUIPOS -->
+<div class="overlay" id="moverVariosModal" onclick="handleOverlay(event,'moverVariosModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title"><span>🔄 Mover varios equipos</span><button class="modal-close" onclick="cerrarModal('moverVariosModal')">✕</button></div>
+    <p style="font-size:13px;color:var(--texto2);margin-bottom:14px">Pegá los códigos de los equipos (uno por línea o separados por coma). A cada uno se le va a registrar el traslado desde su ubicación actual hacia el destino que elijas.</p>
+    <div class="f">
+      <label>Códigos de equipos</label>
+      <textarea id="mvCodigos" rows="6" placeholder="B-9&#10;P-8&#10;C-5&#10;..." style="width:100%;background:var(--gris2);border:1px solid var(--borde);border-radius:var(--rsm);color:var(--texto);font-family:inherit;font-size:14px;padding:10px;outline:none;resize:vertical"></textarea>
+    </div>
+    <div class="f">
+      <label>Destino (obra) para todos <span class="req">*</span></label>
+      <input id="mvDestino" list="dl-ubicaciones" placeholder="Ej: Obrador" autocomplete="off">
+      <datalist id="dl-ubicaciones"></datalist>
+    </div>
+    <div id="mvResultado" style="display:none;margin:10px 0;padding:10px;border-radius:var(--rsm);font-size:13px"></div>
+    <button class="btn btn-primary" id="btnMoverVarios" onclick="ejecutarMoverVarios()">Mover equipos</button>
+  </div>
+</div>
 
 <!-- MODAL EDITAR MOVIMIENTO CISTERNA -->
 <div class="overlay" id="editMovModal" onclick="handleOverlay(event,'editMovModal')">
@@ -1160,7 +1181,63 @@ function volverGrupos() {
   grupoActual = "";
 }
 
-// ══ INFORME POR MAIL ══
+// ══ MOVER VARIOS EQUIPOS ══
+function abrirMoverVarios(){
+  document.getElementById("mvCodigos").value="";
+  document.getElementById("mvDestino").value="";
+  document.getElementById("mvResultado").style.display="none";
+  // Cargar datalist de ubicaciones existentes
+  const ubics=[...new Set(S.equiposInfo.map(e=>e.ubicacion).filter(Boolean))].sort();
+  const dl=document.getElementById("dl-ubicaciones");
+  if(dl)dl.innerHTML=ubics.map(u=>`<option value="${u}">`).join("");
+  document.getElementById("moverVariosModal").classList.add("open");
+}
+
+async function ejecutarMoverVarios(){
+  const raw=document.getElementById("mvCodigos").value.trim();
+  const destino=document.getElementById("mvDestino").value.trim();
+  if(!raw){toast("Pegá al menos un código","err");return;}
+  if(!destino){toast("Poné el destino","err");return;}
+  // Separar por línea o coma
+  const codigos=raw.split(/[\n,]+/).map(c=>c.trim()).filter(Boolean);
+  if(!codigos.length){toast("No se detectaron códigos","err");return;}
+
+  const btn=document.getElementById("btnMoverVarios");
+  const resDiv=document.getElementById("mvResultado");
+  btn.disabled=true;
+
+  let ok=0,fallaron=[];
+  for(let i=0;i<codigos.length;i++){
+    const cod=codigos[i];
+    btn.innerHTML=`<span class="spin-sm"></span>Moviendo ${i+1}/${codigos.length}...`;
+    try{
+      const p={action:"moverEquipo",codigo:cod.toUpperCase(),destino:destino};
+      const d=await jsonp(`${URL_}?${new URLSearchParams(p)}`);
+      if(d&&d.ok)ok++;
+      else fallaron.push(cod);
+    }catch(e){fallaron.push(cod);}
+  }
+
+  // Mostrar resultado
+  resDiv.style.display="block";
+  if(fallaron.length){
+    resDiv.style.background="rgba(239,68,68,.12)";
+    resDiv.style.color="#f87171";
+    resDiv.innerHTML=`✓ ${ok} movidos correctamente.<br>⚠️ No se encontraron: <strong>${fallaron.join(", ")}</strong><br><small>Revisá que estén escritos igual que en el Maestro.</small>`;
+  }else{
+    resDiv.style.background="rgba(34,197,94,.12)";
+    resDiv.style.color="#4ade80";
+    resDiv.innerHTML=`✓ Los ${ok} equipos se movieron a <strong>${destino}</strong> y quedó registrado el traslado.`;
+  }
+  btn.disabled=false;btn.innerHTML="Mover equipos";
+  // Refrescar datos de equipos
+  try{
+    const rE=await jsonp(`${URL_}?action=getInfoEquipos`);
+    if(rE&&rE.ok)S.equiposInfo=(rE.equipos||[]).filter(e=>e.codigo&&e.codigo.trim()!=="");
+  }catch(e){}
+  if(typeof grupoActual!=="undefined"&&grupoActual)abrirGrupo(grupoActual);
+}
+
 // Campos disponibles para el informe (los que se ven en las cards)
 const INFORME_CAMPOS = [
   {key:"ubicacion",   label:"Ubicación / Obra",      def:true},

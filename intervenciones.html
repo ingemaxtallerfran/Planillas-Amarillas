@@ -2961,14 +2961,22 @@ async function guardarPlanilla(){
       }catch(ex){errC++;erroresDetalle.push("Cisterna "+(d.destino||"")+": error de red");}
     }
     // Cargas a equipos → según tipo
+    // Función: buscar de qué cisterna/chulengo salió, según el número de descarga
+    const chulengoDeDescarga=(num)=>{
+      const n=String(num||"").trim();
+      const desc=verifData.llegadas.find(d=>String(d.numero||"").trim()===n);
+      return desc?(desc.destino||"").trim():"";
+    };
     for(const e of equipos){
       const cant=parseFloat(e.cantidad)||0;
       if(cant<=0||!e.equipo)continue;
+      // El chulengo sale de la descarga a la que pertenece este equipo (por su número)
+      const chul=chulengoDeDescarga(e.numero);
       let p;
       if(planillaTipo==="docta"){
-        p={action:"agregarCombDocta",fecha:(e.fecha||todayDMY()).trim(),equipo:(e.equipo||"").toUpperCase().trim(),cantidad:String(cant),odometro:(e.odometro||"").trim(),chulengo:(e.destino||"CH-3 /Docta").trim(),responsable:(e.responsable||"").trim()};
+        p={action:"agregarCombDocta",fecha:(e.fecha||todayDMY()).trim(),equipo:(e.equipo||"").toUpperCase().trim(),cantidad:String(cant),odometro:(e.odometro||"").trim(),chulengo:chul||"CH-3 /Docta",responsable:(e.responsable||"").trim()};
       }else{
-        p={action:"agregarCombObrador",fecha:(e.fecha||todayDMY()).trim(),codigo:(e.equipo||"").toUpperCase().trim(),cantidad:String(cant),odometro:(e.odometro||"").trim(),chulengo:(e.destino||"CH7-Cesar").trim(),responsable:(e.responsable||"").trim()};
+        p={action:"agregarCombObrador",fecha:(e.fecha||todayDMY()).trim(),codigo:(e.equipo||"").toUpperCase().trim(),cantidad:String(cant),odometro:(e.odometro||"").trim(),chulengo:chul||"CH7-Cesar",responsable:(e.responsable||"").trim()};
       }
       try{
         const r=await jsonp(`${URL_}?${new URLSearchParams(p)}`);

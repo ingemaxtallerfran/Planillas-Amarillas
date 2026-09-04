@@ -322,6 +322,8 @@
     .vtable col.c-odo{width:18%}
     .tipo-plan-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:16px;background:var(--gris2);border:1px solid var(--borde);border-radius:var(--rsm);cursor:pointer;text-align:left;transition:border-color .15s}
     .tipo-plan-btn:hover,.tipo-plan-btn:active{border-color:var(--naranja)}
+    .alerta-subtab{flex:1;padding:9px;background:var(--gris2);border:1px solid var(--borde);border-radius:var(--rsm);color:var(--texto2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:.03em}
+    .alerta-subtab.active{background:var(--naranja);color:#fff;border-color:var(--naranja)}
   </style>
 </head>
 <body>
@@ -693,7 +695,13 @@
   </div>
   <!-- Alertas -->
   <div class="stab-sec" id="equipos-alertas">
+    <!-- Sub-tabs dentro de Alertas -->
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button class="alerta-subtab active" id="astab-service" onclick="switchAlerta('service')">🔧 Services</button>
+      <button class="alerta-subtab" id="astab-odo" onclick="switchAlerta('odo')">⏱️ Odómetros viejos</button>
+    </div>
     <div id="eqAlertas"><div class="loading"><div class="spin"></div></div></div>
+    <div id="eqAlertasOdo" style="display:none"><div class="loading"><div class="spin"></div></div></div>
   </div>
 </div>
 
@@ -1567,6 +1575,7 @@ async function init(){
     S.equiposInfo=(rE.value.equipos||[]).filter(e=>e.codigo&&e.codigo.trim()!=="");
     equiposRenderGrupos();
     equiposRenderAlertas();
+    cargarOdoIgnorados(); // cargar lista de odómetros ignorados en segundo plano
   }else{
     const msg=rE.value?.mensaje||"No se pudo cargar Maestro de Equipos";
     const el=document.getElementById("eqGruposGrid");
@@ -2484,6 +2493,86 @@ function equiposRenderAlertas(){
   if(!alertas.length){el.innerHTML='<div class="empty">✅ Todos los equipos al día</div>';return;}
   el.innerHTML=`<div class="stats" style="margin-bottom:10px"><strong>${alertas.length}</strong> equipo${alertas.length>1?"s":""} requieren atención</div>`+
     alertas.map(eq=>equipoCardHTML(eq,S.equiposInfo.indexOf(eq)+1000)).join("");
+}
+
+// ── Sub-tabs de Alertas ──
+function switchAlerta(cual){
+  const bS=document.getElementById("astab-service"),bO=document.getElementById("astab-odo");
+  const eS=document.getElementById("eqAlertas"),eO=document.getElementById("eqAlertasOdo");
+  if(cual==="odo"){
+    bS.classList.remove("active");bO.classList.add("active");
+    eS.style.display="none";eO.style.display="block";
+    equiposRenderOdoViejos();
+  }else{
+    bO.classList.remove("active");bS.classList.add("active");
+    eO.style.display="none";eS.style.display="block";
+  }
+}
+
+// ── Odómetros viejos (sin actualizar +30 días) ──
+let odoIgnorados=[]; // lista de códigos ignorados
+async function cargarOdoIgnorados(){
+  try{
+    const d=await jsonp(`${URL_}?action=getOdometrosIgnorados`);
+    if(d&&d.ok)odoIgnorados=(d.ignorados||[]).map(c=>c.toUpperCase());
+  }catch(e){}
+}
+
+function diasDesde(fechaStr){
+  if(!fechaStr)return null;
+  // fechaStr puede venir "yyyy-MM-dd" o similar
+  const f=new Date(fechaStr);
+  if(isNaN(f.getTime()))return null;
+  const hoy=new Date();
+  return Math.floor((hoy-f)/(1000*60*60*24));
+}
+
+function equiposRenderOdoViejos(){
+  const el=document.getElementById("eqAlertasOdo");if(!el)return;
+  const viejos=S.equiposInfo.filter(eq=>{
+    const cod=(eq.codigo||"").trim().toUpperCase();
+    if(odoIgnorados.includes(cod))return false; // ignorados fuera
+    const dias=diasDesde(eq.fechaOdometro);
+    return dias!==null && dias>30;
+  }).sort((a,b)=>{
+    const da=diasDesde(a.fechaOdometro)||0,db=diasDesde(b.fechaOdometro)||0;
+    return db-da; // el más viejo primero
+  });
+  if(!viejos.length){el.innerHTML='<div class="empty">✅ Todos los odómetros actualizados (o ignorados)</div>';return;}
+  el.innerHTML=`<div class="stats" style="margin-bottom:10px"><strong>${viejos.length}</strong> equipo${viejos.length>1?"s":""} sin actualizar odómetro hace +30 días</div>`+
+    viejos.map(eq=>{
+      const dias=diasDesde(eq.fechaOdometro);
+      const foto=driveImgUrl(eq.foto);
+      const thumb=foto?`<img class="h-thumb" src="${foto}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="h-nofoto" style="display:none">🚜</div>`:`<div class="h-nofoto">🚜</div>`;
+      return `<div class="h-card">
+        <div class="h-header" style="cursor:default">
+          ${thumb}
+          <div class="h-main">
+            <div class="h-cod">${eq.codigo}</div>
+            <div class="h-tipo">${[eq.marca,eq.modelo].filter(Boolean).join(" ")||"—"}</div>
+            <div class="h-meta">
+              <span class="tag badge-danger">⏱️ ${dias} días sin actualizar</span>
+              ${eq.ubicacion?`<span class="tag tag-blue">📍 ${eq.ubicacion}</span>`:""}
+              <span class="tag tag-gray">Últ: ${fmtFechaAny(eq.fechaOdometro)}</span>
+            </div>
+          </div>
+        </div>
+        <div style="padding:0 12px 12px">
+          <button onclick="ignorarOdo('${eq.codigo.replace(/'/g,"\\'")}',this)" style="width:100%;background:var(--gris2);border:1px solid var(--borde);color:var(--texto2);border-radius:var(--rsm);padding:9px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer">🔕 Ignorar alerta</button>
+        </div>
+      </div>`;
+    }).join("");
+}
+
+async function ignorarOdo(codigo,btn){
+  btn.disabled=true;btn.innerHTML='<span class="spin-sm"></span>Ignorando...';
+  try{
+    const d=await jsonp(`${URL_}?action=ignorarOdometro&codigo=${encodeURIComponent(codigo.toUpperCase())}`);
+    if(!d||!d.ok){toast(d?.mensaje||"Error","err");btn.disabled=false;btn.innerHTML="🔕 Ignorar alerta";return;}
+    toast(`${codigo} ignorado ✓`);
+    odoIgnorados.push(codigo.toUpperCase());
+    equiposRenderOdoViejos();
+  }catch(e){toast("Error de conexión","err");btn.disabled=false;btn.innerHTML="🔕 Ignorar alerta";}
 }
 
 

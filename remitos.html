@@ -273,7 +273,7 @@ function remElegirTipo(tipo){
   document.getElementById("remNumero").value="";
   document.getElementById("remDescripcion").value="";
   document.getElementById("remObra").value="";
-  remItems=[{descripcion:"",cantidad:""}];
+  remItems=[{descripcion:"",cantidad:"",equipo:""}];
   remRenderItems();
   remFotoQuitar();
 }
@@ -308,19 +308,20 @@ function remFotoQuitar(){
 }
 
 // ── ÍTEMS ──
-let remItems=[{descripcion:"",cantidad:""}];
+let remItems=[{descripcion:"",cantidad:"",equipo:""}];
 function remRenderItems(){
   const t=document.getElementById("remItemsTable");
-  t.innerHTML=`<colgroup><col><col style="width:90px"><col style="width:34px"></colgroup>
-    <tr><th>Descripción</th><th>Cant.</th><th></th></tr>`+
+  t.innerHTML=`<colgroup><col><col style="width:80px"><col style="width:110px"><col style="width:34px"></colgroup>
+    <tr><th>Descripción</th><th>Cant.</th><th>Equipo</th><th></th></tr>`+
     remItems.map((it,i)=>`<tr>
-      <td><input value="${(it.descripcion||"").replace(/"/g,"&quot;")}" oninput="remItemSet(${i},'descripcion',this.value)" placeholder="Ej: Motor Lüsqtoff"></td>
+      <td><input value="${(it.descripcion||"").replace(/"/g,"&quot;")}" oninput="remItemSet(${i},'descripcion',this.value)" placeholder="Ej: Filtro P602535"></td>
       <td><input value="${(it.cantidad||"").toString().replace(/"/g,"&quot;")}" oninput="remItemSet(${i},'cantidad',this.value)" placeholder="1"></td>
+      <td><input value="${(it.equipo||"").replace(/"/g,"&quot;")}" oninput="remItemSet(${i},'equipo',this.value)" placeholder="Opcional"></td>
       <td class="actions"><button class="del-row" onclick="remItemDel(${i})">🗑</button></td>
     </tr>`).join("");
 }
-function remItemAdd(){remItems.push({descripcion:"",cantidad:""});remRenderItems();}
-function remItemDel(i){remItems.splice(i,1);if(!remItems.length)remItems=[{descripcion:"",cantidad:""}];remRenderItems();}
+function remItemAdd(){remItems.push({descripcion:"",cantidad:"",equipo:""});remRenderItems();}
+function remItemDel(i){remItems.splice(i,1);if(!remItems.length)remItems=[{descripcion:"",cantidad:"",equipo:""}];remRenderItems();}
 function remItemSet(i,campo,val){remItems[i][campo]=val;}
 
 // ── LEER CON IA ──
@@ -349,7 +350,7 @@ async function remLeerConIA(){
       const existe=Array.from(sel.options).some(o=>o.value===d.obra);
       if(existe)sel.value=d.obra;
     }
-    remItems=(d.items&&d.items.length)?d.items.map(it=>({descripcion:it.descripcion||"",cantidad:it.cantidad!=null?String(it.cantidad):""})):[{descripcion:"",cantidad:""}];
+    remItems=(d.items&&d.items.length)?d.items.map(it=>({descripcion:it.descripcion||"",cantidad:it.cantidad!=null?String(it.cantidad):"",equipo:it.equipo||""})):[{descripcion:"",cantidad:"",equipo:""}];
     remRenderItems();
     toast("Leído — revisá los datos antes de guardar");
   }catch(e){
@@ -448,8 +449,8 @@ function remVerDetalle(id){
     <div class="card-title">${r.tipo==="Propio"?"📤":"📥"} ${r.contraparte||""}</div>
     <div style="font-size:13px;color:var(--texto2);margin-bottom:10px">${fmtFechaRem(r.fecha)}${r.obra?" · "+r.obra:""}${r.numeroRemito?" · N° "+r.numeroRemito:""}</div>
     ${r.foto?`<div style="text-align:center;margin-bottom:14px"><img src="${r.foto}" onclick="remAmpliarFoto('${r.foto}')" style="max-width:100%;max-height:320px;border-radius:var(--rsm);cursor:zoom-in;border:1px solid var(--borde)"></div>`:""}
-    <table class="vtable"><tr><th>Descripción</th><th>Cant.</th></tr>
-    ${items.map(it=>`<tr><td style="padding:8px">${it.descripcion||""}</td><td style="padding:8px;text-align:center">${it.cantidad||""}</td></tr>`).join("")||'<tr><td colspan="2" style="padding:10px;text-align:center;color:var(--gris5)">Sin ítems</td></tr>'}
+    <table class="vtable"><tr><th>Descripción</th><th>Cant.</th><th>Equipo</th></tr>
+    ${items.map(it=>`<tr><td style="padding:8px">${it.descripcion||""}</td><td style="padding:8px;text-align:center">${it.cantidad||""}</td><td style="padding:8px;text-align:center">${it.equipo||"—"}</td></tr>`).join("")||'<tr><td colspan="3" style="padding:10px;text-align:center;color:var(--gris5)">Sin ítems</td></tr>'}
     </table>
     ${r.descripcion?`<div style="margin-top:12px;font-size:13px;color:var(--texto2)">${r.descripcion}</div>`:""}
     <button class="mini-btn sec" style="margin-top:16px;border-color:#f87171;color:#f87171" onclick="remEliminar('${r.id}')">🗑 Eliminar remito</button>

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Ingemax — Remitos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--naranja:#E8651A;--negro:#0f0f0f;--gris1:#1a1a1a;--gris2:#252525;--gris3:#333;--gris5:#888;--borde:#2e2e2e;--texto:#f0f0f0;--texto2:#aaa;--verde:#22c55e;--radius:10px;--rsm:7px}
+    [data-theme="light"]{--naranja:#D9540A;--negro:#f2f2f2;--gris1:#fff;--gris2:#eaeaea;--gris3:#d5d5d5;--gris5:#6b6b6b;--borde:#d0d0d0;--texto:#111;--texto2:#444;--verde:#16a34a}
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    body{font-family:'Barlow',sans-serif;background:var(--negro);color:var(--texto);min-height:100vh;transition:background .2s,color .2s}
+    .header{background:var(--gris1);border-bottom:2px solid var(--naranja);padding:0 12px;display:flex;align-items:center;gap:10px;height:56px;position:sticky;top:0;z-index:100}
+    [data-theme="light"] .header{box-shadow:0 1px 4px rgba(0,0,0,.08)}
+    .back-btn{background:var(--gris2);border:1px solid var(--borde);border-radius:50%;width:38px;height:38px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--texto);text-decoration:none;flex-shrink:0}
+    .logo-box{background:#fff;border-radius:7px;padding:5px 10px;display:flex;align-items:center;height:40px}
+    .logo-img{height:28px;width:auto;display:block}
+    .logo-fallback{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:#111}
+    .logo-fallback span{color:var(--naranja)}
+    .title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;flex:1}
+    .theme-btn{background:var(--gris2);border:1px solid var(--borde);border-radius:50%;width:38px;height:38px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .wrap{max-width:580px;margin:0 auto;padding:16px}
+
+    .stabs{display:grid;grid-template-columns:repeat(2,1fr);background:var(--gris1);border-bottom:1px solid var(--borde);margin:-16px -16px 16px}
+    .stab{padding:11px;font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.05em;border:none;background:none;color:var(--gris5);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;text-transform:uppercase;transition:color .2s,border-color .2s}
+    .stab.active{color:var(--naranja);border-bottom-color:var(--naranja)}
+    .stab-sec{display:none}
+    .stab-sec.active{display:block}
+
+    .card{background:var(--gris1);border:1px solid var(--borde);border-radius:var(--radius);padding:18px;margin-bottom:14px}
+    [data-theme="light"] .card{box-shadow:0 1px 3px rgba(0,0,0,.06)}
+    .card-title{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--texto2);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+    .card-title::before{content:'';width:4px;height:15px;background:var(--naranja);border-radius:2px;flex-shrink:0}
+
+    .f{margin-bottom:12px}
+    .f label{display:block;font-size:11px;font-weight:600;color:var(--gris5);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em}
+    .f select,.f input,.f textarea{width:100%;background:var(--gris2);border:1px solid var(--borde);border-radius:var(--rsm);color:var(--texto);font-family:'Barlow',sans-serif;font-size:15px;padding:10px 12px;outline:none;-webkit-appearance:none;appearance:none;transition:border-color .2s;resize:none}
+    .f select:focus,.f input:focus,.f textarea:focus{border-color:var(--naranja)}
+    .f textarea{height:64px}
+
+    .btn{width:100%;padding:13px;border:none;border-radius:var(--rsm);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;letter-spacing:.04em;cursor:pointer;transition:opacity .15s;margin-top:6px}
+    .btn:active{opacity:.85}
+    .btn-primary{background:var(--naranja);color:#fff}
+    .btn-cancel{background:var(--gris2);color:var(--texto2);border:1px solid var(--borde)}
+    .btn-row{display:flex;gap:10px}
+    .btn-row .btn{margin-top:0}
+
+    .mini-btn{width:100%;background:var(--naranja);color:#fff;border:none;border-radius:var(--rsm);padding:9px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:.04em;margin-top:8px}
+    .mini-btn.sec{background:var(--gris1);border:1px solid var(--borde);color:var(--texto2)}
+
+    .tipo-plan-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:16px;background:var(--gris2);border:1px solid var(--borde);border-radius:var(--rsm);cursor:pointer;text-align:left;transition:border-color .15s}
+    .tipo-plan-btn:hover,.tipo-plan-btn:active{border-color:var(--naranja)}
+
+    .foto-btn-label{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border:1.5px dashed var(--borde);border-radius:var(--rsm);background:var(--gris2);color:var(--texto2);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:border-color .15s,color .15s}
+
+    .vtable{width:100%;border-collapse:collapse;font-size:14px;margin-bottom:6px}
+    .vtable th{background:var(--gris2);color:var(--texto2);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:8px 6px;border:1px solid var(--borde);white-space:nowrap}
+    .vtable td{border:1px solid var(--borde);padding:0}
+    .vtable td.actions{border:none;padding:0 0 0 6px;width:30px;text-align:center}
+    .vtable input{width:100%;background:var(--gris1);border:none;color:var(--texto);padding:9px 8px;font-size:14px;font-family:inherit;outline:none;text-align:left}
+    .vtable input:focus{background:var(--gris2);box-shadow:inset 0 0 0 2px var(--naranja)}
+    .vtable .del-row{background:none;border:none;color:#f87171;cursor:pointer;font-size:15px;padding:2px}
+
+    .toolbar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+    .toolbar select,.toolbar input{flex:1;min-width:110px;background:var(--gris2);border:1px solid var(--borde);border-radius:var(--rsm);color:var(--texto);font-family:'Barlow',sans-serif;font-size:13px;padding:8px 10px;outline:none;-webkit-appearance:none;appearance:none}
+
+    .list-item{background:var(--gris1);border:1px solid var(--borde);border-radius:var(--radius);padding:13px 15px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+    .list-item:hover{border-color:var(--naranja)}
+    [data-theme="light"] .list-item{box-shadow:0 1px 3px rgba(0,0,0,.06)}
+    .item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+    .item-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;line-height:1.2}
+    .item-date{white-space:nowrap;flex-shrink:0}
+    .item-body{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px}
+    .tag{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px}
+    .tag-gray{background:rgba(255,255,255,.07);color:var(--texto2);border:1px solid var(--borde)}
+    [data-theme="light"] .tag-gray{background:rgba(0,0,0,.05)}
+
+    .empty{text-align:center;padding:50px 20px;color:var(--gris5);font-size:14px}
+    .loading{text-align:center;padding:40px;color:var(--gris5)}
+    .spin{display:inline-block;width:28px;height:28px;border:3px solid var(--gris3);border-top-color:var(--naranja);border-radius:50%;animation:sp .7s linear infinite}
+    .spin-sm{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:5px}
+    @keyframes sp{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a class="back-btn" href="menu" title="Volver al menú">‹</a>
+    <div class="logo-box">
+      <img src="logo-ingemax.jpg" alt="INGEMAX" class="logo-img" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+      <div class="logo-fallback" style="display:none">INGEMA<span>X</span></div>
+    </div>
+    <div class="title">Remitos</div>
+    <button class="theme-btn" id="themeBtn" onclick="toggleTema()">🌙</button>
+  </div>
+
+  <div class="wrap">
+    <div class="stabs">
+      <button class="stab active" onclick="remSwitchTab('nuevo',this)">Nuevo</button>
+      <button class="stab" onclick="remSwitchTab('listado',this)">Listado</button>
+    </div>
+
+    <!-- ══ NUEVO ══ -->
+    <div class="stab-sec active" id="rem-nuevo">
+
+      <div class="card" id="remPaso0">
+        <div class="card-title">¿Qué tipo de remito es?</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button class="tipo-plan-btn" onclick="remElegirTipo('Propio')">
+            <div><div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700">📤 Propio</div>
+            <div style="font-size:12px;color:var(--texto2)">Algo que vos entregás — a una persona o una obra</div></div>
+            <span style="color:var(--naranja);font-size:20px">›</span>
+          </button>
+          <button class="tipo-plan-btn" onclick="remElegirTipo('Tercero')">
+            <div><div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700">📥 Tercero / Compra</div>
+            <div style="font-size:12px;color:var(--texto2)">Algo que recibís — proveedor, taller, traslado de obrador</div></div>
+            <span style="color:var(--naranja);font-size:20px">›</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="card" id="remPaso1" style="display:none">
+        <div class="card-title"><span id="remTipoLabel">Nuevo remito</span></div>
+        <button class="mini-btn sec" onclick="remVolverTipo()" style="max-width:150px;margin:0 0 14px">‹ Cambiar tipo</button>
+
+        <div id="remFotoWrap" style="display:none;position:relative;margin-bottom:10px">
+          <img id="remFotoPrev" style="width:100%;max-height:260px;object-fit:contain;border-radius:var(--rsm);background:var(--gris2);display:block">
+          <button onclick="remFotoQuitar()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);border:none;color:#fff;border-radius:50%;width:30px;height:30px;font-size:16px;cursor:pointer">✕</button>
+        </div>
+        <label class="foto-btn-label" for="remFotoInput" id="remFotoLabel">📷 Sacar / elegir foto del remito (opcional)</label>
+        <input type="file" id="remFotoInput" accept="image/*" style="display:none" onchange="remFotoSelected(this)">
+        <button class="btn btn-primary" id="btnLeerRemito" onclick="remLeerConIA()" style="display:none">🔍 Leer con IA</button>
+        <div id="remLoadingIA" style="display:none;text-align:center;padding:20px">
+          <div class="spin"></div>
+          <div style="font-size:13px;color:var(--texto2);margin-top:10px">Leyendo el remito... esto puede tardar unos segundos</div>
+        </div>
+
+        <div style="margin-top:16px">
+          <div class="f"><label>Fecha <span style="color:var(--naranja)">*</span></label><input type="date" id="remFecha"></div>
+          <div class="f"><label id="remContraparteLabel">Destinatario <span style="color:var(--naranja)">*</span></label>
+            <input type="text" id="remContraparte" list="dl-contrapartes" placeholder="Nombre">
+            <datalist id="dl-contrapartes"></datalist>
+          </div>
+          <div class="f" id="remNumeroWrap" style="display:none"><label>N° de remito</label><input type="text" id="remNumero" placeholder="Opcional"></div>
+          <div class="f"><label>Obra / destino</label><select id="remObra"><option value="">— Sin obra —</option></select></div>
+
+          <div class="f">
+            <label>Ítems</label>
+            <table class="vtable" id="remItemsTable"></table>
+            <button class="mini-btn sec" onclick="remItemAdd()" style="max-width:200px;margin-top:6px">+ Agregar ítem</button>
+          </div>
+
+          <div class="f"><label>Observaciones</label><textarea id="remDescripcion" placeholder="Opcional"></textarea></div>
+        </div>
+
+        <div class="btn-row" style="margin-top:10px">
+          <button class="btn btn-cancel" onclick="remReset()">Cancelar</button>
+          <button class="btn btn-primary" id="btnGuardarRemito" onclick="remGuardar()">Guardar remito</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ LISTADO ══ -->
+    <div class="stab-sec" id="rem-listado">
+      <div class="toolbar">
+        <select id="rlTipo" onchange="remRenderListado()">
+          <option value="">Todos los tipos</option>
+          <option value="Propio">Propio</option>
+          <option value="Tercero">Tercero</option>
+        </select>
+        <input type="date" id="rlFecha" onchange="remRenderListado()">
+        <input type="text" id="rlContraparte" placeholder="Proveedor / destinatario" oninput="remRenderListado()">
+        <select id="rlObra" onchange="remRenderListado()"><option value="">Todas las obras</option></select>
+      </div>
+      <div id="remListaCont"><div class="loading"><div class="spin"></div></div></div>
+
+      <div id="remDetalle" style="display:none">
+        <button class="mini-btn sec" onclick="remVolverListado()" style="max-width:150px;margin:0 0 14px">‹ Volver</button>
+        <div id="remDetalleBody"></div>
+      </div>
+
+      <div id="remFotoOverlay" onclick="remCerrarFotoAmpliada()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:2000;align-items:center;justify-content:center;padding:20px">
+        <img id="remFotoOverlayImg" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px">
+      </div>
+    </div>
+  </div>
+
+<script>
+const URL_ = "https://script.google.com/macros/s/AKfycbwh9fSHZ0Tt6nGQFcWFJg7P5L4jUVoRdhs1QhulVECMqmn7ACv58VUUprOhMQviszKSew/exec";
+
+// ── TEMA ──
+function aplicarTema(t){
+  const b=document.getElementById("themeBtn");
+  if(t==="light"){document.documentElement.setAttribute("data-theme","light");if(b)b.textContent="☀️";}
+  else{document.documentElement.removeAttribute("data-theme");if(b)b.textContent="🌙";}
+  try{sessionStorage.setItem("tema",t);}catch(e){}
+}
+function toggleTema(){
+  const a=document.documentElement.getAttribute("data-theme")==="light"?"light":"dark";
+  aplicarTema(a==="light"?"dark":"light");
+}
+(function(){let t="dark";try{t=sessionStorage.getItem("tema")||"dark";}catch(e){}if(t==="light")document.documentElement.setAttribute("data-theme","light");})();
+
+// ── JSONP ──
+function jsonp(url){
+  return new Promise((res,rej)=>{
+    const cb="cb_"+Date.now()+"_"+Math.floor(Math.random()*1e5);
+    const s=document.createElement("script");let done=false;
+    const clean=()=>{done=true;try{delete window[cb]}catch(e){}try{s.remove()}catch(e){}};
+    window[cb]=d=>{if(done)return;clean();res(d);};
+    s.onerror=()=>{if(done)return;clean();rej(new Error("error"));};
+    s.src=url+(url.includes("?")?"&":"?")+"callback="+cb+"&_="+Date.now();
+    document.body.appendChild(s);
+    setTimeout(()=>{if(done)return;clean();rej(new Error("timeout"));},20000);
+  });
+}
+
+function toast(msg,type){
+  let t=document.getElementById("toast");
+  if(!t){t=document.createElement("div");t.id="toast";t.style.cssText="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:8px;font-size:14px;font-weight:600;z-index:999;max-width:90vw;text-align:center;pointer-events:none;transition:opacity .2s";document.body.appendChild(t);}
+  t.textContent=msg;
+  t.style.background=type==="err"?"#7f1d1d":"var(--naranja)";
+  t.style.color="#fff";
+  t.style.opacity="1";
+  clearTimeout(t._h);
+  t._h=setTimeout(()=>{t.style.opacity="0";},3000);
+}
+
+function g(id){const el=document.getElementById(id);return el?el.value.trim():"";}
+function todayStr(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function fmtFechaRem(f){if(!f)return"";const d=new Date(f+"T00:00:00");if(isNaN(d.getTime()))return f;return d.toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"2-digit"});}
+
+function fillSelect(id,list,placeholder){
+  const s=document.getElementById(id);if(!s)return;
+  const cur=s.value;
+  s.innerHTML=`<option value="">${placeholder}</option>`;
+  (list||[]).forEach(v=>{const o=document.createElement("option");o.value=o.textContent=v;s.appendChild(o);});
+  if(cur)s.value=cur;
+}
+function fillDatalist(id,list){
+  const dl=document.getElementById(id);if(!dl)return;
+  dl.innerHTML=(list||[]).map(v=>`<option value="${v}">`).join("");
+}
+
+// ── TABS ──
+function remSwitchTab(name,btn){
+  document.getElementById("rem-nuevo").classList.toggle("active",name==="nuevo");
+  document.getElementById("rem-listado").classList.toggle("active",name==="listado");
+  btn.closest(".stabs").querySelectorAll(".stab").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  if(name==="listado")remCargarListado();
+}
+
+// ── LISTAS COMPARTIDAS (obras) ──
+async function remCargarListas(){
+  try{
+    const d=await jsonp(`${URL_}?action=getListas`);
+    if(d&&d.ok){fillSelect("remObra",d.obras,"— Sin obra —");fillSelect("rlObra",d.obras,"Todas las obras");}
+  }catch(e){}
+}
+
+// ── ELEGIR TIPO ──
+let remTipoActual="Propio";
+function remElegirTipo(tipo){
+  remTipoActual=tipo;
+  document.getElementById("remPaso0").style.display="none";
+  document.getElementById("remPaso1").style.display="block";
+  document.getElementById("remTipoLabel").textContent=tipo==="Propio"?"📤 Remito propio":"📥 Remito de tercero / compra";
+  document.getElementById("remContraparteLabel").innerHTML=(tipo==="Propio"?"Destinatario":"Proveedor")+' <span style="color:var(--naranja)">*</span>';
+  document.getElementById("remNumeroWrap").style.display=tipo==="Tercero"?"block":"none";
+  document.getElementById("remFecha").value=todayStr();
+  document.getElementById("remContraparte").value="";
+  document.getElementById("remNumero").value="";
+  document.getElementById("remDescripcion").value="";
+  document.getElementById("remObra").value="";
+  remItems=[{descripcion:"",cantidad:""}];
+  remRenderItems();
+  remFotoQuitar();
+}
+function remVolverTipo(){
+  remFotoQuitar();
+  document.getElementById("remPaso1").style.display="none";
+  document.getElementById("remPaso0").style.display="block";
+}
+function remReset(){remVolverTipo();}
+
+// ── FOTO ──
+let remFotoFile=null,remFotoB64=null;
+function remFotoSelected(input){
+  const f=input.files&&input.files[0];if(!f)return;
+  remFotoFile=f;remFotoB64=null;
+  const r=new FileReader();
+  r.onload=e=>{
+    document.getElementById("remFotoPrev").src=e.target.result;
+    document.getElementById("remFotoWrap").style.display="block";
+    document.getElementById("remFotoLabel").style.display="none";
+    if(remTipoActual==="Tercero")document.getElementById("btnLeerRemito").style.display="block";
+  };
+  r.readAsDataURL(f);
+}
+function remFotoQuitar(){
+  remFotoFile=null;remFotoB64=null;
+  const inp=document.getElementById("remFotoInput");if(inp)inp.value="";
+  document.getElementById("remFotoPrev").src="";
+  document.getElementById("remFotoWrap").style.display="none";
+  document.getElementById("remFotoLabel").style.display="flex";
+  document.getElementById("btnLeerRemito").style.display="none";
+}
+
+// ── ÍTEMS ──
+let remItems=[{descripcion:"",cantidad:""}];
+function remRenderItems(){
+  const t=document.getElementById("remItemsTable");
+  t.innerHTML=`<colgroup><col><col style="width:90px"><col style="width:34px"></colgroup>
+    <tr><th>Descripción</th><th>Cant.</th><th></th></tr>`+
+    remItems.map((it,i)=>`<tr>
+      <td><input value="${(it.descripcion||"").replace(/"/g,"&quot;")}" oninput="remItemSet(${i},'descripcion',this.value)" placeholder="Ej: Motor Lüsqtoff"></td>
+      <td><input value="${(it.cantidad||"").toString().replace(/"/g,"&quot;")}" oninput="remItemSet(${i},'cantidad',this.value)" placeholder="1"></td>
+      <td class="actions"><button class="del-row" onclick="remItemDel(${i})">🗑</button></td>
+    </tr>`).join("");
+}
+function remItemAdd(){remItems.push({descripcion:"",cantidad:""});remRenderItems();}
+function remItemDel(i){remItems.splice(i,1);if(!remItems.length)remItems=[{descripcion:"",cantidad:""}];remRenderItems();}
+function remItemSet(i,campo,val){remItems[i][campo]=val;}
+
+// ── LEER CON IA ──
+async function remLeerConIA(){
+  if(!remFotoFile){toast("Elegí una foto primero","err");return;}
+  document.getElementById("btnLeerRemito").style.display="none";
+  document.getElementById("remLoadingIA").style.display="block";
+  try{
+    const b64=await new Promise((res,rej)=>{
+      const r=new FileReader();
+      r.onload=e=>res(e.target.result.split(",")[1]);
+      r.onerror=()=>rej();r.readAsDataURL(remFotoFile);
+    });
+    remFotoB64=b64;
+    const resp=await fetch(URL_,{method:"POST",redirect:"follow",
+      body:JSON.stringify({action:"leerRemito",imagen:b64})});
+    const d=await resp.json();
+    document.getElementById("remLoadingIA").style.display="none";
+    document.getElementById("btnLeerRemito").style.display="block";
+    if(!d||!d.ok){toast(d?.error||"Error al leer","err");return;}
+    if(d.fecha)document.getElementById("remFecha").value=d.fecha;
+    if(d.proveedor)document.getElementById("remContraparte").value=d.proveedor;
+    if(d.numeroRemito)document.getElementById("remNumero").value=d.numeroRemito;
+    if(d.obra){
+      const sel=document.getElementById("remObra");
+      const existe=Array.from(sel.options).some(o=>o.value===d.obra);
+      if(existe)sel.value=d.obra;
+    }
+    remItems=(d.items&&d.items.length)?d.items.map(it=>({descripcion:it.descripcion||"",cantidad:it.cantidad!=null?String(it.cantidad):""})):[{descripcion:"",cantidad:""}];
+    remRenderItems();
+    toast("Leído — revisá los datos antes de guardar");
+  }catch(e){
+    document.getElementById("remLoadingIA").style.display="none";
+    document.getElementById("btnLeerRemito").style.display="block";
+    toast("Error de conexión","err");
+  }
+}
+
+// ── GUARDAR ──
+async function remGuardar(){
+  const fecha=g("remFecha"),contraparte=g("remContraparte");
+  if(!fecha||!contraparte){toast("Completá fecha y "+(remTipoActual==="Propio"?"destinatario":"proveedor"),"err");return;}
+  const itemsValidos=remItems.filter(it=>(it.descripcion||"").trim());
+  const btn=document.getElementById("btnGuardarRemito");
+  btn.disabled=true;btn.innerHTML='<span class="spin-sm"></span>Guardando...';
+  try{
+    let imagen=null;
+    if(remFotoFile){
+      imagen=remFotoB64||await new Promise((res,rej)=>{
+        const r=new FileReader();r.onload=e=>res(e.target.result.split(",")[1]);r.onerror=()=>rej();r.readAsDataURL(remFotoFile);
+      });
+    }
+    const payload={
+      action:"agregarRemito",
+      tipo:remTipoActual,
+      fecha,
+      contraparte,
+      numeroRemito:g("remNumero"),
+      obra:g("remObra"),
+      descripcion:g("remDescripcion"),
+      items:itemsValidos,
+      imagen
+    };
+    const resp=await fetch(URL_,{method:"POST",redirect:"follow",body:JSON.stringify(payload)});
+    const d=await resp.json();
+    if(!d||!d.ok){toast(d?.error||d?.mensaje||"Error al guardar","err");return;}
+    toast("Remito guardado ✓");
+    remReset();
+  }catch(e){toast("Error de conexión","err");}
+  finally{btn.disabled=false;btn.innerHTML="Guardar remito";}
+}
+
+// ── LISTADO ──
+let remitosCache=[];
+async function remCargarListado(){
+  const cont=document.getElementById("remListaCont");
+  cont.innerHTML='<div class="loading"><div class="spin"></div></div>';
+  try{
+    const d=await jsonp(`${URL_}?action=getRemitos`);
+    if(!d||!d.ok){cont.innerHTML='<div class="empty">No se pudo cargar el listado</div>';return;}
+    remitosCache=d.remitos||[];
+    const contrapartes=[...new Set(remitosCache.map(r=>r.contraparte).filter(Boolean))].sort();
+    fillDatalist("dl-contrapartes",contrapartes);
+    remRenderListado();
+  }catch(e){cont.innerHTML='<div class="empty">Error de conexión</div>';}
+}
+function remRenderListado(){
+  const cont=document.getElementById("remListaCont");
+  const fTipo=g("rlTipo"),fFecha=g("rlFecha"),fContra=g("rlContraparte").toLowerCase(),fObra=g("rlObra");
+  const lista=remitosCache.filter(r=>{
+    if(fTipo&&r.tipo!==fTipo)return false;
+    if(fFecha&&r.fecha!==fFecha)return false;
+    if(fContra&&!(r.contraparte||"").toLowerCase().includes(fContra))return false;
+    if(fObra&&r.obra!==fObra)return false;
+    return true;
+  });
+  if(!lista.length){cont.innerHTML='<div class="empty">Sin remitos con esos filtros</div>';return;}
+  cont.innerHTML=lista.map(r=>{
+    const nItems=(r.items||[]).length;
+    const tipoTag=r.tipo==="Propio"
+      ?'<span class="tag" style="background:rgba(34,197,94,.15);color:var(--verde)">📤 Propio</span>'
+      :'<span class="tag" style="background:rgba(232,101,26,.15);color:var(--naranja)">📥 Tercero</span>';
+    return `<div class="list-item" onclick="remVerDetalle('${r.id}')">
+      <div class="item-top">
+        <div class="item-title">${r.contraparte||"(sin nombre)"}</div>
+        <div class="item-date" style="font-size:12px;color:var(--texto2)">${fmtFechaRem(r.fecha)}</div>
+      </div>
+      <div class="item-body">
+        ${tipoTag}
+        ${r.numeroRemito?`<span class="tag tag-gray">N° ${r.numeroRemito}</span>`:""}
+        ${r.obra?`<span class="tag tag-gray">${r.obra}</span>`:""}
+        <span class="tag tag-gray">${nItems} ítem${nItems===1?"":"s"}</span>
+        ${r.foto?'<span class="tag tag-gray">📷</span>':""}
+      </div>
+    </div>`;
+  }).join("");
+}
+function remVerDetalle(id){
+  const r=remitosCache.find(x=>String(x.id)===String(id));if(!r)return;
+  document.querySelector("#rem-listado > .toolbar").style.display="none";
+  document.getElementById("remListaCont").style.display="none";
+  document.getElementById("remDetalle").style.display="block";
+  const items=r.items||[];
+  document.getElementById("remDetalleBody").innerHTML=`
+    <div class="card-title">${r.tipo==="Propio"?"📤":"📥"} ${r.contraparte||""}</div>
+    <div style="font-size:13px;color:var(--texto2);margin-bottom:10px">${fmtFechaRem(r.fecha)}${r.obra?" · "+r.obra:""}${r.numeroRemito?" · N° "+r.numeroRemito:""}</div>
+    ${r.foto?`<div style="text-align:center;margin-bottom:14px"><img src="${r.foto}" onclick="remAmpliarFoto('${r.foto}')" style="max-width:100%;max-height:320px;border-radius:var(--rsm);cursor:zoom-in;border:1px solid var(--borde)"></div>`:""}
+    <table class="vtable"><tr><th>Descripción</th><th>Cant.</th></tr>
+    ${items.map(it=>`<tr><td style="padding:8px">${it.descripcion||""}</td><td style="padding:8px;text-align:center">${it.cantidad||""}</td></tr>`).join("")||'<tr><td colspan="2" style="padding:10px;text-align:center;color:var(--gris5)">Sin ítems</td></tr>'}
+    </table>
+    ${r.descripcion?`<div style="margin-top:12px;font-size:13px;color:var(--texto2)">${r.descripcion}</div>`:""}
+    <button class="mini-btn sec" style="margin-top:16px;border-color:#f87171;color:#f87171" onclick="remEliminar('${r.id}')">🗑 Eliminar remito</button>
+  `;
+}
+function remVolverListado(){
+  document.getElementById("remDetalle").style.display="none";
+  document.querySelector("#rem-listado > .toolbar").style.display="flex";
+  document.getElementById("remListaCont").style.display="block";
+}
+async function remEliminar(id){
+  if(!confirm("¿Eliminar este remito? No se puede deshacer."))return;
+  try{
+    const d=await jsonp(`${URL_}?action=eliminarRemito&id=${encodeURIComponent(id)}`);
+    if(!d||!d.ok){toast(d?.mensaje||"Error al eliminar","err");return;}
+    toast("Remito eliminado");
+    remVolverListado();
+    remCargarListado();
+  }catch(e){toast("Error de conexión","err");}
+}
+function remAmpliarFoto(url){
+  document.getElementById("remFotoOverlayImg").src=url;
+  document.getElementById("remFotoOverlay").style.display="flex";
+}
+function remCerrarFotoAmpliada(){document.getElementById("remFotoOverlay").style.display="none";}
+
+// ── INIT ──
+aplicarTema(document.documentElement.getAttribute("data-theme")==="light"?"light":"dark");
+remRenderItems();
+remCargarListas();
+remCargarListado();
+</script>
+</body>
+</html>

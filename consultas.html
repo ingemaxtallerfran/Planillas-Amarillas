@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Ingemax — Consultas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--naranja:#E8651A;--negro:#0f0f0f;--gris1:#1a1a1a;--gris2:#252525;--gris3:#333;--gris5:#888;--borde:#2e2e2e;--texto:#f0f0f0;--texto2:#aaa;--radius:10px;--rsm:7px}
+    [data-theme="light"]{--naranja:#D9540A;--negro:#f2f2f2;--gris1:#fff;--gris2:#eaeaea;--gris3:#d5d5d5;--gris5:#6b6b6b;--borde:#d0d0d0;--texto:#111;--texto2:#444}
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%}
+    body{font-family:'Barlow',sans-serif;background:var(--negro);color:var(--texto);display:flex;flex-direction:column;transition:background .2s,color .2s;overflow:hidden}
+    .header{background:var(--gris1);border-bottom:2px solid var(--naranja);padding:0 12px;display:flex;align-items:center;gap:10px;height:56px;flex-shrink:0}
+    [data-theme="light"] .header{box-shadow:0 1px 4px rgba(0,0,0,.08)}
+    .back-btn{background:var(--gris2);border:1px solid var(--borde);border-radius:50%;width:38px;height:38px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--texto);text-decoration:none;flex-shrink:0}
+    .logo-box{background:#fff;border-radius:7px;padding:5px 10px;display:flex;align-items:center;height:40px}
+    .logo-img{height:28px;width:auto;display:block}
+    .logo-fallback{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:#111}
+    .logo-fallback span{color:var(--naranja)}
+    .title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;flex:1}
+    .theme-btn{background:var(--gris2);border:1px solid var(--borde);border-radius:50%;width:38px;height:38px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+    .chat-scroll{flex:1;overflow-y:auto;padding:16px;max-width:640px;width:100%;margin:0 auto}
+    .chat-empty{text-align:center;color:var(--texto2);padding:30px 10px}
+    .chat-empty p{font-size:14px;margin-bottom:16px}
+    .chips{display:flex;flex-direction:column;gap:8px;max-width:400px;margin:0 auto}
+    .chip{background:var(--gris1);border:1px solid var(--borde);border-radius:var(--rsm);padding:10px 14px;font-size:13px;color:var(--texto);cursor:pointer;text-align:left;font-family:'Barlow',sans-serif}
+    .chip:hover{border-color:var(--naranja)}
+
+    .msg{max-width:80%;margin-bottom:12px;padding:11px 14px;border-radius:14px;font-size:14px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word}
+    .msg.user{background:var(--naranja);color:#fff;margin-left:auto;border-bottom-right-radius:3px}
+    .msg.bot{background:var(--gris1);border:1px solid var(--borde);color:var(--texto);margin-right:auto;border-bottom-left-radius:3px}
+    .msg.err{background:rgba(248,113,113,.12);border:1px solid #f87171;color:#f87171}
+    .msg-fecha{font-size:10px;opacity:.6;margin-top:5px}
+
+    .thinking{display:flex;gap:4px;align-items:center;padding:4px 0}
+    .thinking span{width:6px;height:6px;border-radius:50%;background:var(--gris5);animation:tk 1.2s infinite}
+    .thinking span:nth-child(2){animation-delay:.2s}
+    .thinking span:nth-child(3){animation-delay:.4s}
+    @keyframes tk{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+
+    .inputbar{flex-shrink:0;border-top:1px solid var(--borde);background:var(--gris1);padding:10px 12px;display:flex;gap:8px;align-items:flex-end;max-width:640px;width:100%;margin:0 auto;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+    .inputbar textarea{flex:1;resize:none;background:var(--gris2);border:1px solid var(--borde);border-radius:18px;color:var(--texto);font-family:'Barlow',sans-serif;font-size:15px;padding:10px 14px;outline:none;max-height:100px;line-height:1.3}
+    .inputbar textarea:focus{border-color:var(--naranja)}
+    .send-btn{background:var(--naranja);color:#fff;border:none;border-radius:50%;width:42px;height:42px;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+    .send-btn:disabled{opacity:.5;cursor:not-allowed}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a class="back-btn" href="menu" title="Volver al menú">‹</a>
+    <div class="logo-box">
+      <img src="logo-ingemax.jpg" alt="INGEMAX" class="logo-img" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+      <div class="logo-fallback" style="display:none">INGEMA<span>X</span></div>
+    </div>
+    <div class="title">Consultas</div>
+    <button class="theme-btn" id="themeBtn" onclick="toggleTema()">🌙</button>
+  </div>
+
+  <div class="chat-scroll" id="chatScroll">
+    <div class="chat-empty" id="chatEmpty">
+      <p>Preguntame sobre los equipos, combustible o stock.</p>
+      <div class="chips">
+        <button class="chip" onclick="chatPreguntaRapida(this)">¿Dónde está el equipo P-22?</button>
+        <button class="chip" onclick="chatPreguntaRapida(this)">¿Cuándo se le cambió la batería?</button>
+        <button class="chip" onclick="chatPreguntaRapida(this)">¿Cuánto gasoil consumimos este mes?</button>
+        <button class="chip" onclick="chatPreguntaRapida(this)">¿Cuánto stock de gasoil hay en la cisterna?</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="inputbar">
+    <textarea id="chatInput" rows="1" placeholder="Preguntá algo..." onkeydown="chatKeydown(event)" oninput="chatAutoGrow(this)"></textarea>
+    <button class="send-btn" id="chatBtnEnviar" onclick="chatEnviar()">➤</button>
+  </div>
+
+<script>
+const URL_ = "https://script.google.com/macros/s/AKfycbwh9fSHZ0Tt6nGQFcWFJg7P5L4jUVoRdhs1QhulVECMqmn7ACv58VUUprOhMQviszKSew/exec";
+
+// ── TEMA ──
+function aplicarTema(t){
+  const b=document.getElementById("themeBtn");
+  if(t==="light"){document.documentElement.setAttribute("data-theme","light");if(b)b.textContent="☀️";}
+  else{document.documentElement.removeAttribute("data-theme");if(b)b.textContent="🌙";}
+  try{sessionStorage.setItem("tema",t);}catch(e){}
+}
+function toggleTema(){
+  const a=document.documentElement.getAttribute("data-theme")==="light"?"light":"dark";
+  aplicarTema(a==="light"?"dark":"light");
+}
+(function(){let t="dark";try{t=sessionStorage.getItem("tema")||"dark";}catch(e){}if(t==="light")document.documentElement.setAttribute("data-theme","light");})();
+
+function fmtHora(){return new Date().toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"});}
+
+// ── CHAT ──
+let chatMensajes=[]; // {role:"user"|"assistant", content:string}
+let chatEnviando=false;
+
+function chatAutoGrow(el){el.style.height="auto";el.style.height=Math.min(el.scrollHeight,100)+"px";}
+function chatKeydown(ev){
+  if(ev.key==="Enter"&&!ev.shiftKey){ev.preventDefault();chatEnviar();}
+}
+function chatPreguntaRapida(btn){
+  document.getElementById("chatInput").value=btn.textContent;
+  chatEnviar();
+}
+
+function chatRenderMensaje(role,texto,esError){
+  const empty=document.getElementById("chatEmpty");
+  if(empty)empty.remove();
+  const scroll=document.getElementById("chatScroll");
+  const div=document.createElement("div");
+  div.className="msg "+(role==="user"?"user":(esError?"bot err":"bot"));
+  div.textContent=texto;
+  const hora=document.createElement("div");
+  hora.className="msg-fecha";
+  hora.textContent=fmtHora();
+  div.appendChild(hora);
+  scroll.appendChild(div);
+  scroll.scrollTop=scroll.scrollHeight;
+  return div;
+}
+
+function chatMostrarPensando(){
+  const scroll=document.getElementById("chatScroll");
+  const div=document.createElement("div");
+  div.className="msg bot";
+  div.id="chatPensando";
+  div.innerHTML='<div class="thinking"><span></span><span></span><span></span></div>';
+  scroll.appendChild(div);
+  scroll.scrollTop=scroll.scrollHeight;
+}
+function chatQuitarPensando(){
+  const el=document.getElementById("chatPensando");
+  if(el)el.remove();
+}
+
+async function chatEnviar(){
+  if(chatEnviando)return;
+  const input=document.getElementById("chatInput");
+  const texto=input.value.trim();
+  if(!texto)return;
+  input.value="";
+  chatAutoGrow(input);
+  chatRenderMensaje("user",texto);
+  chatMensajes.push({role:"user",content:texto});
+
+  chatEnviando=true;
+  document.getElementById("chatBtnEnviar").disabled=true;
+  chatMostrarPensando();
+  try{
+    const resp=await fetch(URL_,{method:"POST",redirect:"follow",
+      body:JSON.stringify({action:"consultarIA",mensajes:chatMensajes})});
+    const d=await resp.json();
+    chatQuitarPensando();
+    if(!d||!d.ok){
+      chatRenderMensaje("bot",d?.error||"No pude responder esa pregunta.",true);
+      chatMensajes.pop(); // no dejamos la pregunta colgada sin respuesta en el historial
+      return;
+    }
+    chatRenderMensaje("bot",d.respuesta||"(sin respuesta)");
+    chatMensajes.push({role:"assistant",content:d.respuesta||""});
+  }catch(e){
+    chatQuitarPensando();
+    chatRenderMensaje("bot","Error de conexión. Probá de nuevo.",true);
+    chatMensajes.pop();
+  }finally{
+    chatEnviando=false;
+    document.getElementById("chatBtnEnviar").disabled=false;
+    input.focus();
+  }
+}
+</script>
+</body>
+</html>

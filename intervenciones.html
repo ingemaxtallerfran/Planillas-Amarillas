@@ -1460,8 +1460,11 @@ function switchPage(name,idx,btn){
   const ind=document.getElementById("navIndicator");
   ind.style.left=(w*idx)+"%";ind.style.width=w+"%";
   try{sessionStorage.setItem("ap",name);sessionStorage.setItem("ai",String(idx));}catch(e){}
-  // CARGA PEREZOSA: el herramental se carga solo al entrar por primera vez
+  // CARGA PEREZOSA: cada módulo se carga solo la primera vez que se entra a su pestaña
   if(name==="herr"&&!S.herrLoaded){hCargar();}
+  if(name==="stock"&&!S.stockLoaded){stockCargar();}
+  if(name==="planillas"&&!S.planLoaded){planCargar();}
+  if(name==="interv"&&!S.intervLoaded){intervCargar();}
 }
 function switchStab(mod,name,btn){
   const prefix=mod+"-";
@@ -1542,11 +1545,15 @@ async function init(){
     if (fieldId === "consEquipo") consRender();
   };
 
-  // Restaurar página
+  // Restaurar página (o combustible por default) — dispara la carga perezosa del módulo correspondiente
   try{
-    const sp=sessionStorage.getItem("ap"),si=parseInt(sessionStorage.getItem("ai")||"0");
-    if(sp){const sb=document.querySelector(`[data-page="${sp}"]`);if(sb)switchPage(sp,si,sb);}
+    const sp=sessionStorage.getItem("ap")||"combustible",si=parseInt(sessionStorage.getItem("ai")||"0");
+    const sb=document.querySelector(`[data-page="${sp}"]`);
+    if(sb)switchPage(sp,si,sb);
   }catch(e){}
+
+  // Combustible se carga siempre (las tarjetas de Equipos muestran su consumo), en paralelo con lo de abajo
+  combCargar();
 
   // Cargar listas + equipos en paralelo
   const [rL,rE]=await Promise.allSettled([
@@ -1598,8 +1605,6 @@ async function init(){
       const o=document.createElement("option");o.value=o.textContent=code;s.appendChild(o);
     });
   });
-
-  await Promise.all([combCargar(),planCargar(),intervCargar(),stockCargar()]);
 }
 
 // ══ COMBUSTIBLE ══
@@ -1608,6 +1613,7 @@ async function combCargar(){
     const d=await jsonp(`${URL_}?action=getCombustiblesTotal`);
     if(!d||!d.ok)return;
     S.combRegistros=d.registros||[];
+    S.combLoaded=true;
     // Si operarios llegó vacío, armar desde historial
     if(!document.getElementById("dl-operarios").childElementCount){
       const ops=[...new Set(S.combRegistros.map(r=>r.responsable).filter(Boolean))].sort();
@@ -1883,7 +1889,7 @@ function consRender(){
 
 // ══ STOCK CISTERNA GRANDE ══
 const CAP_CISTERNA=10000;
-async function stockCargar(){await Promise.all([cgCargarStock(),cgCargarMovs(),cgCargarDestinos()]);}
+async function stockCargar(){await Promise.all([cgCargarStock(),cgCargarMovs(),cgCargarDestinos()]);S.stockLoaded=true;}
 async function cgCargarDestinos(){
   try{
     const d=await jsonp(`${URL_}?action=getDestinosCisterna`);
@@ -2043,6 +2049,7 @@ async function planCargar(){
     const d=await jsonp(`${URL_}?action=getRegistros`);
     if(!d||!d.ok)return;
     S.planRegistros=d.registros||[];
+    S.planLoaded=true;
     const obras=[...new Set(S.planRegistros.map(r=>r.obra).filter(Boolean))].sort();
     const obrasSel=document.getElementById("hpObra");
     if(obrasSel){const curO=obrasSel.value;obrasSel.innerHTML='<option value="">Todas las obras / ubicaciones</option>'+obras.map(o=>`<option value="${o}">${o}</option>`).join("");if(curO)obrasSel.value=curO;}
@@ -2123,6 +2130,7 @@ async function intervCargar(){
     const d=await jsonp(`${URL_}?action=getIntervenciones`);
     if(!d||!d.ok)return;
     S.intervRegistros=d.intervenciones||[];
+    S.intervLoaded=true;
     poblarDatalistsInterv();intervRenderHist();
   }catch(e){}
 }

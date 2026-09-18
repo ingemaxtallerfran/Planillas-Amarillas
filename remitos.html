@@ -211,7 +211,7 @@ function jsonp(url){
     s.onerror=()=>{if(done)return;clean();rej(new Error("error"));};
     s.src=url+(url.includes("?")?"&":"?")+"callback="+cb+"&_="+Date.now();
     document.body.appendChild(s);
-    setTimeout(()=>{if(done)return;clean();rej(new Error("timeout"));},20000);
+    setTimeout(()=>{if(done)return;clean();rej(new Error("timeout"));},30000);
   });
 }
 

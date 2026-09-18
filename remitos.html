@@ -3,6 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <script>
+  /* Modo solo lectura: abrir con ?modo=lectura (se mantiene en la pestaña). ?modo=edicion lo desactiva. */
+  (function(){
+    try{var q=new URLSearchParams(location.search).get("modo");
+      if(q==="lectura")sessionStorage.setItem("modo","lectura");
+      else if(q==="edicion")sessionStorage.removeItem("modo");}catch(e){}
+    var ro=false;try{ro=sessionStorage.getItem("modo")==="lectura";}catch(e){}
+    window.SOLO_LECTURA=ro;
+    if(!ro)return;
+    document.documentElement.classList.add("ro");
+    var of=window.fetch;
+    window.fetch=function(u,o){
+      if(o&&o.method&&String(o.method).toUpperCase()==="POST")
+        return Promise.resolve(new Response(JSON.stringify({ok:false,error:"Modo solo lectura: no se puede guardar",mensaje:"Modo solo lectura: no se puede guardar"}),{status:200,headers:{"Content-Type":"application/json"}}));
+      return of.apply(this,arguments);
+    };
+    document.addEventListener("DOMContentLoaded",function(){
+      var b=document.createElement("div");
+      b.textContent="\uD83D\uDC41 Modo solo lectura: se puede mirar todo, pero no guardar ni editar";
+      b.style.cssText="background:#2b6cb0;color:#fff;text-align:center;font:600 12px Arial,sans-serif;padding:5px 8px;position:relative;z-index:2000";
+      document.body.insertBefore(b,document.body.firstChild);
+      document.querySelectorAll("a.app-card,a.back-btn").forEach(function(a){var h=a.getAttribute("href")||"";if(h&&h.indexOf("modo=")<0)a.setAttribute("href",h+(h.indexOf("?")>=0?"&":"?")+"modo=lectura");});
+    });
+  })();
+  </script>
+  <style>
+  html.ro [onclick*="remGuardar"],html.ro [onclick*="remEliminar"],html.ro [onclick*="remLeerConIA"],html.ro .foto-btn-label,html.ro .stabs,html.ro #rem-nuevo{display:none!important} html.ro #rem-listado{display:block!important}
+  </style>
   <title>Ingemax — Remitos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
@@ -202,7 +230,7 @@ function toggleTema(){
 (function(){let t="dark";try{t=sessionStorage.getItem("tema")||"dark";}catch(e){}if(t==="light")document.documentElement.setAttribute("data-theme","light");})();
 
 // ── JSONP ──
-function jsonp(url){
+function jsonp(url){if(window.SOLO_LECTURA&&!/^(get|debug)/.test(new URL(url,location.href).searchParams.get("action")||""))return Promise.resolve({ok:false,mensaje:"Modo solo lectura: no se puede guardar"});
   return new Promise((res,rej)=>{
     const cb="cb_"+Date.now()+"_"+Math.floor(Math.random()*1e5);
     const s=document.createElement("script");let done=false;

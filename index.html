@@ -3,6 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <script>
+  /* Modo solo lectura: abrir con ?modo=lectura (se mantiene en la pestaña). ?modo=edicion lo desactiva. */
+  (function(){
+    try{var q=new URLSearchParams(location.search).get("modo");
+      if(q==="lectura")sessionStorage.setItem("modo","lectura");
+      else if(q==="edicion")sessionStorage.removeItem("modo");}catch(e){}
+    var ro=false;try{ro=sessionStorage.getItem("modo")==="lectura";}catch(e){}
+    window.SOLO_LECTURA=ro;
+    if(!ro)return;
+    document.documentElement.classList.add("ro");
+    var of=window.fetch;
+    window.fetch=function(u,o){
+      if(o&&o.method&&String(o.method).toUpperCase()==="POST")
+        return Promise.resolve(new Response(JSON.stringify({ok:false,error:"Modo solo lectura: no se puede guardar",mensaje:"Modo solo lectura: no se puede guardar"}),{status:200,headers:{"Content-Type":"application/json"}}));
+      return of.apply(this,arguments);
+    };
+    document.addEventListener("DOMContentLoaded",function(){
+      var b=document.createElement("div");
+      b.textContent="\uD83D\uDC41 Modo solo lectura: se puede mirar todo, pero no guardar ni editar";
+      b.style.cssText="background:#2b6cb0;color:#fff;text-align:center;font:600 12px Arial,sans-serif;padding:5px 8px;position:relative;z-index:2000";
+      document.body.insertBefore(b,document.body.firstChild);
+      document.querySelectorAll("a.app-card,a.back-btn").forEach(function(a){var h=a.getAttribute("href")||"";if(h&&h.indexOf("modo=")<0)a.setAttribute("href",h+(h.indexOf("?")>=0?"&":"?")+"modo=lectura");});
+    });
+  })();
+  </script>
+  <style>
+  html.ro #bguardar,html.ro #blimpiar{display:none!important}
+  </style>
   <title>Ingemax — Planillas</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#2C2C2C">
@@ -197,7 +225,7 @@
     setTimeout(() => t.classList.add("hidden"), 3000);
   }
 
-  function jsonp(url) {
+  function jsonp(url) {if(window.SOLO_LECTURA&&!/^(get|debug)/.test(new URL(url,location.href).searchParams.get("action")||""))return Promise.resolve({ok:false,mensaje:"Modo solo lectura: no se puede guardar"});
     return new Promise((resolve, reject) => {
       const cb = "cb_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
       const script = document.createElement("script");

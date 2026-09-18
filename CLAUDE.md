@@ -39,6 +39,10 @@ Cada página es autocontenida: tiene su propio bloque `<style>` y su `<script>` 
 - El tema oscuro/claro se maneja con un atributo `data-theme="light"` en `<html>`, alternado por `toggleTema()`/`aplicarTema()` y persistido en `sessionStorage` (clave `tema`) — no en `localStorage`, ni con `prefers-color-scheme`. Los overrides de CSS viven en bloques `[data-theme="light"] { ... }` que redefinen las mismas custom properties de CSS (`--naranja`, `--negro`, `--gris1`, etc.) declaradas en `:root`. Al agregar UI con color nuevo, definila como variable CSS en `:root` y sobrescribila en el bloque `[data-theme="light"]` en vez de hardcodear colores.
 - `menu.html` e `index.html` no implementan cambio de tema (son solo oscuro / solo claro respectivamente) — no asumir que todas las páginas tienen un toggle de tema.
 
+## Modo solo lectura
+
+Abrir cualquier página con `?modo=lectura` (ej. `menu.html?modo=lectura`) activa un modo de consulta pensado para gente que se está familiarizando con el sistema: el flag se guarda en `sessionStorage` (`modo`), se propaga a los links del menú y del botón volver, y `?modo=edicion` lo desactiva. No es seguridad real (no hay login y la URL del Apps Script está en el código): protege contra errores, no contra alguien que quiera saltearlo. Cada página (`menu`, `index`, `intervenciones`, `remitos`, `costos`) tiene al principio del `<head>` el mismo bloque que define `window.SOLO_LECTURA`, agrega la clase `ro` a `<html>`, muestra un banner y bloquea todo `fetch` POST. Además `jsonp()` solo deja pasar acciones que empiezan con `get`. Los botones de escritura se ocultan con selectores CSS `html.ro [onclick*="..."]` específicos de cada página: al agregar un botón o función que escriba, sumarlo a esa lista. `consultas.html` no tiene modo lectura (su chat puede registrar services).
+
 ## Flujo de trabajo: cambio → cache → push → publicado
 
 El sitio se publica por GitHub Pages: no hay paso de deploy separado, lo que está en `main` es lo que ven los usuarios. Después de cada cambio en un archivo cacheado por el service worker:

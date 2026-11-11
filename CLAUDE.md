@@ -53,6 +53,8 @@ El sitio se publica por GitHub Pages: no hay paso de deploy separado, lo que est
 
 Si te salteás el push, el cambio no existe para nadie más allá de tu working directory; si te saltás el bump de `CACHE`, el push no alcanza porque los usuarios que vuelven van a seguir viendo la versión cacheada vieja. Los dos pasos son parte del mismo "deploy" y van juntos.
 
+**Colaboradores (ej. un pasante):** trabajan directo sobre `main`, sin ramas ni Pull Requests (decisión de Fran: son pocos cambios y, si algo se rompe, se revierte con `git revert`). Como `main` se publica en vivo, antes de empezar hacer `git pull`, mantener los cambios chicos y de a uno, y recordar que probar en local escribe en las planillas reales (usar `?modo=lectura` para mirar). Guía para el colaborador: [GUIA-COLABORADOR.md](GUIA-COLABORADOR.md).
+
 ## Trabajando en intervenciones.html
 
 Este archivo es grande (~180KB, 3180 líneas) y no tiene límites de módulos — es un solo `<script>` con muchas funciones a nivel superior. Antes de agregar una función, buscá helpers existentes (`g()`, `fill()`/`fillSelect()`, `toast()`, `jsonp()`, `fmtFecha*()`, `parseNum()`) en vez de reimplementarlos. Las funciones de estado/renderizado de cada sección están prefijadas por módulo, por ejemplo `comb*` (Combustible), `cg*` (Carga/Stock), `interv*` (Intervenciones), `equipos*` (Equipos).

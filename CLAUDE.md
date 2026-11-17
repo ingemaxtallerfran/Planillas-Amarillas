@@ -57,4 +57,24 @@ Si te salteás el push, el cambio no existe para nadie más allá de tu working 
 
 ## Trabajando en intervenciones.html
 
-Este archivo es grande (~180KB, 3180 líneas) y no tiene límites de módulos — es un solo `<script>` con muchas funciones a nivel superior. Antes de agregar una función, buscá helpers existentes (`g()`, `fill()`/`fillSelect()`, `toast()`, `jsonp()`, `fmtFecha*()`, `parseNum()`) en vez de reimplementarlos. Las funciones de estado/renderizado de cada sección están prefijadas por módulo, por ejemplo `comb*` (Combustible), `cg*` (Carga/Stock), `interv*` (Intervenciones), `equipos*` (Equipos).
+Este archivo es grande (~190KB, ~3300 líneas) y no tiene límites de módulos — es un solo `<script>` con muchas funciones a nivel superior. Antes de agregar una función, buscá helpers existentes (`g()`, `fill()`/`fillSelect()`, `toast()`, `jsonp()`, `fmtFecha*()`, `parseNum()`) en vez de reimplementarlos. Las funciones de estado/renderizado de cada sección están prefijadas por módulo, por ejemplo `comb*` (Combustible), `cg*` (Carga/Stock), `interv*` (Intervenciones), `equipos*` (Equipos), `h*` (Herramental).
+
+Para ubicarte sin leerlo entero: los bloques HTML están marcados con `<!-- ══ NOMBRE ══ -->` y los de JS con `// ══ NOMBRE ══` o `// ── NOMBRE ──`. Grep de `══` te da el índice; después leé solo el rango que necesitás.
+
+### Copia local de lecturas (`swr`)
+
+`intervenciones.html` y `costos.html` guardan la última respuesta de cada acción `get*` en `localStorage` (claves `ix1:<accion>`). `swr(accion, aplicar)` pinta al instante con esa copia y, cuando llega la respuesta real, vuelve a llamar a `aplicar` solo si los datos cambiaron (espera si el usuario está escribiendo en una tarjeta). Mientras actualiza, `body` tiene la clase `sync` (barrita bajo el header). Si el servidor falla y hay copia, se ve la copia con un aviso. Reglas:
+- Toda lectura nueva que se pinte al abrir una pestaña va con `await swr("getX", d => {...})`, no con `jsonp` directo.
+- `aplicar` tiene que poder correrse dos veces seguidas sin duplicar nada (reemplazar `innerHTML`, no agregar).
+- Después de guardar algo, volvé a llamar a la función de carga de esa sección: el `swr` trae lo nuevo y actualiza la copia.
+
+## Trabajar gastando pocos tokens
+
+Instrucciones para cualquier modelo que trabaje en este repo:
+- **No leas archivos enteros.** Grep del nombre de la función/id/texto visible, y leé ±40 líneas alrededor. `intervenciones.html` entero son ~60K tokens.
+- **No releas lo que acabás de editar** ni pidas capturas para comprobar un cambio: usá `tools/verificar.ps1`, que carga las páginas sin ventana en modo lectura contra el backend real y devuelve una línea por página con errores de JS. Ej.: `powershell -ExecutionPolicy Bypass -File tools\verificar.ps1 -Paginas intervenciones.html -Js "S.equiposInfo.length"`.
+- **El backend no está acá.** No pidas que peguen el Apps Script entero: si un cambio necesita backend, escribí el bloque nuevo completo (función aparte + la línea exacta para enganchar en `doGet`/`doPost`) y avisá a Fran que tiene que pegarlo y hacer "Nueva versión" del deployment. Las lecturas (`get*`) van por JSONP con parámetros en la URL; las escrituras chicas también (`e.parameter`); solo las fotos y la IA van por `fetch` POST (`data` = JSON del body).
+- **Antes de optimizar, medí** (ej. `curl -sL -w "%{time_total}" "<URL_>?action=getX&callback=f" -o /dev/null`). La lentitud suele estar en el backend, no en el HTML.
+- **Un cambio = un commit**, con el bump de `CACHE`. Antes de empezar `git pull` (hay otro colaborador pusheando a `main`).
+- **Respuestas a Fran: cortas y en criollo.** No es programador: decile qué cambió y qué tiene que hacer él, sin explicar el código.
+- Si algo de este archivo quedó desactualizado (cantidad de líneas, nombres), corregilo en el mismo commit.

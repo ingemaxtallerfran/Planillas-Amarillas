@@ -139,18 +139,26 @@ function getGrupoDeEquipo(codigo){
 function fmtPeso(n){n=Number(n)||0;return "$"+n.toLocaleString("es-AR",{maximumFractionDigits:0});}
 
 // ── CARGA ──
+// Copia local: pinta al instante la última respuesta guardada y la reemplaza si la real cambió
+// (versión mínima del swr() de intervenciones.html; aplicar(d) puede correr dos veces).
+async function swr(accion,aplicar){
+  const k="ix1:"+accion;let previo=null;
+  try{previo=localStorage.getItem(k);}catch(e){}
+  if(previo){try{aplicar(JSON.parse(previo));}catch(e){previo=null;}}
+  let d=null;
+  try{d=await jsonp(`${URL_}?action=${accion}`);}catch(e){}
+  if(!d||!d.ok)return;
+  const txt=JSON.stringify(d);
+  if(txt!==previo){try{localStorage.setItem(k,txt);}catch(e){}aplicar(d);}
+}
 async function costosCargar(){
-  const cont=document.getElementById("costosResumen");
-  try{
-    const [r26,rH]=await Promise.allSettled([
-      jsonp(`${URL_}?action=getCostos2026`),
-      jsonp(`${URL_}?action=getCostosHistorico`)
-    ]);
-    S.costos2026=(r26.status==="fulfilled"&&r26.value?.ok)?r26.value:null;
-    S.costosHist=(rH.status==="fulfilled"&&rH.value?.ok)?rH.value:null;
-    if(!S.costos2026&&!S.costosHist){cont.innerHTML='<div class="empty">No se pudieron cargar los datos de costos.</div>';return;}
-    costosRenderResumen();
-  }catch(e){cont.innerHTML='<div class="empty">Error de conexión</div>';}
+  // Si llegan datos nuevos mientras alguien mira un detalle, no sacarlo de ahí: se ven al volver
+  const pintar=()=>{if(document.getElementById("costosDetalle").style.display==="none")costosRenderResumen();};
+  await Promise.all([
+    swr("getCostos2026",d=>{S.costos2026=d;pintar();}),
+    swr("getCostosHistorico",d=>{S.costosHist=d;pintar();})
+  ]);
+  if(!S.costos2026&&!S.costosHist)document.getElementById("costosResumen").innerHTML='<div class="empty">No se pudieron cargar los datos de costos.</div>';
 }
 
 function costosPorTipo(){
@@ -309,10 +317,7 @@ function costosVerEquipo(codigo){
   cont.style.display="none";det.style.display="block";
 }
 
-function costosVolver(){
-  document.getElementById("costosDetalle").style.display="none";
-  document.getElementById("costosResumen").style.display="block";
-}
+function costosVolver(){costosRenderResumen();} // repinta con lo último (pudo actualizarse mientras se miraba un detalle)
 
 aplicarTema(document.documentElement.getAttribute("data-theme")==="light"?"light":"dark");
 costosCargar();

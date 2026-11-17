@@ -37,7 +37,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     /* TEMA OSCURO (default) */
-    :root{--naranja:#E8651A;--negro:#0f0f0f;--gris1:#1a1a1a;--gris2:#252525;--gris3:#333;--gris4:#555;--gris5:#888;--borde:#2e2e2e;--texto:#f0f0f0;--texto2:#aaa;--verde:#22c55e;--azul:#3b82f6;--radius:10px;--rsm:7px;--prio-alto:#f87171;--prio-medio:#fbbf24;--prio-bajo:#4ade80}
+    :root{--naranja:#E8651A;--negro:#0f0f0f;--gris1:#1a1a1a;--gris2:#252525;--gris3:#333;--gris4:#555;--gris5:#888;--borde:#2e2e2e;--texto:#f0f0f0;--texto2:#aaa;--verde:#22c55e;--azul:#3b82f6;--radius:10px;--rsm:7px;--prio-alto:#f87171;--prio-medio:#fbbf24;--prio-bajo:#084dcc}
     /* TEMA CLARO (alto contraste para sol) */
     [data-theme="light"]{
       --naranja:#D9540A;        /* naranja un poco más oscuro para contraste sobre blanco */
@@ -54,7 +54,7 @@
       --azul:#2563eb;
       --prio-alto:#dc2626;      /* prioridades de Pendientes: tonos más oscuros para fondo blanco */
       --prio-medio:#b45309;
-      --prio-bajo:#15803d;
+      --prio-bajo:#084dcc;
     }
     /* Ajustes finos modo claro: sombras suaves en cards y nav */
     [data-theme="light"] .header{box-shadow:0 1px 4px rgba(0,0,0,.08)}
@@ -803,7 +803,7 @@
         <div class="pill selected" onclick="alertasFiltroPrio('todas',this)">Todas</div>
         <div class="pill" onclick="alertasFiltroPrio('Alto',this)">🔴 Alto</div>
         <div class="pill" onclick="alertasFiltroPrio('Medio',this)">🟡 Medio</div>
-        <div class="pill" onclick="alertasFiltroPrio('Bajo',this)">🟢 Bajo</div>
+        <div class="pill" onclick="alertasFiltroPrio('Bajo',this)">🔵 Bajo</div>
       </div>
       <label class="ap-check"><input type="checkbox" id="apVerSol" onchange="alertasRender()"> Mostrar solucionadas</label>
       <div id="apResumen"></div>

@@ -747,6 +747,10 @@
   </div>
   <!-- Grupos por tipo -->
   <div class="stab-sec active" id="herr-tipos">
+    <div class="eq-search-wrap">
+      <span class="eq-search-icon">🔍</span>
+      <input class="eq-search" type="text" id="hBuscarGrupos" placeholder="Buscar por código, nombre o marca..." oninput="hRenderGrupos()">
+    </div>
     <div id="hGruposGrid" class="eq-grupos"><div class="loading"><div class="spin"></div></div></div>
   </div>
   <!-- Grupos por ubicación -->
@@ -2669,12 +2673,21 @@ async function hCargar(){
 function hRenderGrupos(){
   const grid=document.getElementById("hGruposGrid");
   if(!grid)return;
+  // Buscador: filtra por código, nombre (tipo + modelo) o marca
+  const q=(document.getElementById("hBuscarGrupos")?.value||"").toLowerCase().trim();
+  const coincide=h=>!q||[h.codigo,h.tipo,h.marca,h.modelo]
+    .some(v=>String(v||"").toLowerCase().includes(q));
+  const visibles=H.herr.filter(coincide);
   const conteo={};
-  H.herr.forEach(h=>{const g=hGetGrupo(h.codigo);conteo[g]=(conteo[g]||0)+1;});
+  visibles.forEach(h=>{const g=hGetGrupo(h.codigo);conteo[g]=(conteo[g]||0)+1;});
   const lista=Object.keys(conteo).map(g=>({g,c:conteo[g]})).sort((a,b)=>b.c-a.c);
+  if(q&&!visibles.length){
+    grid.innerHTML=`<div class="empty" style="grid-column:1/-1">Sin herramientas que coincidan con "${q.replace(/</g,"&lt;")}"</div>`;
+    return;
+  }
   let html=`<div class="eq-grupo-btn" onclick="hAbrir('tipo','*todas*')">
     <div><div class="eq-grupo-nombre">📦 Todas</div><div class="eq-grupo-pref">todo el herramental</div></div>
-    <div class="eq-grupo-count">${H.herr.length}</div></div>`;
+    <div class="eq-grupo-count">${visibles.length}</div></div>`;
   html+=lista.map(x=>`<div class="eq-grupo-btn" onclick="hAbrir('tipo','${x.g.replace(/'/g,"\\'")}')">
     <div><div class="eq-grupo-nombre">${x.g}</div><div class="eq-grupo-pref">herramientas</div></div>
     <div class="eq-grupo-count">${x.c}</div></div>`).join("");
@@ -2709,7 +2722,9 @@ function hAbrir(tipoVista,filtro){
   hVista=tipoVista;hFiltro=filtro;
   document.querySelectorAll('[id^="herr-"]').forEach(s=>s.classList.remove("active"));
   document.getElementById("herr-lista").classList.add("active");
-  document.getElementById("hBuscar").value="";
+  // Si hay algo escrito en el buscador de tipos, se lleva a la lista
+  const qGrupos=tipoVista==="tipo"?(document.getElementById("hBuscarGrupos")?.value||"").trim():"";
+  document.getElementById("hBuscar").value=qGrupos;
   hRenderLista();
 }
 function hVolver(){

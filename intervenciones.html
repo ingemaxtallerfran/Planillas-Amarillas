@@ -1084,7 +1084,7 @@ function swrCuandoNoEscriba(){
   // No repintar tarjetas mientras alguien escribe dentro de una (se perdería lo tipeado)
   return new Promise(res=>{(function chk(){
     const a=document.activeElement;
-    if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.closest(".equipo-card,.h-card"))setTimeout(chk,1500);else res();
+    if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.closest(".equipo-card,.h-card,.ap-card"))setTimeout(chk,1500);else res();
   })();});
 }
 async function swr(accion,aplicar){
@@ -1661,7 +1661,7 @@ async function ejecutarEliminar(){
     toast("Eliminado ✓");
     if(tipo==="comb"){cerrarModal("combModal");await combCargar();}
     if(tipo==="interv"){cerrarModal("intervModal");await intervCargar();}
-    if(tipo==="alerta"){apAlertas=apAlertas.filter(x=>x.id!==id);if(apEditandoId===id)apEditandoId=null;apFrecuentes();alertasRender();}
+    if(tipo==="alerta"){apAlertas=apAlertas.filter(x=>x.id!==id);if(apEditandoId===id)apEditandoId=null;apFrecuentes();alertasRender();alertasCargar();}
   }catch(e){toast("Error de conexión","err");}
 }
 
@@ -2665,7 +2665,7 @@ function switchAlerta(cual){
     document.getElementById(secId).style.display=k===cual?"":"none";
   });
   if(cual==="odo")equiposRenderOdoViejos();
-  if(cual==="pend"){if(S.alertasLoaded)alertasRender();else alertasCargar();}
+  if(cual==="pend")alertasCargar(); // swr pinta la copia local al instante y después trae lo nuevo
 }
 
 // ── Pendientes por equipo ──
@@ -2688,19 +2688,20 @@ function apMostrarNombre(){const el=document.getElementById("apNombre");if(el)el
 async function alertasCargar(){
   const el=document.getElementById("apLista");
   if(el&&!S.alertasLoaded)el.innerHTML='<div class="loading"><div class="spin"></div></div>';
+  const sinDatos=()=>{if(S.alertasLoaded)return;S.alertasError="No se pudieron cargar los pendientes cargados a mano";alertasRender();};
   try{
-    const d=await jsonp(`${URL_}?action=getAlertas`);
-    if(!d||!d.ok)throw new Error(d?.mensaje||"Error");
-    apAlertas=(d.alertas||[]).map(a=>({
-      id:String(a.id),equipo:normalizarCodigo(a.equipo),fecha:a.fecha||"",
-      descripcion:String(a.descripcion||""),prioridad:apNormPrio(a.prioridad),foto:a.foto||"",
-      solucionada:apEsSol(a.solucionada),fechaSolucion:a.fechaSolucion||""
-    }));
-    S.alertasLoaded=true;S.alertasError="";
-  }catch(e){
-    S.alertasError="No se pudieron cargar los pendientes cargados a mano"+(e&&e.message&&e.message!=="Error"?` (${e.message})`:"");
-  }
-  apFrecuentes();alertasRender();
+    const d=await swr("getAlertas",d=>{
+      apAlertas=(d.alertas||[]).map(a=>({
+        id:String(a.id),equipo:normalizarCodigo(a.codigo),fecha:a.fecha||"",
+        descripcion:String(a.descripcion||""),prioridad:apNormPrio(a.prioridad),foto:a.foto||"",
+        solucionada:apEsSol(a.solucionada),fechaSolucion:a.fechaSolucion||""
+      }));
+      S.alertasLoaded=true;S.alertasError="";
+      apFrecuentes();alertasRender();
+    });
+    if(d&&!d.ok){if(d.mensaje)toast(d.mensaje,"err");sinDatos();}
+    else if(!d)sinDatos();
+  }catch(e){sinDatos();}
 }
 // Sugerencias de descripción: lo que ya se cargó antes
 function apFrecuentes(){
@@ -2753,20 +2754,22 @@ async function alertasGuardar(){
   if(!validas.length){toast("Escribí al menos un problema","err");return;}
   setBtnLoading("btnAlertasGuardar","Guardando...");
   try{
-    const items=[];
+    const items=[];let fotosFallidas=0;
     for(let i=0;i<validas.length;i++){
       const c=validas[i];let foto="";
       if(apFotoFiles[c.id]){
         setBtnLoading("btnAlertasGuardar",`Subiendo foto ${i+1}...`);
         foto=(await subirFoto(apFotoFiles[c.id]))||"";
+        if(!foto)fotosFallidas++;
       }
       items.push({descripcion:c.descripcion.trim(),prioridad:c.prioridad,foto});
     }
     setBtnLoading("btnAlertasGuardar","Guardando...");
-    const p={action:"agregarAlertas",equipo:normalizarCodigo(equipo),fecha:g("apFecha")||todayStr(),alertas:JSON.stringify(items)};
+    const p={action:"agregarAlertas",codigo:normalizarCodigo(equipo),fecha:g("apFecha")||todayStr(),alertas:JSON.stringify(items)};
     const d=await jsonp(`${URL_}?${new URLSearchParams(p)}`);
     if(!d||!d.ok){toast(d?.mensaje||"Error","err");return;}
-    toast(items.length>1?`${items.length} pendientes guardados ✓`:"Pendiente guardado ✓");
+    if(fotosFallidas)toast(`Guardado, pero ${fotosFallidas>1?fotosFallidas+" fotos no se pudieron":"la foto no se pudo"} subir`,"err");
+    else toast(items.length>1?`${items.length} pendientes guardados ✓`:"Pendiente guardado ✓");
     apCasillas=[];Object.keys(apFotoFiles).forEach(k=>delete apFotoFiles[k]);
     apNuevaCasilla();alertasRenderCasillas();
     ssSet("apEquipo","");apMostrarNombre();document.getElementById("apFecha").value=todayStr();
@@ -2863,7 +2866,7 @@ async function alertaGuardarEdicion(id){
     const d=await jsonp(`${URL_}?${new URLSearchParams({action:"editarAlerta",id,descripcion,prioridad})}`);
     if(!d||!d.ok){toast(d?.mensaje||"Error","err");resetBtn("btnApEdit","Guardar cambios");return;}
     a.descripcion=descripcion;a.prioridad=prioridad;apEditandoId=null;
-    toast("Actualizado ✓");apFrecuentes();alertasRender();
+    toast("Actualizado ✓");apFrecuentes();alertasRender();alertasCargar();
   }catch(e){toast("Error de conexión","err");resetBtn("btnApEdit","Guardar cambios");}
 }
 async function alertaSolucionar(id,btn){
@@ -2874,7 +2877,7 @@ async function alertaSolucionar(id,btn){
     const d=await jsonp(`${URL_}?${new URLSearchParams({action:"solucionarAlerta",id,solucionada:nuevo?"si":"no"})}`);
     if(!d||!d.ok){toast(d?.mensaje||"Error","err");alertasRender();return;}
     a.solucionada=nuevo;a.fechaSolucion=nuevo?(d.fechaSolucion||todayStr()):"";
-    toast(nuevo?"Marcado como solucionado ✓":"Reabierto ✓");alertasRender();
+    toast(nuevo?"Marcado como solucionado ✓":"Reabierto ✓");alertasRender();alertasCargar();
   }catch(e){toast("Error de conexión","err");alertasRender();}
 }
 

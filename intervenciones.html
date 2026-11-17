@@ -29,7 +29,7 @@
   })();
   </script>
   <style>
-  html.ro [onclick*="combGuardar"],html.ro [onclick*="cgGuardar"],html.ro [onclick*="intervGuardar"],html.ro [onclick*="guardarPlanilla"],html.ro [onclick*="leerPlanilla"],html.ro [onclick*="elegirTipoPlanilla"],html.ro [onclick*="combActualizar"],html.ro [onclick*="intervActualizar"],html.ro [onclick*="confirmar("],html.ro [onclick*="ejecutarEliminar"],html.ro [onclick*="ejecutarMoverVarios"],html.ro [onclick*="guardarEditMov"],html.ro [onclick*="eliminarEditMov"],html.ro [onclick*="enviarInforme"],html.ro [onclick*="abrirMoverVarios"],html.ro [onclick*="abrirInforme"],html.ro [onclick*="stopPropagation();combAbrirEditar"],html.ro [onclick*="cgEliminar"],html.ro [onclick*="subirFotoEquipo"],html.ro [onclick*="editarEquipoRapido"],html.ro [onclick*="ignorarOdo"],html.ro [onclick*="hMover"],html.ro [onclick*="hEditar"],html.ro [onclick*="hSubirFoto"],html.ro [onclick*="hAgregar"],html.ro [onclick*="quitarFoto"],html.ro [onclick*="hQuitarFoto"],html.ro .foto-btn-label{display:none!important}
+  html.ro [onclick*="combGuardar"],html.ro [onclick*="cgGuardar"],html.ro [onclick*="intervGuardar"],html.ro [onclick*="guardarPlanilla"],html.ro [onclick*="leerPlanilla"],html.ro [onclick*="elegirTipoPlanilla"],html.ro [onclick*="combActualizar"],html.ro [onclick*="intervActualizar"],html.ro [onclick*="confirmar("],html.ro [onclick*="ejecutarEliminar"],html.ro [onclick*="ejecutarMoverVarios"],html.ro [onclick*="guardarEditMov"],html.ro [onclick*="eliminarEditMov"],html.ro [onclick*="enviarInforme"],html.ro [onclick*="abrirMoverVarios"],html.ro [onclick*="abrirInforme"],html.ro [onclick*="stopPropagation();combAbrirEditar"],html.ro [onclick*="cgEliminar"],html.ro [onclick*="subirFotoEquipo"],html.ro [onclick*="editarEquipoRapido"],html.ro [onclick*="ignorarOdo"],html.ro [onclick*="hMover"],html.ro [onclick*="hEditar"],html.ro [onclick*="hSubirFoto"],html.ro [onclick*="hAgregar"],html.ro [onclick*="quitarFoto"],html.ro [onclick*="hQuitarFoto"],html.ro [onclick*="alertasGuardar"],html.ro [onclick*="alertasAgregarCasilla"],html.ro [onclick*="alertaEditar"],html.ro [onclick*="alertaGuardarEdicion"],html.ro [onclick*="alertaSolucionar"],html.ro #apNuevoCard,html.ro .foto-btn-label{display:none!important}
   </style>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <title>Ingemax — Sistema de Gestión</title>
@@ -37,7 +37,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     /* TEMA OSCURO (default) */
-    :root{--naranja:#E8651A;--negro:#0f0f0f;--gris1:#1a1a1a;--gris2:#252525;--gris3:#333;--gris4:#555;--gris5:#888;--borde:#2e2e2e;--texto:#f0f0f0;--texto2:#aaa;--verde:#22c55e;--azul:#3b82f6;--radius:10px;--rsm:7px}
+    :root{--naranja:#E8651A;--negro:#0f0f0f;--gris1:#1a1a1a;--gris2:#252525;--gris3:#333;--gris4:#555;--gris5:#888;--borde:#2e2e2e;--texto:#f0f0f0;--texto2:#aaa;--verde:#22c55e;--azul:#3b82f6;--radius:10px;--rsm:7px;--prio-alto:#f87171;--prio-medio:#fbbf24;--prio-bajo:#4ade80}
     /* TEMA CLARO (alto contraste para sol) */
     [data-theme="light"]{
       --naranja:#D9540A;        /* naranja un poco más oscuro para contraste sobre blanco */
@@ -52,6 +52,9 @@
       --texto2:#444444;         /* texto secundario: gris oscuro */
       --verde:#16a34a;
       --azul:#2563eb;
+      --prio-alto:#dc2626;      /* prioridades de Pendientes: tonos más oscuros para fondo blanco */
+      --prio-medio:#b45309;
+      --prio-bajo:#15803d;
     }
     /* Ajustes finos modo claro: sombras suaves en cards y nav */
     [data-theme="light"] .header{box-shadow:0 1px 4px rgba(0,0,0,.08)}
@@ -352,6 +355,43 @@
     .tipo-plan-btn:hover,.tipo-plan-btn:active{border-color:var(--naranja)}
     .alerta-subtab{flex:1;padding:9px;background:var(--gris2);border:1px solid var(--borde);border-radius:var(--rsm);color:var(--texto2);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:.03em}
     .alerta-subtab.active{background:var(--naranja);color:#fff;border-color:var(--naranja)}
+    /* ── Alertas → Pendientes ── */
+    #eqAlertasPend{max-width:900px;margin:0 auto}
+    .ap-casilla{background:var(--gris2);border:1px solid var(--borde);border-radius:var(--rsm);padding:10px;margin-bottom:10px;display:flex;flex-direction:column;gap:8px}
+    .ap-fila{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .ap-fila input[type="text"]{flex:1;min-width:0}
+    .ap-in{background:var(--gris1);border:1px solid var(--borde);border-radius:var(--rsm);color:var(--texto);font-family:'Barlow',sans-serif;font-size:15px;padding:9px 10px;outline:none}
+    .ap-in:focus{border-color:var(--naranja)}
+    .ap-in.error{border-color:#ef4444}
+    .ap-prio{width:96px;font-weight:700;cursor:pointer}
+    .ap-prio option{color:var(--texto);font-weight:400}
+    .ap-prio.p-Alto,.ap-prio-lbl.p-Alto{color:var(--prio-alto)}
+    .ap-prio.p-Medio,.ap-prio-lbl.p-Medio{color:var(--prio-medio)}
+    .ap-prio.p-Bajo,.ap-prio-lbl.p-Bajo{color:var(--prio-bajo)}
+    .ap-mini{background:var(--gris1);border:1px solid var(--borde);color:var(--texto2);border-radius:var(--rsm);padding:8px 12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.03em;cursor:pointer;white-space:nowrap}
+    .ap-mini:disabled{opacity:.5;cursor:not-allowed}
+    .ap-mini.prim{background:var(--naranja);border-color:var(--naranja);color:#fff}
+    .ap-mini.peligro{color:var(--prio-alto)}
+    .ap-foto-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border:1.5px dashed var(--borde);border-radius:var(--rsm);background:var(--gris1);color:var(--texto2);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+    .ap-thumb{width:44px;height:44px;object-fit:cover;border-radius:8px;background:var(--gris3)}
+    .ap-check{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--texto2);cursor:pointer;margin-bottom:10px}
+    .ap-check input{accent-color:var(--naranja);width:16px;height:16px}
+    .ap-card{background:var(--gris1);border:1px solid var(--borde);border-left:5px solid var(--gris4);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    [data-theme="light"] .ap-card{box-shadow:0 1px 3px rgba(0,0,0,.06)}
+    .ap-card.p-Alto{border-left-color:var(--prio-alto)}
+    .ap-card.p-Medio{border-left-color:var(--prio-medio)}
+    .ap-card.p-Bajo{border-left-color:var(--prio-bajo)}
+    .ap-card.sol{border-left-color:var(--gris4)}
+    .ap-card.sol .ap-titulo{text-decoration:line-through;color:var(--gris5)}
+    .ap-card img{width:60px;height:60px;object-fit:cover;border-radius:8px;cursor:pointer;background:var(--gris2)}
+    .ap-txt{flex:1;min-width:180px}
+    .ap-titulo{font-size:15px;font-weight:600;line-height:1.3}
+    .ap-meta{font-size:12px;color:var(--gris5);margin-top:3px}
+    .ap-cod{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--naranja)}
+    .ap-prio-lbl{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;letter-spacing:.03em}
+    .ap-acciones{display:flex;gap:6px;flex-wrap:wrap}
+    .ap-edit .ap-txt{display:flex;flex-direction:column;gap:8px}
+    .ap-edit .ap-txt>input{width:100%}
   </style>
 </head>
 <body>
@@ -731,9 +771,41 @@
     <div style="display:flex;gap:8px;margin-bottom:14px">
       <button class="alerta-subtab active" id="astab-service" onclick="switchAlerta('service')">🔧 Services</button>
       <button class="alerta-subtab" id="astab-odo" onclick="switchAlerta('odo')">⏱️ Odómetros viejos</button>
+      <button class="alerta-subtab" id="astab-pend" onclick="switchAlerta('pend')">📝 Pendientes</button>
     </div>
     <div id="eqAlertas"><div class="loading"><div class="spin"></div></div></div>
     <div id="eqAlertasOdo" style="display:none"><div class="loading"><div class="spin"></div></div></div>
+    <!-- Pendientes: problemas cargados a mano por equipo + services automáticos -->
+    <div id="eqAlertasPend" style="display:none">
+      <div class="card" id="apNuevoCard">
+        <div class="card-title">Nuevo pendiente</div>
+        <div class="row2">
+          <div class="f">
+            <label>Equipo <span class="req">*</span></label>
+            <div class="ss-wrap" id="ss-apEquipo-wrap"></div>
+            <div class="ap-meta" id="apNombre"></div>
+          </div>
+          <div class="f"><label>Fecha</label><input type="date" id="apFecha"></div>
+        </div>
+        <datalist id="dl-apFrecuentes"></datalist>
+        <div id="apCasillas"></div>
+        <button class="ap-mini" onclick="alertasAgregarCasilla()">＋ Agregar otro problema</button>
+        <button class="btn btn-primary" id="btnAlertasGuardar" onclick="alertasGuardar()" style="margin-top:12px">Guardar todas</button>
+      </div>
+      <div class="eq-search-wrap">
+        <span class="eq-search-icon">🔍</span>
+        <input class="eq-search" type="text" id="apFiltroCod" placeholder="Filtrar por código..." oninput="alertasRender()" autocomplete="off">
+      </div>
+      <div class="pill-row" style="margin-bottom:10px">
+        <div class="pill selected" onclick="alertasFiltroPrio('todas',this)">Todas</div>
+        <div class="pill" onclick="alertasFiltroPrio('Alto',this)">🔴 Alto</div>
+        <div class="pill" onclick="alertasFiltroPrio('Medio',this)">🟡 Medio</div>
+        <div class="pill" onclick="alertasFiltroPrio('Bajo',this)">🟢 Bajo</div>
+      </div>
+      <label class="ap-check"><input type="checkbox" id="apVerSol" onchange="alertasRender()"> Mostrar solucionadas</label>
+      <div id="apResumen"></div>
+      <div id="apLista"><div class="loading"><div class="spin"></div></div></div>
+    </div>
   </div>
 </div>
 
@@ -1536,20 +1608,21 @@ function switchStab(mod,name,btn){
 // ── MODALES ──
 function cerrarModal(id){document.getElementById(id).classList.remove("open");}
 function handleOverlay(e,id){if(e.target.id===id)cerrarModal(id);}
-function confirmar(tipo){
-  S.pendingDelete={tipo,id:tipo==="comb"?g("ceId"):tipo==="plan"?g("peId"):g("ieId")};
+function confirmar(tipo,id){
+  S.pendingDelete={tipo,id:id||(tipo==="comb"?g("ceId"):tipo==="plan"?g("peId"):g("ieId"))};
   document.getElementById("confirmOverlay").classList.add("open");
 }
 async function ejecutarEliminar(){
   document.getElementById("confirmOverlay").classList.remove("open");
   const{tipo,id}=S.pendingDelete||{};if(!id)return;
-  let action=tipo==="comb"?"eliminarCombObrador":tipo==="plan"?"eliminarRegistro":"eliminarIntervencion";
+  let action=tipo==="comb"?"eliminarCombObrador":tipo==="plan"?"eliminarRegistro":tipo==="alerta"?"eliminarAlerta":"eliminarIntervencion";
   try{
     const d=await jsonp(`${URL_}?action=${action}&id=${encodeURIComponent(id)}`);
     if(!d||!d.ok){toast(d?.mensaje||"Error al eliminar","err");return;}
     toast("Eliminado ✓");
     if(tipo==="comb"){cerrarModal("combModal");await combCargar();}
     if(tipo==="interv"){cerrarModal("intervModal");await intervCargar();}
+    if(tipo==="alerta"){apAlertas=apAlertas.filter(x=>x.id!==id);if(apEditandoId===id)apEditandoId=null;apFrecuentes();alertasRender();}
   }catch(e){toast("Error de conexión","err");}
 }
 
@@ -1573,7 +1646,7 @@ function selCgTipo(val,el){
 async function init(){
   // Sincronizar ícono del botón de tema con el tema activo
   aplicarTema(document.documentElement.getAttribute("data-theme")==="light"?"light":"dark");
-  ["cFecha","iFecha","cgFecha"].forEach(id=>{const el=document.getElementById(id);if(el)el.value=todayStr();});
+  ["cFecha","iFecha","cgFecha","apFecha"].forEach(id=>{const el=document.getElementById(id);if(el)el.value=todayStr();});
   const ind=document.getElementById("navIndicator");
   ind.style.left="0%";ind.style.width="16.66%";
   // Crear SS vacíos de entrada (se actualizan luego con opciones)
@@ -1584,11 +1657,14 @@ async function init(){
   crearSS("ss-iEquipo-wrap",     "iEquipo",      [], "— Seleccionar equipo —", true);
   crearSS("ss-ieEquipo-wrap",    "ieEquipo",     [], "— Seleccionar equipo —", true);
   crearSS("ss-consEquipo-wrap",  "consEquipo",   [], "— Elegir equipo —", false);
+  crearSS("ss-apEquipo-wrap",    "apEquipo",     [], "— Seleccionar equipo —", false);
+  apNuevaCasilla();alertasRenderCasillas();
   // Al elegir equipo en consumos, renderizar
   const _ssSelectOrig = ssSelect;
   ssSelect = function(fieldId, val) {
     _ssSelectOrig(fieldId, val);
     if (fieldId === "consEquipo") consRender();
+    if (fieldId === "apEquipo") apMostrarNombre();
   };
 
   // Restaurar página (o combustible por default) — dispara la carga perezosa del módulo correspondiente
@@ -1628,6 +1704,7 @@ async function init(){
     S.equiposInfo=(rE.value.equipos||[]).filter(e=>e.codigo&&e.codigo.trim()!=="");
     equiposRenderGrupos();
     equiposRenderAlertas();
+    if(S.alertasLoaded||S.alertasError)alertasRender(); // Pendientes muestra también los services
     cargarOdoIgnorados(); // cargar lista de odómetros ignorados en segundo plano
   }else{
     const msg=rE.value?.mensaje||"No se pudo cargar Maestro de Equipos";
@@ -1643,7 +1720,7 @@ async function init(){
   ]);
   codesSet.delete("");
   const allCodes=[...codesSet].sort();
-  ["cEquipo","ceEquipo","iEquipo","ieEquipo"].forEach(fid=>ssUpdateOptions(fid,allCodes));
+  ["cEquipo","ceEquipo","iEquipo","ieEquipo","apEquipo"].forEach(fid=>ssUpdateOptions(fid,allCodes));
   // Filtros historial
   allCodes.forEach(code=>{
     ["hcEquipo","hiEquipo"].forEach(sid=>{
@@ -2530,12 +2607,15 @@ function equiposRender(lista){
   if(!lista.length){listaEl.innerHTML='<div class="empty">Sin resultados</div>';return;}
   listaEl.innerHTML=lista.map(eq=>equipoCardHTML(eq,S.equiposInfo.indexOf(eq))).join("");
 }
+// Los camiones (código C-) no aparecen en alertas aunque estén para service (CH y CR sí)
+function eqExcluidoDeAlertas(eq){
+  const cod=(eq.codigo||"").trim().toUpperCase();
+  return cod[0]==="C"&&!cod.startsWith("CH")&&!cod.startsWith("CR");
+}
 function equiposRenderAlertas(){
   const el=document.getElementById("eqAlertas");if(!el)return;
   const alertas=S.equiposInfo.filter(eq=>{
-    // Los camiones (código C-) no aparecen en alertas aunque estén para service
-    const pref=(eq.codigo||"").trim()[0]?.toUpperCase();
-    if(pref==="C"&&!(eq.codigo||"").trim().toUpperCase().startsWith("CH")&&!(eq.codigo||"").trim().toUpperCase().startsWith("CR"))return false;
+    if(eqExcluidoDeAlertas(eq))return false;
     const dif=parseNum(eq.diferencia);
     const umbral=getUmbral(eq.codigo);
     return!isNaN(dif)&&dif>=umbral*0.8; // muestra los que están al 80% o más del umbral
@@ -2551,16 +2631,224 @@ function equiposRenderAlertas(){
 
 // ── Sub-tabs de Alertas ──
 function switchAlerta(cual){
-  const bS=document.getElementById("astab-service"),bO=document.getElementById("astab-odo");
-  const eS=document.getElementById("eqAlertas"),eO=document.getElementById("eqAlertasOdo");
-  if(cual==="odo"){
-    bS.classList.remove("active");bO.classList.add("active");
-    eS.style.display="none";eO.style.display="block";
-    equiposRenderOdoViejos();
-  }else{
-    bO.classList.remove("active");bS.classList.add("active");
-    eO.style.display="none";eS.style.display="block";
+  const tabs={service:["astab-service","eqAlertas"],odo:["astab-odo","eqAlertasOdo"],pend:["astab-pend","eqAlertasPend"]};
+  Object.entries(tabs).forEach(([k,[btnId,secId]])=>{
+    document.getElementById(btnId).classList.toggle("active",k===cual);
+    // "" (y no "block") para respetar el display:grid de #eqAlertas en desktop
+    document.getElementById(secId).style.display=k===cual?"":"none";
+  });
+  if(cual==="odo")equiposRenderOdoViejos();
+  if(cual==="pend"){if(S.alertasLoaded)alertasRender();else alertasCargar();}
+}
+
+// ── Pendientes por equipo ──
+// Problemas cargados a mano (hoja de alertas en el Apps Script) + services próximos/vencidos
+// calculados en vivo desde S.equiposInfo con getUmbral (los mismos de la subpestaña Services).
+const AP_PRIOS=["Alto","Medio","Bajo"],AP_ORDEN={Alto:0,Medio:1,Bajo:2};
+let apAlertas=[],apCasillas=[],apNid=1,apFiltroPrio="todas",apEditandoId=null;
+const apFotoFiles={}; // id de casilla → File
+function escHtml(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function apJs(s){return escHtml(String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'"));} // para meter un string en onclick='...'
+function apSinGuion(s){return String(s||"").toUpperCase().replace(/[\s\-]/g,"");}
+function apNormPrio(p){const s=String(p||"").trim().toLowerCase();return s==="alto"?"Alto":s==="bajo"?"Bajo":"Medio";}
+function apEsSol(v){return v===true||/^(si|sí|true|1|x)$/i.test(String(v??"").trim());}
+function apNombreEquipo(cod){
+  const eq=S.equiposInfo.find(e=>normalizarCodigo(e.codigo)===normalizarCodigo(cod));
+  return eq?[eq.marca,eq.modelo].filter(Boolean).join(" "):"";
+}
+function apMostrarNombre(){const el=document.getElementById("apNombre");if(el)el.textContent=apNombreEquipo(ssGet("apEquipo"));}
+
+async function alertasCargar(){
+  const el=document.getElementById("apLista");
+  if(el&&!S.alertasLoaded)el.innerHTML='<div class="loading"><div class="spin"></div></div>';
+  try{
+    const d=await jsonp(`${URL_}?action=getAlertas`);
+    if(!d||!d.ok)throw new Error(d?.mensaje||"Error");
+    apAlertas=(d.alertas||[]).map(a=>({
+      id:String(a.id),equipo:normalizarCodigo(a.equipo),fecha:a.fecha||"",
+      descripcion:String(a.descripcion||""),prioridad:apNormPrio(a.prioridad),foto:a.foto||"",
+      solucionada:apEsSol(a.solucionada),fechaSolucion:a.fechaSolucion||""
+    }));
+    S.alertasLoaded=true;S.alertasError="";
+  }catch(e){
+    S.alertasError="No se pudieron cargar los pendientes cargados a mano"+(e&&e.message&&e.message!=="Error"?` (${e.message})`:"");
   }
+  apFrecuentes();alertasRender();
+}
+// Sugerencias de descripción: lo que ya se cargó antes
+function apFrecuentes(){
+  const set=[...new Set(apAlertas.map(a=>a.descripcion.trim()).filter(Boolean))].sort();
+  fillDatalist("dl-apFrecuentes",set.map(escHtml));
+}
+
+// ── Formulario: varias casillas (problemas) para un mismo equipo ──
+function apNuevaCasilla(){apCasillas.push({id:apNid++,descripcion:"",prioridad:"Medio",preview:""});}
+function alertasAgregarCasilla(){
+  apNuevaCasilla();alertasRenderCasillas();
+  const ins=document.querySelectorAll("#apCasillas .ap-desc");if(ins.length)ins[ins.length-1].focus();
+}
+function apQuitarCasilla(id){
+  apCasillas=apCasillas.filter(c=>c.id!==id);delete apFotoFiles[id];
+  if(!apCasillas.length)apNuevaCasilla();
+  alertasRenderCasillas();
+}
+function apCasillaSet(id,campo,val){const c=apCasillas.find(x=>x.id===id);if(c)c[campo]=val;}
+function apCasillaFoto(id,input){
+  const file=input.files[0],c=apCasillas.find(x=>x.id===id);if(!file||!c)return;
+  apFotoFiles[id]=file;
+  const reader=new FileReader();
+  reader.onload=e=>{c.preview=e.target.result;alertasRenderCasillas();};
+  reader.readAsDataURL(file);
+}
+function alertasRenderCasillas(){
+  const box=document.getElementById("apCasillas");if(!box)return;
+  box.innerHTML=apCasillas.map(c=>`<div class="ap-casilla">
+    <div class="ap-fila">
+      <input type="text" class="ap-in ap-desc" list="dl-apFrecuentes" placeholder="Describí el problema" autocomplete="off"
+        value="${escHtml(c.descripcion)}" oninput="apCasillaSet(${c.id},'descripcion',this.value)">
+      <select class="ap-in ap-prio p-${c.prioridad}" onchange="apCasillaSet(${c.id},'prioridad',this.value);this.className='ap-in ap-prio p-'+this.value">
+        ${AP_PRIOS.map(p=>`<option value="${p}"${p===c.prioridad?" selected":""}>${p}</option>`).join("")}
+      </select>
+      ${apCasillas.length>1?`<button type="button" class="ap-mini" onclick="apQuitarCasilla(${c.id})" title="Quitar">✕</button>`:""}
+    </div>
+    <div class="ap-fila">
+      <label class="ap-foto-btn">📷 ${c.preview?"Cambiar foto":"Agregar foto"}
+        <input type="file" accept="image/*" style="display:none" onchange="apCasillaFoto(${c.id},this)">
+      </label>
+      ${c.preview?`<img class="ap-thumb" src="${c.preview}">`:""}
+    </div>
+  </div>`).join("");
+}
+async function alertasGuardar(){
+  const equipo=ssGet("apEquipo");
+  if(!equipo){ssMarkErr("apEquipo");toast("Seleccioná el equipo","err");return;}
+  const validas=apCasillas.filter(c=>c.descripcion.trim());
+  if(!validas.length){toast("Escribí al menos un problema","err");return;}
+  setBtnLoading("btnAlertasGuardar","Guardando...");
+  try{
+    const items=[];
+    for(let i=0;i<validas.length;i++){
+      const c=validas[i];let foto="";
+      if(apFotoFiles[c.id]){
+        setBtnLoading("btnAlertasGuardar",`Subiendo foto ${i+1}...`);
+        foto=(await subirFoto(apFotoFiles[c.id]))||"";
+      }
+      items.push({descripcion:c.descripcion.trim(),prioridad:c.prioridad,foto});
+    }
+    setBtnLoading("btnAlertasGuardar","Guardando...");
+    const p={action:"agregarAlertas",equipo:normalizarCodigo(equipo),fecha:g("apFecha")||todayStr(),alertas:JSON.stringify(items)};
+    const d=await jsonp(`${URL_}?${new URLSearchParams(p)}`);
+    if(!d||!d.ok){toast(d?.mensaje||"Error","err");return;}
+    toast(items.length>1?`${items.length} pendientes guardados ✓`:"Pendiente guardado ✓");
+    apCasillas=[];Object.keys(apFotoFiles).forEach(k=>delete apFotoFiles[k]);
+    apNuevaCasilla();alertasRenderCasillas();
+    ssSet("apEquipo","");apMostrarNombre();document.getElementById("apFecha").value=todayStr();
+    await alertasCargar();
+  }catch(e){toast("Error de conexión","err");}
+  finally{resetBtn("btnAlertasGuardar","Guardar todas");}
+}
+
+// ── Lista ──
+function alertasFiltroPrio(p,el){
+  apFiltroPrio=p;
+  el.closest(".pill-row").querySelectorAll(".pill").forEach(x=>x.classList.toggle("selected",x===el));
+  alertasRender();
+}
+function apServices(){
+  return S.equiposInfo.filter(eq=>!eqExcluidoDeAlertas(eq)).map(eq=>{
+    const dif=parseNum(eq.diferencia),umbral=getUmbral(eq.codigo);
+    if(isNaN(dif)||dif<umbral*0.8)return null;
+    const vencido=dif>=umbral;
+    return{tipo:"service",equipo:normalizarCodigo(eq.codigo),codigo:eq.codigo,prioridad:vencido?"Alto":"Medio",
+      estado:vencido?"vencido":"próximo",dif,umbral,solucionada:false,fecha:""};
+  }).filter(Boolean);
+}
+function alertasRender(){
+  const el=document.getElementById("apLista");if(!el)return;
+  const q=apSinGuion(document.getElementById("apFiltroCod")?.value);
+  const verSol=!!document.getElementById("apVerSol")?.checked;
+  const manuales=apAlertas.filter(a=>verSol||!a.solucionada).map(a=>({tipo:"manual",...a}));
+  const servs=apServices();
+  const items=[...manuales,...servs]
+    .filter(i=>(apFiltroPrio==="todas"||i.prioridad===apFiltroPrio)&&(!q||apSinGuion(i.equipo).includes(q)))
+    .sort((a,b)=>(a.solucionada-b.solucionada)||(AP_ORDEN[a.prioridad]-AP_ORDEN[b.prioridad])||
+      (a.tipo==="service"&&b.tipo==="service"?(b.dif/b.umbral)-(a.dif/a.umbral):String(b.fecha).localeCompare(String(a.fecha))));
+  const pendientes=apAlertas.filter(a=>!a.solucionada).length+servs.length;
+  document.getElementById("apResumen").innerHTML=
+    (S.alertasError?`<div class="stats" style="color:var(--prio-alto)">⚠️ ${escHtml(S.alertasError)}. Se muestran solo los services.</div>`:"")+
+    `<div class="stats"><strong>${pendientes}</strong> pendiente${pendientes===1?"":"s"} · ${items.length} mostrado${items.length===1?"":"s"}</div>`;
+  if(!items.length){el.innerHTML='<div class="empty">✅ No hay pendientes con esos filtros</div>';return;}
+  el.innerHTML=items.map(apCardHTML).join("");
+}
+function apCardHTML(a){
+  const nombre=apNombreEquipo(a.equipo);
+  const equipoHTML=`<span class="ap-cod">${escHtml(a.codigo||a.equipo)}</span>${nombre?" · "+escHtml(nombre):""}`;
+  if(a.tipo==="service"){
+    return`<div class="ap-card p-${a.prioridad}">
+      <div class="ap-txt">
+        <div class="ap-titulo">🔧 Service ${a.estado}</div>
+        <div class="ap-meta">${equipoHTML} · ${a.dif.toLocaleString("es-AR")} de ${a.umbral.toLocaleString("es-AR")} hs/km · automático desde Equipos</div>
+      </div>
+      <span class="ap-prio-lbl p-${a.prioridad}">${a.prioridad}</span>
+    </div>`;
+  }
+  const id=apJs(a.id);
+  if(a.id===apEditandoId){
+    return`<div class="ap-card ap-edit p-${a.prioridad}">
+      <div class="ap-txt">
+        <div class="ap-meta">${equipoHTML} · editando</div>
+        <input type="text" class="ap-in" id="apEditDesc" list="dl-apFrecuentes" autocomplete="off" value="${escHtml(a.descripcion)}">
+        <div class="ap-fila">
+          <select class="ap-in ap-prio p-${a.prioridad}" id="apEditPrio" onchange="this.className='ap-in ap-prio p-'+this.value">
+            ${AP_PRIOS.map(p=>`<option value="${p}"${p===a.prioridad?" selected":""}>${p}</option>`).join("")}
+          </select>
+          <button class="ap-mini prim" id="btnApEdit" onclick="alertaGuardarEdicion('${id}')">Guardar cambios</button>
+          <button class="ap-mini" onclick="apEditandoId=null;alertasRender()">Cancelar</button>
+        </div>
+      </div>
+    </div>`;
+  }
+  const foto=driveImgUrl(a.foto);
+  return`<div class="ap-card ${a.solucionada?"sol":"p-"+a.prioridad}">
+    ${foto?`<img src="${escHtml(foto)}" loading="lazy" onclick="window.open(this.src,'_blank')" onerror="this.style.display='none'">`:""}
+    <div class="ap-txt">
+      <div class="ap-titulo">${escHtml(a.descripcion)}</div>
+      <div class="ap-meta">${equipoHTML} · ${fmtFechaAny(a.fecha)}${a.solucionada&&a.fechaSolucion?` · solucionado ${fmtFechaAny(a.fechaSolucion)}`:""}</div>
+    </div>
+    <span class="ap-prio-lbl p-${a.prioridad}">${a.prioridad}</span>
+    <div class="ap-acciones">
+      <button class="ap-mini" onclick="alertaEditar('${id}')">✏️ Editar</button>
+      <button class="ap-mini" onclick="alertaSolucionar('${id}',this)">${a.solucionada?"↩️ Reabrir":"✅ Solucionado"}</button>
+      <button class="ap-mini peligro" onclick="confirmar('alerta','${id}')" title="Eliminar">🗑</button>
+    </div>
+  </div>`;
+}
+function alertaEditar(id){
+  apEditandoId=id;alertasRender();
+  const inp=document.getElementById("apEditDesc");if(inp)inp.focus();
+}
+async function alertaGuardarEdicion(id){
+  const a=apAlertas.find(x=>x.id===id);if(!a)return;
+  const descripcion=g("apEditDesc"),prioridad=g("apEditPrio");
+  if(!descripcion){markErr("apEditDesc");toast("La descripción no puede quedar vacía","err");return;}
+  setBtnLoading("btnApEdit","Guardando...");
+  try{
+    const d=await jsonp(`${URL_}?${new URLSearchParams({action:"editarAlerta",id,descripcion,prioridad})}`);
+    if(!d||!d.ok){toast(d?.mensaje||"Error","err");resetBtn("btnApEdit","Guardar cambios");return;}
+    a.descripcion=descripcion;a.prioridad=prioridad;apEditandoId=null;
+    toast("Actualizado ✓");apFrecuentes();alertasRender();
+  }catch(e){toast("Error de conexión","err");resetBtn("btnApEdit","Guardar cambios");}
+}
+async function alertaSolucionar(id,btn){
+  const a=apAlertas.find(x=>x.id===id);if(!a)return;
+  const nuevo=!a.solucionada;
+  btn.disabled=true;btn.innerHTML='<span class="spin-sm"></span>';
+  try{
+    const d=await jsonp(`${URL_}?${new URLSearchParams({action:"solucionarAlerta",id,solucionada:nuevo?"si":"no"})}`);
+    if(!d||!d.ok){toast(d?.mensaje||"Error","err");alertasRender();return;}
+    a.solucionada=nuevo;a.fechaSolucion=nuevo?(d.fechaSolucion||todayStr()):"";
+    toast(nuevo?"Marcado como solucionado ✓":"Reabierto ✓");alertasRender();
+  }catch(e){toast("Error de conexión","err");alertasRender();}
 }
 
 // ── Odómetros viejos (sin actualizar +30 días) ──

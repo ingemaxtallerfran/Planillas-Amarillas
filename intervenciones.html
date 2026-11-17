@@ -691,6 +691,10 @@
   </div>
   <!-- Vista grupos por tipo -->
   <div class="stab-sec active" id="equipos-grupos">
+    <div class="eq-search-wrap">
+      <span class="eq-search-icon">🔍</span>
+      <input class="eq-search" type="text" id="eqBuscarGrupos" placeholder="Buscar por código, nombre o marca..." oninput="equiposRenderGrupos()">
+    </div>
     <button onclick="abrirMoverVarios()" style="width:100%;margin-bottom:12px;background:var(--gris2);border:1px solid var(--naranja);color:var(--naranja);border-radius:var(--rsm);padding:11px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;letter-spacing:.03em">🔄 Mover varios equipos de obra</button>
     <div class="eq-grupos" id="eqGruposGrid"></div>
   </div>
@@ -1179,10 +1183,17 @@ function getGrupoDeEquipo(codigo) {
 function equiposRenderGrupos() {
   const grid = document.getElementById("eqGruposGrid");
   if (!grid) return;
-  grid.innerHTML = EQ_GRUPOS.map(g => {
-    const count = g.prefijos[0] === "*"
-      ? S.equiposInfo.length
-      : S.equiposInfo.filter(e => getGrupoDeEquipo(e.codigo) === g.nombre).length;
+  // Buscador: filtra por código, nombre (marca + modelo) o marca
+  const q = (document.getElementById("eqBuscarGrupos")?.value || "").toLowerCase().trim();
+  const coincide = e => !q ||
+    (e.codigo||"").toLowerCase().includes(q) ||
+    [e.marca, e.modelo].filter(Boolean).join(" ").toLowerCase().includes(q);
+  const html = EQ_GRUPOS.map(g => {
+    const delGrupo = g.prefijos[0] === "*"
+      ? S.equiposInfo
+      : S.equiposInfo.filter(e => getGrupoDeEquipo(e.codigo) === g.nombre);
+    const count = delGrupo.filter(coincide).length;
+    if (q && count === 0) return ""; // ocultar categorías sin coincidencias
     if (count === 0 && g.prefijos[0] !== "*") return ""; // ocultar grupos sin equipos
     return `<div class="eq-grupo-btn" onclick="abrirGrupo('${g.nombre}')">
       <div>
@@ -1192,6 +1203,7 @@ function equiposRenderGrupos() {
       <div class="eq-grupo-count">${count}</div>
     </div>`;
   }).join("");
+  grid.innerHTML = html || `<div class="empty" style="grid-column:1/-1">Sin equipos que coincidan con "${q.replace(/</g,"&lt;")}"</div>`;
 }
 
 let grupoActual = "";
@@ -1205,9 +1217,11 @@ function abrirGrupo(nombre) {
   document.getElementById("equipos-lista").classList.add("active");
   document.querySelector('#page-equipos .stab').classList.remove("active");
   // título
-  document.getElementById("eqBuscar").value = "";
+  // Si hay algo escrito en el buscador de categorías, se lleva a la lista
+  const qGrupos = (document.getElementById("eqBuscarGrupos")?.value || "").trim();
+  document.getElementById("eqBuscar").value = qGrupos;
   document.getElementById("eqBuscar").placeholder = `Buscar en ${nombre}...`;
-  equiposRender(lista);
+  if (qGrupos) equiposFiltrar(); else equiposRender(lista);
 }
 
 function volverGrupos() {

@@ -55,6 +55,9 @@
     }
     /* Ajustes finos modo claro: sombras suaves en cards y nav */
     [data-theme="light"] .header{box-shadow:0 1px 4px rgba(0,0,0,.08)}
+    /* Barrita que corre bajo el header mientras se actualizan datos en segundo plano (ver swr) */
+    body.sync .header::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;background:linear-gradient(90deg,transparent,#fff,transparent) no-repeat;background-size:35% 100%;animation:syncbar 1.1s linear infinite}
+    @keyframes syncbar{from{background-position:-60% 0}to{background-position:160% 0}}
     [data-theme="light"] .bottom-nav{box-shadow:0 -1px 4px rgba(0,0,0,.08)}
     [data-theme="light"] .card,
     [data-theme="light"] .equipo-card,
@@ -999,6 +1002,42 @@ function jsonp(url){if(window.SOLO_LECTURA&&!/^(get|debug)/.test(new URL(url,loc
   });
 }
 
+// ── COPIA LOCAL DE LECTURAS ──
+// swr(accion, aplicar): pinta al instante la última respuesta guardada en este dispositivo y
+// después pide la real; solo vuelve a pintar si cambió. aplicar(d) puede correr dos veces,
+// así que tiene que ser idempotente (reemplazar, no agregar).
+const SWR_VISTO={};let swrPend=0,swrAvisoT=0;
+function swrGuardar(accion,d){try{localStorage.setItem("ix1:"+accion,JSON.stringify(d));}catch(e){}}
+function swrCuandoNoEscriba(){
+  // No repintar tarjetas mientras alguien escribe dentro de una (se perdería lo tipeado)
+  return new Promise(res=>{(function chk(){
+    const a=document.activeElement;
+    if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.closest(".equipo-card,.h-card"))setTimeout(chk,1500);else res();
+  })();});
+}
+async function swr(accion,aplicar){
+  const k="ix1:"+accion;let previo=null;
+  try{previo=localStorage.getItem(k);}catch(e){}
+  if(previo&&!SWR_VISTO[accion]){try{aplicar(JSON.parse(previo));}catch(e){previo=null;}}
+  SWR_VISTO[accion]=true;
+  swrPend++;document.body.classList.add("sync");
+  let d=null,fallo=false;
+  try{d=await jsonp(`${URL_}?action=${accion}`);}catch(e){fallo=true;}
+  if(--swrPend<=0){swrPend=0;document.body.classList.remove("sync");}
+  if(fallo||!d||!d.ok){
+    if(previo&&Date.now()-swrAvisoT>20000){swrAvisoT=Date.now();toast("El servidor no respondió: se muestran los últimos datos guardados","err");}
+    if(fallo&&!previo)throw new Error("sin datos");
+    return d;
+  }
+  const txt=JSON.stringify(d);
+  if(txt!==previo){
+    try{localStorage.setItem(k,txt);}catch(e){}
+    await swrCuandoNoEscriba();
+    aplicar(d);
+  }
+  return d;
+}
+
 // ── UTILS ──
 function toast(msg,type){const t=document.getElementById("toast");t.textContent=msg;t.className="toast "+(type||"ok");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.add("hidden"),3200);}
 function g(id){const el=document.getElementById(id);return el?el.value.trim():"";}
@@ -1287,7 +1326,7 @@ async function ejecutarMoverVarios(){
   // Refrescar datos de equipos
   try{
     const rE=await jsonp(`${URL_}?action=getInfoEquipos`);
-    if(rE&&rE.ok)S.equiposInfo=(rE.equipos||[]).filter(e=>e.codigo&&e.codigo.trim()!=="");
+    if(rE&&rE.ok){S.equiposInfo=(rE.equipos||[]).filter(e=>e.codigo&&e.codigo.trim()!=="");swrGuardar("getInfoEquipos",rE);}
   }catch(e){}
   if(typeof grupoActual!=="undefined"&&grupoActual)abrirGrupo(grupoActual);
 }
@@ -1601,63 +1640,52 @@ async function init(){
   // Combustible se carga siempre (las tarjetas de Equipos muestran su consumo), en paralelo con lo de abajo
   combCargar();
 
-  // Cargar listas + equipos en paralelo
-  const [rL,rE]=await Promise.allSettled([
-    jsonp(`${URL_}?action=getListas`),
-    jsonp(`${URL_}?action=getInfoEquipos`)
-  ]);
+  // Selectores de equipo (fusión de Equipos + Maestro), códigos normalizados sin duplicados
+  const poblarEquipos=()=>{
+    const codesSet=new Set([
+      ...((S.listas&&S.listas.equipos)||[]).map(c=>normalizarCodigo(c)),
+      ...S.equiposInfo.map(e=>normalizarCodigo(e.codigo))
+    ]);
+    codesSet.delete("");
+    const allCodes=[...codesSet].sort();
+    ["cEquipo","ceEquipo","iEquipo","ieEquipo"].forEach(fid=>ssUpdateOptions(fid,allCodes));
+    ["hcEquipo","hiEquipo"].forEach(sid=>fillSelect(sid,allCodes,"Todos los equipos"));
+  };
 
-  // Listas
-  let equiposCodes=[];
-  if(rL.status==="fulfilled"&&rL.value?.ok){
-    const d=rL.value;S.listas=d;
-    equiposCodes=d.equipos||[];
+  // Listas y Maestro en paralelo: cada uno pinta apenas tiene datos (copia local primero, real después)
+  const pL=swr("getListas",d=>{
+    S.listas=d;
     const operarios=d.operarios||[];
-    // SS de responsable
     ["cResponsable","ceResponsable"].forEach(fid=>ssUpdateOptions(fid,operarios));
-    // Filtro operarios planillas
-    operarios.forEach(op=>{
-      const s=document.getElementById("hpOperario");if(!s)return;
-      const o=document.createElement("option");o.value=o.textContent=op;s.appendChild(o);
-    });
+    fillSelect("hpOperario",operarios,"Todos los operarios");
     fillDatalist("listTrabajos",d.trabajos||[]);
-  }
+    poblarEquipos();
+  }).catch(()=>null);
 
-  // Maestro equipos
-  if(rE.status==="fulfilled"&&rE.value?.ok){
-    S.equiposInfo=(rE.value.equipos||[]).filter(e=>e.codigo&&e.codigo.trim()!=="");
+  const pE=swr("getInfoEquipos",d=>{
+    S.equiposInfo=(d.equipos||[]).filter(e=>e.codigo&&e.codigo.trim()!=="");
     equiposRenderGrupos();
     equiposRenderAlertas();
-    cargarOdoIgnorados(); // cargar lista de odómetros ignorados en segundo plano
-  }else{
-    const msg=rE.value?.mensaje||"No se pudo cargar Maestro de Equipos";
+    poblarEquipos();
+    // Si ya está adentro de un grupo u obra, refrescar esa lista (sin pisarle una búsqueda en curso)
+    if(grupoActual){if(!g("eqBuscar"))abrirGrupo(grupoActual);}
+    else if(obraActual)abrirObra(obraActual);
+  }).catch(()=>null).then(d=>{
+    if(S.equiposInfo.length)return;
+    const msg=(d&&d.mensaje)||"No se pudo cargar Maestro de Equipos";
     const el=document.getElementById("eqGruposGrid");
     if(el)el.innerHTML=`<div class="empty" style="grid-column:1/-1">⚠️ ${msg}</div>`;
     document.getElementById("eqAlertas").innerHTML='<div class="empty">—</div>';
-  }
-
-  // Poblar SS de equipos (fusión de Equipos + Maestro), códigos normalizados sin duplicados
-  const codesSet=new Set([
-    ...equiposCodes.map(c=>normalizarCodigo(c)),
-    ...S.equiposInfo.map(e=>normalizarCodigo(e.codigo))
-  ]);
-  codesSet.delete("");
-  const allCodes=[...codesSet].sort();
-  ["cEquipo","ceEquipo","iEquipo","ieEquipo"].forEach(fid=>ssUpdateOptions(fid,allCodes));
-  // Filtros historial
-  allCodes.forEach(code=>{
-    ["hcEquipo","hiEquipo"].forEach(sid=>{
-      const s=document.getElementById(sid);if(!s)return;
-      const o=document.createElement("option");o.value=o.textContent=code;s.appendChild(o);
-    });
   });
+
+  cargarOdoIgnorados(); // lista de odómetros ignorados, en segundo plano
+  await Promise.all([pL,pE]);
 }
 
 // ══ COMBUSTIBLE ══
 async function combCargar(){
   try{
-    const d=await jsonp(`${URL_}?action=getCombustiblesTotal`);
-    if(!d||!d.ok)return;
+   await swr("getCombustiblesTotal",d=>{
     S.combRegistros=d.registros||[];
     S.combLoaded=true;
     // Si operarios llegó vacío, armar desde historial
@@ -1676,6 +1704,7 @@ async function combCargar(){
       if(typeof grupoActual!=="undefined"&&grupoActual){abrirGrupo(grupoActual);}
       else if(typeof obraActual!=="undefined"&&obraActual){abrirObra(obraActual);}
     }
+   });
   }catch(e){toast("Error cargando combustible","err");}
 }
 function combCalcStats(){
@@ -1938,15 +1967,12 @@ const CAP_CISTERNA=10000;
 async function stockCargar(){await Promise.all([cgCargarStock(),cgCargarMovs(),cgCargarDestinos()]);S.stockLoaded=true;}
 async function cgCargarDestinos(){
   try{
-    const d=await jsonp(`${URL_}?action=getDestinosCisterna`);
-    if(!d||!d.ok)return;
-    fillDatalist("dl-destinos",d.vehiculos||[]);
+    await swr("getDestinosCisterna",d=>{fillDatalist("dl-destinos",d.vehiculos||[]);});
   }catch(e){}
 }
 async function cgCargarStock(){
   try{
-    const d=await jsonp(`${URL_}?action=getStockCisterna`);
-    if(!d||!d.ok)return;
+   await swr("getStockCisterna",d=>{
     const stock=Number(d.stock)||0;
     const pct=Math.min(100,Math.round((stock/CAP_CISTERNA)*100));
     const color=pct>40?"var(--verde)":pct>20?"#f59e0b":"#ef4444";
@@ -1957,14 +1983,15 @@ async function cgCargarStock(){
     const fill=document.getElementById("gaugeFill");
     fill.setAttribute("stroke-dasharray",(pct/100*251.2)+" 251.2");
     fill.style.stroke=color;
+   });
   }catch(e){}
 }
 async function cgCargarMovs(){
   try{
-    const d=await jsonp(`${URL_}?action=getMovCisterna`);
-    if(!d||!d.ok)return;
-    CG_MOVS=d.movimientos||[];
-    cgCalcStats();cgRenderUltimos();calRender();
+    await swr("getMovCisterna",d=>{
+      CG_MOVS=d.movimientos||[];
+      cgCalcStats();cgRenderUltimos();calRender();
+    });
   }catch(e){}
 }
 function cgCalcStats(){
@@ -2092,8 +2119,7 @@ function calSelDia(fecha){
 // ══ PLANILLAS (solo lectura) ══
 async function planCargar(){
   try{
-    const d=await jsonp(`${URL_}?action=getRegistros`);
-    if(!d||!d.ok)return;
+   await swr("getRegistros",d=>{
     S.planRegistros=d.registros||[];
     S.planLoaded=true;
     const obras=[...new Set(S.planRegistros.map(r=>r.obra).filter(Boolean))].sort();
@@ -2104,6 +2130,7 @@ async function planCargar(){
     const eqSel=document.getElementById("hpEquipo");
     if(eqSel){const curE=eqSel.value;eqSel.innerHTML='<option value="">Todos los equipos</option>'+eqs.map(eq=>`<option value="${eq}">${eq}</option>`).join("");if(curE)eqSel.value=curE;}
     planRenderHist();
+   });
   }catch(e){}
 }
 function planRenderHist(){
@@ -2173,11 +2200,11 @@ function poblarDatalistsInterv(){
 }
 async function intervCargar(){
   try{
-    const d=await jsonp(`${URL_}?action=getIntervenciones`);
-    if(!d||!d.ok)return;
-    S.intervRegistros=d.intervenciones||[];
-    S.intervLoaded=true;
-    poblarDatalistsInterv();intervRenderHist();
+    await swr("getIntervenciones",d=>{
+      S.intervRegistros=d.intervenciones||[];
+      S.intervLoaded=true;
+      poblarDatalistsInterv();intervRenderHist();
+    });
   }catch(e){}
 }
 function intervRenderHist(){
@@ -2567,8 +2594,7 @@ function switchAlerta(cual){
 let odoIgnorados=[]; // lista de códigos ignorados
 async function cargarOdoIgnorados(){
   try{
-    const d=await jsonp(`${URL_}?action=getOdometrosIgnorados`);
-    if(d&&d.ok)odoIgnorados=(d.ignorados||[]).map(c=>c.toUpperCase());
+    await swr("getOdometrosIgnorados",d=>{odoIgnorados=(d.ignorados||[]).map(c=>c.toUpperCase());});
   }catch(e){}
 }
 
@@ -2649,22 +2675,21 @@ function hGetGrupo(cod){
 }
 
 async function hCargar(){
-  try{
-    const [rH,rM,rL]=await Promise.allSettled([
-      jsonp(`${URL_}?action=getHerramental`),
-      jsonp(`${URL_}?action=getMovimientosHM`),
-      jsonp(`${URL_}?action=getListasHM`)
-    ]);
-    if(rH.status==="fulfilled"&&rH.value?.ok)H.herr=rH.value.herramientas||[];
-    if(rM.status==="fulfilled"&&rM.value?.ok)H.movs=rM.value.movimientos||[];
-    if(rL.status==="fulfilled"&&rL.value?.ok){H.ubics=rL.value.ubicaciones||[];H.resps=rL.value.responsables||[];}
+  const pintar=()=>{
     S.herrLoaded=true;
     fillDatalist("dl-hubics",H.ubics);
     fillDatalist("dl-hresps",H.resps);
     fillDatalist("dl-htipos",[...new Set(H.herr.map(h=>h.tipo).filter(Boolean))].sort());
     fillDatalist("dl-hmarcas",[...new Set(H.herr.map(h=>h.marca).filter(Boolean))].sort());
     hRenderGrupos();
-  }catch(e){
+  };
+  await Promise.allSettled([
+    swr("getHerramental",d=>{H.herr=d.herramientas||[];pintar();}),
+    swr("getMovimientosHM",d=>{H.movs=d.movimientos||[];pintar();}),
+    swr("getListasHM",d=>{H.ubics=d.ubicaciones||[];H.resps=d.responsables||[];pintar();})
+  ]);
+  if(!S.herrLoaded){
+    // Nada cargó (ni copia local ni servidor): avisar; al volver a entrar a la pestaña se reintenta
     const el=document.getElementById("hGruposGrid");
     if(el)el.innerHTML='<div class="empty" style="grid-column:1/-1">Error cargando herramental</div>';
   }
